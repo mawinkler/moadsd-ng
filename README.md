@@ -15,7 +15,7 @@
 
 **Software Components**
   * PostgreSQL 10.10
-  * Deep Security 12 LTS
+  * Deep Security 12.5 FR
   * Deep Security Smart Check Latest
   * Kubernetes 1.14.4
   * Cri-O 1.14
