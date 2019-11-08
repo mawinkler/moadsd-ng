@@ -1,0 +1,113 @@
+---
+# #####################################################################
+# Create a Deep Security instance
+# #####################################################################
+
+# Preparations required if not running within a public cloud
+# - name: RHEL register
+#   command: subscription-manager register --username="{{ rhel_username }}" --password="{{ rhel_password }}" --auto-attach
+#
+# - name: RHEL
+#   command: yum-config-manager --disable rhel-7-server-rt-beta-rpms
+
+- name: Create DSM configuration file
+  copy:
+    dest: /root/dsm.properties
+    mode: 0640
+    content: |
+      AddressAndPortsScreen.ManagerAddress={{ addressandportsscreen_manageraddress }}
+      AddressAndPortsScreen.NewNode={{ addressandportsscreen_newnode }}
+      UpgradeVerificationScreen.Overwrite={{ upgradeverificationscreen_overwrite }}
+      LicenseScreen.License.-1={{ licensescreen_license }}
+      DatabaseScreen.DatabaseType={{ databasescreen_databasetype }}
+      DatabaseScreen.Hostname={{ databasescreen_hostname }}
+      DatabaseScreen.Transport={{ databasescreen_transport }}
+      DatabaseScreen.DatabaseName={{ databasescreen_databasename }}
+      DatabaseScreen.Username={{ databasescreen_username }}
+      DatabaseScreen.Password={{ databasescreen_password }}
+      AddressAndPortsScreen.ManagerPort={{ addressandportsscreen_managerport }}
+      AddressAndPortsScreen.HeartbeatPort={{ addressandportsscreen_heartbeatport }}
+      CredentialsScreen.Administrator.Username={{ credentialsscreen_administrator_username }}
+      CredentialsScreen.Administrator.Password={{ credentialsscreen_administrator_password }}
+      CredentialsScreen.UseStrongPasswords={{ credentialsscreen_usestrongpasswords }}
+      SecurityUpdateScreen.UpdateComponents={{ securityupdatescreen_updatecomponents }}
+      SecurityUpdateScreen.Proxy={{ securityupdatescreen_proxy }}
+      SecurityUpdateScreen.ProxyType={{ securityupdatescreen_proxytype }}
+      SecurityUpdateScreen.ProxyAddress={{ securityupdatescreen_proxyaddress }}
+      SecurityUpdateScreen.ProxyPort={{ securityupdatescreen_proxyport }}
+      SecurityUpdateScreen.ProxyAuthentication={{ securityupdatescreen_proxyauthentication }}
+      SecurityUpdateScreen.ProxyUsername={{ securityupdatescreen_proxyusername }}
+      SecurityUpdateScreen.ProxyPassword={{ securityupdatescreen_proxypassword }}
+      SoftwareUpdateScreen.UpdateSoftware={{ softwareupdatescreen_updatesoftware }}
+      SoftwareUpdateScreen.Proxy={{ softwareupdatescreen_proxy }}
+      SoftwareUpdateScreen.ProxyType={{ softwareupdatescreen_proxytype }}
+      SoftwareUpdateScreen.ProxyAddress={{ softwareupdatescreen_proxyaddress }}
+      SoftwareUpdateScreen.ProxyPort={{ softwareupdatescreen_proxyport }}
+      SoftwareUpdateScreen.ProxyAuthentication={{ softwareupdatescreen_proxyauthentication }}
+      SoftwareUpdateScreen.ProxyUsername={{ softwareupdatescreen_proxyusername }}
+      SoftwareUpdateScreen.ProxyPassword={{ softwareupdatescreen_proxypassword }}
+      SoftwareUpdateScreen.ProxyAuthentication={{ softwareupdatescreen_proxyauthentication }}
+      RelayScreen.Install={{ relayscreen_install }}
+      SmartProtectionNetworkScreen.EnableFeedback={{ smartprotectionnetworkscreen_enablefeedback }}
+
+# If you want to install a pre-release version of Deep Security and do have
+# a custom installer, place it in the root of your moadsd-ng directory and
+# name it dsm.sh. It will then be copied to the dsm server instance instead
+# downloaded from the official download site
+- name: Check if custom DSM installation script is available locally
+  stat:
+    path: ./dsm.sh
+  delegate_to: localhost
+  register: st
+
+- name: Copy custom DSM installation script if available locally
+  become: yes
+  copy:
+    src: ./dsm.sh
+    dest: /root/dsm.sh
+    owner: root
+    group: root
+    mode: '750'
+  when: st.stat.exists == True
+
+- name: Download DSM installation script
+  get_url:
+    url: "{{ deepsecurity_download_url }}{{ deepsecurity_installer }}"
+    dest: "/root/{{ dsm_installer }}"
+    mode: 0750
+  when: st.stat.exists == False
+
+- name: Install custom DSM
+  shell: "/root/dsm.sh -q -varfile /root/dsm.properties >> /root/dsm.log"
+  args:
+    chdir: $HOME
+    creates: dsm.log
+  when: st.stat.exists == True
+
+- name: Install DSM
+  shell: "/root/{{ deepsecurity_installer }} -q -varfile /root/dsm.properties >> /root/dsm.log"
+  args:
+    chdir: $HOME
+    creates: dsm.log
+  when: st.stat.exists == False
+
+- name: Fetch dsm.log
+  fetch:
+    src: /root/dsm.log
+    dest: ./site_{{ type }}/
+    flat: yes
+
+- name: Store Deep Security credentials
+  shell: |
+    echo URL: https://{{ inventory_hostname }}:{{ addressandportsscreen_managerport }} > dsm.txt
+    echo Username: {{ credentialsscreen_administrator_username }} >> dsm.txt
+    echo Password: {{ credentialsscreen_administrator_password }} >> dsm.txt
+  args:
+    chdir: $HOME
+    creates: dsm.txt
+
+- name: Fetch dsm.txt
+  fetch:
+    src: /root/dsm.txt
+    dest: ./site_{{ type }}/
+    flat: yes

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+STATUS=`sudo /opt/ds_agent/dsa_query -c GetComponentInfo`
+JSON="{"
+while IFS=':' read -ra COMP; do
+  i=0
+  for j in "${COMP[@]}"; do
+    [ $((i%2)) -eq 0 ] && JSON="${JSON}\"${j}\" : "
+    [ $((i%2)) -ne 0 ] && JSON="${JSON}\"${j:1}\", "
+    i=$((i+1))
+  done
+done <<< "$STATUS"
+JSON="${JSON::-2}}"
+echo "${JSON}"

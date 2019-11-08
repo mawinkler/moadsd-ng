@@ -1,0 +1,146 @@
+---
+# #####################################################################
+# Deploy Cri-O
+# #####################################################################
+# - name: Install cri-o and its dependecies
+#   apt:
+#     name: "{{ packages }}"
+#     state: present
+#     update_cache: yes
+#   vars:
+#     packages:
+#       - cri-o-runc
+#       - cri-o-1.14
+- name: Make directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /root/src
+    - /etc/containers
+    - /etc/crio
+    - /etc/systemd/system/kubelet.service.d/
+
+- name: Cri-o add apt repository
+  apt_repository:
+    repo: ppa:projectatomic/ppa
+    state: present
+
+- name: Enable universe repository
+  apt_repository:
+    repo: "deb http://archive.ubuntu.com/ubuntu/ bionic universe"
+    state: present
+    
+- name: Cri-o install packages
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - btrfs-tools
+      - containers-common
+      - libassuan-dev
+      - libdevmapper-dev
+      - libglib2.0-dev
+      - libc6-dev
+      - libgpgme11-dev
+      - libgpg-error-dev
+      - libseccomp-dev
+      - libsystemd-dev
+      - libselinux1-dev
+      - pkg-config
+      - go-md2man
+      - cri-o-runc
+
+- name: Cri-o clone
+  git:
+    repo: https://github.com/cri-o/cri-o
+    dest: /root/src/github.com/cri-o
+    version: release-1.14
+
+- name: Cri-o build
+  shell: |
+    export PATH=/usr/local/go/bin:$PATH && \
+    cd /root/src/github.com/cri-o && \
+    make install.tools && \
+    make && \
+    make install && \
+    make install.systemd && \
+    make install.config
+
+- name: Cri-o install policy.json
+  shell: |
+    cd /root/src/github.com/cri-o && \
+    cp test/policy.json /etc/containers/policy.json
+
+- name: Cri-o cgroup_manager
+  replace:
+    regexp: 'cgroupfs'
+    replace: '{{ cgroupdriver }}'
+    name: /etc/crio/crio.conf
+    backup: yes
+
+- name: Cri-o run with overlay2
+  replace:
+    regexp: '#storage_driver = "overlay"'
+    replace: 'storage_driver = "overlay2"'
+    name: /etc/crio/crio.conf
+    backup: yes
+
+- name: Cri-o allow docker hub
+  replace:
+    regexp: '#registries = \['
+    replace: 'registries = ["docker.io",]'
+    name: /etc/crio/crio.conf
+    backup: yes
+
+- name: Cri-o set log_level
+  lineinfile:
+    dest: "/etc/crio/crio.conf"
+    regexp: "^log_level"
+    line: log_level = "info"
+
+# https://github.com/cri-o/cri-o/blob/master/tutorials/kubeadm.md
+- name: Cri-o default conf for kubelet
+  copy:
+    dest: /etc/systemd/system/kubelet.service.d/20-cri.conf
+    mode: 0640
+    content: |
+      [Service]
+      Environment=--node-ip={{ node_ip }} --feature-gates="AllAlpha=false,RunAsGroup=true" --container-runtime=remote --cgroup-driver={{ cgroupdriver }} --container-runtime-endpoint={{ kubelet_container_runtime_socket }} --runtime-request-timeout=5m --allow-privileged=true
+
+- name: Cri-o defaults for kubelet
+  copy:
+    dest: /etc/default/kubelet
+    mode: 0640
+    content: |
+      [Service]
+      Environment=--node-ip={{ node_ip }} --feature-gates="AllAlpha=false,RunAsGroup=true" --container-runtime=remote --cgroup-driver={{ cgroupdriver }} --container-runtime-endpoint={{ kubelet_container_runtime_socket }} --runtime-request-timeout=5m --allow-privileged=true
+
+- name: Cri-o setup required sysctl params
+  copy:
+    dest: /etc/sysctl.d/99-kubernetes-cri.conf
+    mode: 0640
+    content: |
+      net.bridge.bridge-nf-call-iptables  = 1
+      net.ipv4.ip_forward                 = 1
+      net.bridge.bridge-nf-call-ip6tables = 1
+
+- name: Cri-o probing required modules
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - overlay
+    - br_netfilter
+
+- name: Cri-o enable and start
+  systemd:
+    name: crio
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Sysctl --system
+  command: sysctl --system

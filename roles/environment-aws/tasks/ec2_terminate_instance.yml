@@ -1,0 +1,29 @@
+---
+# #####################################################################
+# Terminate a linux instance in AWS environment
+# #####################################################################
+- name: Current play
+  debug:
+    msg:
+      - "Terminating instance {{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+
+- name: Terminate a server instance
+  ec2_instance:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Name": "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+    state: absent
+
+- name: Terminate EC2 Security Group
+  ec2_group:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    # name: "{{ moadsd_ng_prefix }}-vpc"
+    region: "{{ aws_region }}"
+    state: absent
+    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
+    description: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
+    tags:
+      Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"

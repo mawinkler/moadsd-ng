@@ -1,0 +1,19 @@
+---
+# #####################################################################
+# Create a network in GCP environment
+# #####################################################################
+- name: Current play
+  debug:
+    msg:
+      - "Creating network {{ moadsd_ng_prefix }}-network"
+
+- name: Create a network
+  gcp_compute_network:
+    name: "{{ moadsd_ng_prefix }}-network"
+    auto_create_subnetworks: yes
+    project: "{{ gcp_project_id }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+    scopes: "{{ scopes }}"
+    state: present
+  register: network

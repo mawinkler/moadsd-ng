@@ -1,0 +1,72 @@
+---
+# #####################################################################
+# Create a Deep Security Smart Check instance
+# #####################################################################
+- name: Create Deep Security Smart Check overrides file
+  copy:
+    dest: /home/ubuntu/overrides-smartcheck.yml
+    mode: 0640
+    owner: ubuntu
+    content: |
+      service:
+        type: {{ service_type }}
+      networkPolicy:
+        additionalRegistryPorts:
+          - 4567
+      auth:
+        masterPassword: {{ auth_masterPassword }}
+      activationCode: {{ activationCode }}
+      persistence:
+        enabled: {{ persistence_enabled }}
+        db:
+          storageClassName: {{ persistence_storageClassName }}
+        vulnerabilityDB:
+          storageClassName: {{ persistence_storageClassName }}
+        metrics:
+          storageClassName: {{ persistence_storageClassName }}
+
+# Persistence variants - in k8s or external db
+# Variant 1: Within the k8s cluster
+      # persistence:
+      #   enabled: {{ persistence_enabled }}
+      #   db:
+      #     storageClassName: {{ persistence_storageClassName }}
+      #   vulnerabilityDB:
+      #     storageClassName: {{ persistence_storageClassName }}
+      #   metrics:
+      #     storageClassName: {{ persistence_storageClassName }}
+
+# Variant 2: Within an external database
+# First, create a database in PSQL >9.6, then logon on postgres as postgres user
+# !!The database needs to have the same name as the database user!!
+# $ psql
+# postgres=# create role "dssc" with password 'password' login createdb createrole;
+# postgres=# create database "dssc" with owner "dssc";
+      # db:
+      #   host: <HOST>
+      #   port: 5432
+      #   tls:
+      #     mode: disable
+      #   user: {{ smartcheck_database_username }}
+      #   password: {{ smartcheck_database_password }}
+
+- name: Install Deep Security Smart Check
+  become: true
+  become_user: ubuntu
+  shell: helm install --namespace {{ dssc_namespace }} --values overrides-smartcheck.yml --name {{ dssc_name }} {{ dssc_chart }} >> dssc.log
+  args:
+    chdir: $HOME
+    creates: dssc.log
+
+- name: Deep Security Smart Check patch port
+  become: true
+  become_user: ubuntu
+  command: kubectl patch service -n {{ dssc_namespace }} proxy --type='json' --patch='[{"op":"replace", "path":"/spec/ports/0/nodePort", "value":{{ smartcheck_nodeport }}}]'
+
+- name: Fetch dssc.log
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/dssc.log
+    dest: ./site_{{ type }}/
+    flat: yes

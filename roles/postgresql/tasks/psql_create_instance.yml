@@ -1,0 +1,89 @@
+---
+# #####################################################################
+# Creates a PostgreSQL server instance
+# #####################################################################
+- name: PostgreSQL install packages
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - postgresql=10+190
+      - postgresql-contrib=10+190
+      - python3-psycopg2=2.7.4-1
+
+- name: Make directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /root/src
+
+- name: PostgreSQL listen_addresses
+  replace:
+    regexp: "#listen_addresses = 'localhost'"
+    replace: "listen_addresses = '*'"
+    name: /etc/postgresql/10/main/postgresql.conf
+    backup: yes
+
+- name: PostgreSQL max_connections
+  replace:
+    regexp: 'max_connections = 100'
+    replace: 'max_connections = 500'
+    name: /etc/postgresql/10/main/postgresql.conf
+    backup: yes
+
+- name: PostgreSQL checkpoint_timeout
+  replace:
+    regexp: '#checkpoint_timeout = 5min'
+    replace: 'checkpoint_timeout = 15min'
+    name: /etc/postgresql/10/main/postgresql.conf
+    backup: yes
+
+- name: PostgreSQL max_wal_size
+  replace:
+    regexp: '#max_wal_size = 1GB'
+    replace: 'max_wal_size = 16GB'
+    name: /etc/postgresql/10/main/postgresql.conf
+    backup: yes
+
+- name: PostgreSQL checkpoint_completion_target
+  replace:
+    regexp: '#checkpoint_completion_target = 0.5'
+    replace: 'checkpoint_completion_target = 0.9'
+    name: /etc/postgresql/10/main/postgresql.conf
+    backup: yes
+
+- name: PostgreSQL log_truncate_on_rotation
+  replace:
+    regexp: '#log_truncate_on_rotation = off'
+    replace: 'log_truncate_on_rotation = on'
+    name: /etc/postgresql/10/main/postgresql.conf
+    backup: yes
+
+- name: PostgreSQL log_rotation_age
+  replace:
+    regexp: '#log_rotation_age = 1d'
+    replace: 'log_rotation_age = 1d'
+    name: /etc/postgresql/10/main/postgresql.conf
+    backup: yes
+
+- name: PostgreSQL log_rotation_age
+  replace:
+    regexp: '#log_rotation_size = 10MB'
+    replace: 'log_rotation_size = 100MB'
+    name: /etc/postgresql/10/main/postgresql.conf
+    backup: yes
+
+- name: PostgreSQL allow database client
+  lineinfile:
+    path: /etc/postgresql/10/main/pg_hba.conf
+    insertafter: EOF
+    line: "host    all             all             {{ database_client }}/32         md5"
+
+- name: PostgreSQL restart
+  service:
+    name: postgresql
+    daemon_reload: yes
+    state: restarted

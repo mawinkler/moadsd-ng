@@ -1,0 +1,37 @@
+---
+# #####################################################################
+# Create a linux instance in GCP environment
+# #####################################################################
+- name: Current play
+  debug:
+    msg: "Creating instance {{ instance_name }}"
+
+- name: Create bash startup script
+  copy:
+    dest: /tmp/startup.sh
+    mode: 0700
+    owner: ansible
+    content: |
+          {{ startup_script_linux }}
+  delegate_to: localhost
+
+- name: Copy startup script to virtual machine
+  shell: "sshpass -p {{ instance_login_password }} scp /tmp/startup.sh {{ instance_login_user }}@{{ instance_name }}:"
+  args:
+    chdir: $HOME
+  delegate_to: localhost
+
+- name: Execute startup script remotely
+  shell: "sshpass -p {{ instance_login_password }} ssh {{ instance_login_user }}@{{ instance_name }} 'echo {{ instance_login_password }} | /usr/bin/sudo -S /home/{{ instance_login_user }}/startup.sh'"
+  args:
+    chdir: $HOME
+  delegate_to: localhost
+
+- name: Patch sysctl.con
+  lineinfile:
+    path: /etc/sysctl.conf
+    insertafter: EOF
+    line: "{{ item }}"
+  loop:
+    - vm.dirty_background_ratio = 0
+    - vm.dirty_ratio = 0

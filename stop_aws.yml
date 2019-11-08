@@ -1,0 +1,78 @@
+---
+# #####################################################################
+# Create MOADSD-NG Environment in AWS
+# #####################################################################
+- name: Check if AWS cloud SDK is installed
+  command: aws help
+  register: aws_installed
+  changed_when: false
+  ignore_errors: yes
+
+- fail:
+    msg: "Please make sure AWS Cloud SDK is installed before executing the role."
+  when: aws_installed is failed
+
+- name: Terminate instance of Kubernetes master
+  include_role:
+    name: environment-aws
+  vars:
+    operation: terminate_instance
+    instance_name: "{{ kubernetes_master_instance_name }}"
+
+- name: Terminate instance of Kubernetes worker(s)
+  include_role:
+    name: environment-aws
+  vars:
+    operation: terminate_instance
+    instance_name: "{{ kubernetes_worker_instance_name }}{{ item }}"
+  with_sequence: count="{{ kubernetes_worker_count }}"
+
+- name: Terminate instance of PostgreSQL
+  include_role:
+    name: environment-aws
+  vars:
+    operation: terminate_instance
+    instance_name: "{{ postgresql_instance_name }}"
+
+- name: Terminate instance of Deep Security Manager
+  include_role:
+    name: environment-aws
+  vars:
+    operation: terminate_instance
+    instance_name: "{{ deepsecurity_instance_name }}"
+
+- name: Terminate instance of GitLab on Docker
+  include_role:
+    name: environment-aws
+  vars:
+    operation: terminate_instance
+    instance_name: "{{ gitlab_instance_name }}"
+
+- name: Terminate linux endpoint instances
+  include_role:
+    name: environment-aws
+  vars:
+    operation: terminate_instance
+    instance_name: "{{ linuxep_instance_name }}{{ item }}"
+  with_sequence: count="{{ linuxep_instance_count }}"
+
+- name: Terminate windows endpoint instances
+  include_role:
+    name: environment-aws
+  vars:
+    operation: terminate_instance
+    instance_name: "{{ windowsep_instance_name }}{{ item }}"
+  with_sequence: count="{{ windowsep_instance_count }}"
+
+- name: Terminate jumphost
+  include_role:
+    name: environment-aws
+  vars:
+    operation: terminate_instance
+    instance_name: "{{ jumphost_instance_name }}"
+
+- name: Terminate AWS network
+  include_role:
+    name: environment-aws
+  vars:
+    operation: terminate_network

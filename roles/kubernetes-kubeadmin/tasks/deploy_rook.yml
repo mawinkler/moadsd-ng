@@ -1,0 +1,95 @@
+---
+# #####################################################################
+# Deploy Rook
+# #####################################################################
+- name: Rook-ceph deploy
+  block:
+    - name: Rook create directory
+      file:
+        path: /home/ubuntu/rook
+        state: directory
+        owner: ubuntu
+        mode: 0755
+
+    - name: Rook-ceph checkout
+      become: true
+      become_user: ubuntu
+      git:
+        repo: https://github.com/rook/rook.git
+        dest: /home/ubuntu/rook
+        version: v1.0.4
+        force: yes
+
+    - name: Rook-ceph install common
+      become: true
+      become_user: ubuntu
+      command: kubectl create -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/common.yaml
+      ignore_errors: yes
+
+    - name: Rook-ceph install operator
+      become: true
+      become_user: ubuntu
+      command: kubectl create -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/operator.yaml
+      ignore_errors: yes
+
+    - name: Rook-ceph modify cluster.yml
+      become: true
+      become_user: ubuntu
+      replace:
+        regexp: '    #directories:'
+        replace: '    directories:'
+        name: /home/ubuntu/rook/cluster/examples/kubernetes/ceph/cluster.yaml
+        backup: yes
+
+    - name: Rook-ceph modify cluster.yml
+      become: true
+      become_user: ubuntu
+      replace:
+        regexp: '    #- path: /var/lib/rook'
+        replace: '    - path: /var/lib/rook'
+        name: /home/ubuntu/rook/cluster/examples/kubernetes/ceph/cluster.yaml
+        backup: yes
+
+    - name: Rook-ceph install cluster
+      become: true
+      become_user: ubuntu
+      command: kubectl create -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/cluster.yaml
+      ignore_errors: yes
+
+    - name: Rook-ceph install storage class
+      become: true
+      become_user: ubuntu
+      command: kubectl create -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/storageclass.yaml
+      ignore_errors: yes
+
+    - name: Rook-ceph mark storage class as default
+      become: true
+      become_user: ubuntu
+      command: kubectl patch storageclass rook-ceph-block -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+      ignore_errors: yes
+
+    - name: Rook-ceph install toolbox
+      become: true
+      become_user: ubuntu
+      command: kubectl create -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/toolbox.yaml
+      ignore_errors: yes
+
+    # - name: Rook-ceph expose dashboard
+    #   become: true
+    #   become_user: ubuntu
+    #   command: kubectl expose -n rook-ceph deployment rook-ceph-mgr-a --type=NodePort --name=ceph-mgr
+    #
+    # - name: Rook-ceph dashboard port
+    #   become: true
+    #   become_user: ubuntu
+    #   command: kubectl patch service -n kube-system dashboard --type='json' --patch='[{"op":"replace", "path":"/spec/ports/0/nodePort", "value":30001}]'
+
+    - name: Create rook-ceph-dashboard init shell script
+      copy:
+        dest: /home/ubuntu/ceph_admin_password.sh
+        owner: ubuntu
+        mode: 0750
+        content: |
+          #!/bin/bash
+          kubectl expose -n rook-ceph deployment rook-ceph-mgr-a --type=NodePort --name=ceph-mgr
+          kubectl -n rook-ceph get secret rook-ceph-dashboard-password -o yaml | grep "password:" | awk '{print $2}' | base64 --decode

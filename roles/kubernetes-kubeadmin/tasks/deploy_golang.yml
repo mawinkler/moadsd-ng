@@ -1,0 +1,50 @@
+---
+# #####################################################################
+# Deploy Go
+# #####################################################################
+- name: Make directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /usr/local/go/bin
+
+- name: Golang check version
+  shell: /usr/local/go/bin/go version
+  register: go_version
+  failed_when: false
+  changed_when: false
+
+- name: Golang unpack upstream
+  unarchive:
+    src: "https://golang.org/dl/go1.12.7.linux-amd64.tar.gz"
+    dest: "/usr/local"
+    remote_src: True
+  when: '"go1.12.7" not in go_version.stdout'
+
+- name: Golang link
+  file: src=/usr/local/go/bin/go dest=/usr/bin/go state=link
+
+- name: Golang add path to profile
+  lineinfile:
+    path: /etc/profile.d/apps-bin-path.sh
+    insertafter: EOF
+    line: 'export PATH=$PATH:/usr/local/go/bin'
+
+- name: Golang add path to profile root
+  lineinfile:
+    dest: /root/.bashrc
+    line: 'export PATH=/usr/local/go/bin:$PATH'
+    insertafter: 'EOF'
+    regexp: 'export PATH=\/usr\/local\/go\/bin:\$PATH'
+    state: present
+
+- name: Golang add path to profile ubuntu
+  become: yes
+  become_user: ubuntu
+  lineinfile:
+    dest: /home/ubuntu/.bashrc
+    line: 'export PATH=/usr/local/go/bin:$PATH'
+    insertafter: 'EOF'
+    regexp: 'export PATH=\/usr\/local\/go\/bin:\$PATH'
+    state: present

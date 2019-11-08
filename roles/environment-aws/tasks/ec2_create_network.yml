@@ -1,0 +1,61 @@
+---
+# #####################################################################
+# Create a network in AWS environment
+# #####################################################################
+- name: Current play
+  debug:
+    msg:
+      - "Creating network {{ moadsd_ng_prefix }}-vpc"
+
+- name: Create an EC2 VPC
+  ec2_vpc_net:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    name: "{{ moadsd_ng_prefix }}-vpc"
+    cidr_block: "{{ aws_vpc_cidr_block }}"
+    region: "{{ aws_region }}"
+    dns_support: yes
+    dns_hostnames: yes
+    tenancy: default
+    state: present
+  register: ec2_vpc_net_result
+
+- name: Create EC2 VPC Internet Gateway
+  ec2_vpc_igw:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+    region: "{{ aws_region }}"
+    state: present
+    tags:
+      Name: "{{ moadsd_ng_prefix }}-igw"
+  register: igw_result
+
+- name: Create EC2 VPC Subnet within CIDR block
+  ec2_vpc_subnet:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+    region: "{{ aws_region }}"
+    az: "{{ aws_zone }}"
+    state: present
+    cidr: "{{ aws_subnet_cidr_block }}"
+    map_public: yes
+    resource_tags:
+      Name: "{{ moadsd_ng_prefix }}-subnet"
+  register: subnet_result
+
+- name: Create EC2 VPC Public Subnet Route Table
+  ec2_vpc_route_table:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+    region: "{{ aws_region }}"
+    state: present
+    tags:
+      Name: "{{ moadsd_ng_prefix }}-rt"
+    subnets: [ "{{ subnet_result.subnet.id }}" ]
+    routes:
+      - dest: "0.0.0.0/0"
+        gateway_id: "{{ igw_result.gateway_id }}"
+  register: public_route_table

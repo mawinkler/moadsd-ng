@@ -1,0 +1,81 @@
+---
+# #####################################################################
+# Deploy MOADSD-NG Environment
+# #####################################################################
+
+# #####################################################################
+# Store some private ips within the ansible hostvars
+# #####################################################################
+- hosts: tag_role_k8smaster
+  tasks:
+    - name: Get internal ip address of kubernetes master
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_k8smaster_instance"
+
+- hosts: tag_role_dsm
+  tasks:
+    - name: Get internal ip address of deep security
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_dsm_instance"
+
+- hosts: tag_role_dsm_db
+  tasks:
+    - name: Get internal ip address of postgresql
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_postgresql_instance"
+
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Listing environment
+      debug:
+        msg:
+          - "Kubernetes Master            : {{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+      when: site_deploy_kubernetes == True
+
+    - name: Listing environment
+      debug:
+        msg:
+          - "Deep Security                : {{ groups['moadsd_ng_dsm_instance'][0] }}"
+          - "PostgreSQL                   : {{ groups['moadsd_ng_postgresql_instance'][0] }}"
+      when: site_deploy_deepsecurity == True
+
+# #####################################################################
+# Deploy Deep Security Smart Check
+# #####################################################################
+- name: Deploy Deep Security Smart Check
+  hosts: tag_role_k8smaster
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Deploy Deep Security Smart Check
+      include_role:
+        name: smartcheck
+      vars:
+        operation: create_instance
+        activationCode: "{{ smartcheck_license }}"
+        auth_masterPassword: trendmicro
+      when: site_deploy_smartcheck == True
+
+    - name: Enable pre-registry scanning for Deep Security Smart Check
+      include_role:
+        name: smartcheck
+      vars:
+        operation: enable_pre_reg_scanning
+      when: site_deploy_smartcheck == True
+
+    - name: Configure Deep Security Smart Check
+      include_role:
+        name: smartcheck
+      vars:
+        operation: configure
+      when: site_deploy_smartcheck == True

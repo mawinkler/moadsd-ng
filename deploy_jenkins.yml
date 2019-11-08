@@ -1,0 +1,65 @@
+---
+# #####################################################################
+# Deploy MOADSD-NG Environment
+# #####################################################################
+
+# #####################################################################
+# Store some private ips within the ansible hostvars
+# #####################################################################
+- hosts: tag_role_k8smaster
+  tasks:
+    - name: Get internal ip address of kubernetes master
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_k8smaster_instance"
+
+- hosts: tag_role_dsm
+  tasks:
+    - name: Get internal ip address of deep security
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_dsm_instance"
+
+- hosts: tag_role_dsm_db
+  tasks:
+    - name: Get internal ip address of postgresql
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_postgresql_instance"
+
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Listing environment
+      debug:
+        msg:
+          - "Kubernetes Master            : {{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+      when: site_deploy_kubernetes == True
+
+    - name: Listing environment
+      debug:
+        msg:
+          - "Deep Security                : {{ groups['moadsd_ng_dsm_instance'][0] }}"
+          - "PostgreSQL                   : {{ groups['moadsd_ng_postgresql_instance'][0] }}"
+      when: site_deploy_deepsecurity == True
+
+# #####################################################################
+# Deploy Jenkins
+# #####################################################################
+- name: Deploy Jenkins
+  hosts: tag_role_k8smaster
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Deploy Jenkins
+      include_role:
+        name: jenkins
+      vars:
+        operation: create_instance
+      when: site_deploy_jenkins == True

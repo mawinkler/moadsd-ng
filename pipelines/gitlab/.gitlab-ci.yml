@@ -1,0 +1,96 @@
+image: docker:stable
+
+stages:
+  - preregscan
+  - pullpush
+  - test
+  - report
+
+variables:
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+
+services:
+  - name: docker:18.09.7-dind
+    command:
+      - /bin/sh
+      - -c
+      - wget http://<Smart Check IP>:<Port for certificate server>/<Smart Check IP>.crt -O /usr/local/share/ca-certificates/<Smart Check IP>.crt && update-ca-certificates && dockerd-entrypoint.sh || exit
+
+smartcheck-pre-reg-scan:
+  stage: preregscan
+  script:
+    - docker pull ${TARGET_IMAGE}:${TARGET_IMAGE_TAG}
+    - >-
+        docker run -v /var/run/docker.sock:/var/run/docker.sock
+        deepsecurity/smartcheck-scan-action
+        --image-name "${TARGET_IMAGE}:${TARGET_IMAGE_TAG}"
+        --findings-threshold "{\"malware\":0,\"vulnerabilities\":{\"defcon1\":0,\"critical\":0,\"high\":0},\"contents\":{\"defcon1\":0,\"critical\":0,\"high\":1},\"checklists\":{\"defcon1\":0,\"critical\":0,\"high\":0}}"
+        --preregistry-host="$DSSC_REGISTRY"
+        --smartcheck-host="$DSSC_SERVICE"
+        --smartcheck-user="$DSSC_USERNAME"
+        --smartcheck-password="$DSSC_PASSWORD"
+        --insecure-skip-tls-verify
+        --preregistry-scan
+        --preregistry-user "$DSSC_REGISTRY_USERNAME"
+        --preregistry-password "$DSSC_REGISTRY_PASSWORD"
+  tags:
+    - docker
+
+pullpush:
+  stage: pullpush
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+  script:
+    - docker login -u $HUB_USERNAME -p $HUB_PASSWORD
+    - docker pull ${TARGET_IMAGE}:${TARGET_IMAGE_TAG} || true
+    - docker tag ${TARGET_IMAGE}:${TARGET_IMAGE_TAG} ${CI_REGISTRY_IMAGE}/${TARGET_IMAGE}:${TARGET_IMAGE_TAG}
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push ${CI_REGISTRY_IMAGE}/${TARGET_IMAGE}:${TARGET_IMAGE_TAG}
+  tags:
+    - docker
+
+scmanager:
+  variables:
+    POLL_INTERVAL: 3
+    POLL_RETRIES: 600
+    NO_CONTENT: "False"
+    NO_HIGH: "False"
+  stage: test
+  image: ${CI_REGISTRY}/markus/scmanager:latest
+  script:
+    - python /app/scmanager.py
+  artifacts:
+    paths:
+      - clean
+      - scan_report.json
+  tags:
+    - docker
+
+smartcheck-scan-action:
+  stage: test
+  script:
+    - >-
+        docker run -v /var/run/docker.sock:/var/run/docker.sock
+        deepsecurity/smartcheck-scan-action
+        --image-name "${CI_REGISTRY_IMAGE}/${TARGET_IMAGE}:${TARGET_IMAGE_TAG}"
+        --image-pull-auth "{\"username\":\"$CI_DEPLOY_USER\",\"password\":\"$CI_DEPLOY_PASSWORD\"}"
+        --findings-threshold "{\"malware\":0,\"vulnerabilities\":{\"defcon1\":0,\"critical\":0,\"high\":0},\"contents\":{\"defcon1\":0,\"critical\":0,\"high\":1},\"checklists\":{\"defcon1\":0,\"critical\":0,\"high\":0}}"
+        --smartcheck-host="$DSSC_SERVICE"
+        --smartcheck-user="$DSSC_USERNAME"
+        --smartcheck-password="$DSSC_PASSWORD"
+        --insecure-skip-tls-verify
+  tags:
+    - docker
+
+screporter:
+  variables:
+  stage: report
+  image: ${CI_REGISTRY}/markus/screporter:latest
+  script:
+    - export SCANID=$(/usr/bin/jq -r ".id" scan_report.json)
+    - python /app/screport.py
+  tags:
+    - docker

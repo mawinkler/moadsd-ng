@@ -1,0 +1,24 @@
+---
+# #####################################################################
+# Create MOADSD-NG Environment in VMWare ESXi (k8s only)
+# #####################################################################
+- name: Create instance for Kubernetes master
+  include_role:
+    name: environment-esx
+  vars:
+    operation: create_linux_instance
+    instance_name: "{{ kubernetes_master_instance_name }}"
+    instance_login_user: "{{ kubernetes_master_login_user }}"
+    instance_login_password: "{{ kubernetes_master_login_password }}"
+  when: site_deploy_kubernetes == True
+
+- name: Create instance for Kubernetes worker
+  include_role:
+    name: environment-esx
+  vars:
+    operation: create_linux_instance
+    instance_name: "{{ kubernetes_worker_instance_name }}{{ item }}"
+    instance_login_user: "{{ kubernetes_worker_login_user }}"
+    instance_login_password: "{{ kubernetes_worker_login_password }}"
+  with_sequence: count="{{ kubernetes_worker_count }}"
+  when: site_deploy_kubernetes == True

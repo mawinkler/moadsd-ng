@@ -1,0 +1,9 @@
+docker_registry_service_type: NodePort
+docker_registry_service_port: "{{ registry_nodeport }}"
+docker_registry_persistence_storageClassName: rook-ceph-block
+docker_registry_persistence_size: 10Gi
+
+docker_registry_chart: stable/docker-registry
+docker_registry_version: 2.7.1
+docker_registry_namespace: registry
+docker_registry_name: registry

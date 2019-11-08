@@ -1,0 +1,8 @@
+---
+# #####################################################################
+# Terminate a linux instance in GCP environment
+# #####################################################################
+- name: Current play
+  debug:
+    msg:
+      - "Terminating instance {{ instance_name }}"

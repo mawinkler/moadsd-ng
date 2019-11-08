@@ -1,0 +1,110 @@
+---
+# #####################################################################
+# Site Deploy Components
+# #####################################################################
+site_deploy_jumphost: no
+site_deploy_kubernetes: yes
+site_deploy_deepsecurity: no
+site_deploy_smartcheck: yes
+site_deploy_jenkins: yes
+site_deploy_gitlab: no
+site_deploy_gitlab_docker: no
+site_deploy_endpoints: no
+site_deploy_linkerd: yes
+site_deploy_registry: yes
+
+# #####################################################################
+# ESXi Settings
+# #####################################################################
+startup_script_linux: |
+       #!/bin/sh
+       useradd -m -s /bin/bash ansible
+       mkdir -p /home/ansible/.ssh
+       chmod 700 /home/ansible/.ssh
+       chown ansible.ansible /home/ansible/.ssh
+       echo {{ ansible_ssh_key }} >> /home/ansible/.ssh/authorized_keys
+       chmod 600 /home/ansible/.ssh/authorized_keys
+       chown ansible.ansible /home/ansible/.ssh/authorized_keys
+
+       useradd -m -s /bin/bash ubuntu
+       mkdir -p /home/ubuntu/.ssh
+       chmod 700 /home/ubuntu/.ssh
+       chown ubuntu.ubuntu /home/ubuntu/.ssh
+       echo {{ ansible_ssh_key }} >> /home/ubuntu/.ssh/authorized_keys
+       chmod 600 /home/ubuntu/.ssh/authorized_keys
+       chown ubuntu.ubuntu /home/ubuntu/.ssh/authorized_keys
+
+       echo "ansible ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/custom-users
+       echo "ubuntu ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/custom-users
+
+       apt-get update -y -qq
+       export DEBIAN_FRONTEND=noninteractive
+       apt-get install -q --option "Dpkg::Options::=--force-confold" -y --assume-yes python3 python3-simplejson
+moadsd_ng_prefix: moadsd-ng
+
+# #####################################################################
+# Kubernetes Settings
+# #####################################################################
+# crio or docker
+kubernetes_container_runtime: docker
+kubernetes_worker_count: 3
+
+# Cluster Networking Configration:
+# pod_network_cidr: "10.244.0.0/16"   cluster_networking: flannel_flannel
+# pod_network_cidr: "10.244.0.0/16"   cluster_networking: calico_flannel
+# pod_network_cidr: "192.168.0.0/16"  cluster_networking: calico_calico
+pod_network_cidr: "10.244.0.0/16"
+cluster_networking: flannel_flannel
+
+kubernetes_master_instance_name: vk8smaster
+
+kubernetes_worker_instance_name: vk8sworker
+
+kubernetes_dashboard_nodeport: 30000
+rook_ceph_dashboard_nodeport: 30001
+linkerd_dashboard_nodeport: 30002
+
+# #####################################################################
+# Web Server for certificates
+# #####################################################################
+certserv_nodeport: 30012
+
+# #####################################################################
+# Deep Security Smart Check Settings
+# #####################################################################
+smartcheck_nodeport: 30010
+smartcheck_registry: 30011
+
+# #####################################################################
+# Jenkins Settings
+# #####################################################################
+jenkins_nodeport: 30013
+
+# #####################################################################
+# Docker Registry Settings
+# #####################################################################
+registry_nodeport: 30017
+
+# #####################################################################
+# Custom Port for self-created services in K8s
+# #####################################################################
+custom_nodeport: 30100
+
+# #####################################################################
+# Gitlab Settings
+# #####################################################################
+gitlab_instance_name: gitlab
+gitlab_hostname: moadsd-ng.hopto.org
+# GitLab Kubernetes Settings
+gitlab_nodeport_http: 30014
+gitlab_nodeport_https: 30015
+gitlab_nodeport_ssh: 30016
+# GitLab Docker Settings
+gitlab_docker_letsencrypt: 80
+gitlab_docker_registry: 443
+gitlab_docker_https: 8443
+gitlab_size_gb: 32
+gitlab_source_image: projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts
+gitlab_machine_type: n1-standard-2
+gitlab_startup_script: "{{ startup_script_linux }}"
+gitlab_tags: role-gitlab

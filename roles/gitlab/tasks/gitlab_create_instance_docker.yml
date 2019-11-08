@@ -1,0 +1,160 @@
+---
+# #####################################################################
+# Deploy Docker
+# #####################################################################
+- name: Docker install packages
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+
+- name: Docker add an apt signing key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Docker add apt repository for stable version
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+    state: present
+
+- name: Docker install and its dependecies
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - docker-ce=5:18.09.8~3-0~ubuntu-xenial
+      - docker-ce-cli=5:18.09.8~3-0~ubuntu-xenial
+      - containerd.io
+
+- name: Docker create daemon configuration file
+  copy:
+    dest: /etc/docker/daemon.json
+    mode: 0640
+    content: |
+      {
+        "exec-opts": ["native.cgroupdriver={{ cgroupdriver }}"],
+        "log-driver": "json-file",
+        "log-opts": {
+          "max-size": "100m"
+        },
+        "storage-driver": "overlay2"
+      }
+
+- name: Docker add ubuntu user to group
+  user:
+    name: ubuntu
+    group: docker
+
+- name: Containerd configure
+  shell: |
+    containerd config default > /etc/containerd/config.toml
+
+- name: Daemon reload
+  command: systemctl daemon-reload
+
+- name: Docker restart
+  command: systemctl restart docker
+
+- name: Containerd restart
+  command: systemctl restart containerd
+
+# #####################################################################
+# Deploy Docker-Compose
+# #####################################################################
+- name: Docker-compose install
+  shell: |
+    curl -L https://github.com/docker/compose/releases/download/1.24.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+
+- name: Docker-compose add executable flag
+  file:
+    path: /usr/local/bin/docker-compose
+    mode: 0755
+
+# #####################################################################
+# Create a GitLab Instance
+# #####################################################################
+- name: Create GitLab docker-compose file
+  copy:
+    dest: /home/ubuntu/docker-compose.yml
+    mode: 0640
+    owner: ubuntu
+    content: |
+      version: "2.1"
+      services:
+        gitlab:
+          container_name: gitlab
+          image: gitlab/gitlab-ce:latest
+          restart: always
+          hostname: '{{ gitlab_hostname }}'
+          environment:
+            GITLAB_OMNIBUS_CONFIG: |
+              external_url 'https://{{ gitlab_hostname }}:8443/'
+              registry_external_url 'https://{{ gitlab_hostname }}'
+              registry_nginx['enable'] = true
+              registry_nginx['listen_port'] = 443
+              # Add any other gitlab.rb configuration here,
+              # each on its own line
+              # registry['debug_addr'] = "localhost:5001"
+              letsencrypt['enable'] = true
+              letsencrypt['auto_renew_hour'] = "12"
+              letsencrypt['auto_renew_minute'] = "30"
+              letsencrypt['auto_renew_day_of_month'] = "*/7"
+              nginx['redirect_http_to_https'] = true
+              nginx['redirect_http_to_https_port'] = 80
+              VIRTUAL_HOST '{{ gitlab_hostname }}'
+              LETSENCRYPT_HOST '{{ gitlab_hostname }}'
+              LETSENCRYPT_EMAIL 'winkler.info@icloud.com'
+          ports:
+            - '80:80'
+            - '443:443'
+            - '8443:8443'
+            - '10022:22'
+          volumes:
+            - /var/lib/gitlab/config:/etc/gitlab
+            - /var/lib/gitlab/logs:/var/log/gitlab
+            - /var/lib/gitlab/data:/var/opt/gitlab
+            - /var/lib/gitlab/logs/reconfigure:/var/log/gitlab/reconfigure
+
+- name: GitLab start
+  become: true
+  become_user: ubuntu
+  shell: docker-compose up -d >> gitlab.log
+  args:
+    chdir: $HOME
+    creates: gitlab.log
+
+- name: Fetch gitlab.log
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/gitlab.log
+    dest: ./site_{{ type }}/
+    flat: yes
+
+- name: Store GitLab credentials
+  become: true
+  become_user: ubuntu
+  shell: |
+    echo URL: http://{{ gitlab_hostname }}:{{ gitlab_docker_https }} > gitlab.txt
+    echo Username: root >> gitlab.txt
+    echo Password: defined at first login >> gitlab.txt
+  args:
+    chdir: $HOME
+    creates: gitlab.txt
+
+- name: Fetch gitlab.txt
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/gitlab.txt
+    dest: ./site_{{ type }}/
+    flat: yes

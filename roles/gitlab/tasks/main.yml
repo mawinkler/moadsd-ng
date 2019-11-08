@@ -1,0 +1,16 @@
+---
+# #####################################################################
+# Create, Manafe and Terminate GitLab
+# #####################################################################
+- name: "Listing parameters"
+  debug:
+    msg:
+      - "operation                    : {{ operation }}"
+
+- name: Create instance
+  include: gitlab_create_instance.yml
+  when: operation == 'create_instance'
+
+- name: Create instance
+  include: gitlab_create_instance_docker.yml
+  when: operation == 'create_instance_docker'

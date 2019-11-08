@@ -1,0 +1,24 @@
+---
+# #####################################################################
+# Deploy CNI
+# #####################################################################
+- name: Make directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /opt/cni/bin/
+    - /etc/cni/net.d
+
+- name: CNI clone
+  git:
+    repo: https://github.com/containernetworking/plugins
+    dest: /root/src/github.com/containernetworking/plugins
+
+- name: CNI build
+  shell: |
+    export PATH=/usr/local/go/bin:$PATH && \
+    cd /root/src/github.com/containernetworking/plugins && \
+    ./build_linux.sh && \
+    mkdir -p /opt/cni/bin && \
+    cp bin/* /opt/cni/bin/

@@ -1,0 +1,41 @@
+---
+# #####################################################################
+# Create SSL certificate for k8s master
+# #####################################################################
+
+# Depending on the environment, inventory_hostname might be a dns name or an ip
+# We now need effectively the ip on which ansible or we might reach the
+# k8s master.
+- name: Get ipaddr of k8smaster
+  set_fact:
+    remote_ip: "{{ inventory_hostname | ipaddr}}"
+
+- name: Get ipaddr of k8smaster
+  set_fact:
+    remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+  when: not remote_ip
+
+- name: Create Certificate Configuration
+  copy:
+    dest: /home/ubuntu/req.conf
+    mode: 0640
+    owner: ubuntu
+    content: |
+      [req]
+      distinguished_name=req
+      [san]
+      subjectAltName=DNS:{{ inventory_hostname }},IP:{{ remote_ip }}
+
+- name: Generating self-signed certificate
+  become: true
+  become_user: ubuntu
+  shell: openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout k8s.key -out k8s.crt -subj '/CN={{ inventory_hostname }}' -extensions san -config req.conf
+  args:
+    chdir: $HOME
+    creates: k8s.crt
+    
+- name: Fetch k8s certificate
+  fetch:
+    src: /home/ubuntu/k8s.crt
+    dest: ./site_{{ type }}/{{ remote_ip }}.crt
+    flat: yes

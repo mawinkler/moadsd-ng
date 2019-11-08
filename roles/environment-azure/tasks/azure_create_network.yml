@@ -1,0 +1,24 @@
+---
+- name: Debug
+  debug:
+    msg: Not implemented yet
+
+- name: Create resource group
+  azure_rm_resourcegroup:
+     name: example
+     location: "{{ azure_region }}"
+     tags:
+        env: testing
+  tags:
+    - recipe4
+
+- name: Create a storage account
+  azure_rm_storageaccount:
+     resource_group: example
+     name: examplestorage01
+     type: Standard_RAGRS
+     location: "{{ azure_region }}"
+     tags:
+       - env: testing
+  tags:
+    - recipe4

@@ -1,0 +1,195 @@
+---
+# #####################################################################
+# Site Deploy Components
+# #####################################################################
+site_deploy_jumphost: no
+site_deploy_kubernetes: yes
+site_deploy_deepsecurity: yes
+site_deploy_smartcheck: yes
+site_deploy_jenkins: yes
+site_deploy_gitlab: no
+site_deploy_gitlab_docker: no
+site_deploy_endpoints: no
+site_deploy_linkerd: yes
+site_deploy_registry: yes
+
+# #####################################################################
+# AWS Cloud Settings
+# #####################################################################
+aws_zone: eu-central-1a
+aws_region: eu-central-1
+aws_vpc_cidr_block: '10.0.0.0/16'
+aws_subnet_cidr_block: '10.0.1.0/24'
+startup_script_linux: |
+       #!/bin/sh
+       useradd -m -s /bin/bash ansible
+       mkdir -p /home/ansible/.ssh
+       chmod 700 /home/ansible/.ssh
+       chown ansible.ansible /home/ansible/.ssh
+       echo {{ ansible_ssh_key }} >> /home/ansible/.ssh/authorized_keys
+       chmod 600 /home/ansible/.ssh/authorized_keys
+       chown ansible.ansible /home/ansible/.ssh/authorized_keys
+       echo {{ ansible_ssh_key }} >> /home/ubuntu/.ssh/authorized_keys
+       echo "ansible ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/custom-users
+       apt update
+       apt install -y python3 python3-simplejson
+startup_script_windows: |
+       ＜powershell＞
+       $url = "https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1"
+       $file = "$env:temp\ConfigureRemotingForAnsible.ps1"
+       (New-Object -TypeName System.Net.WebClient).DownloadFile($url, $file)
+       powershell.exe -ExecutionPolicy ByPass -File $file
+       ＜/powershell＞
+moadsd_ng_prefix: moadsd-ng
+
+# #####################################################################
+# Source Images in use
+# ami-0ac05733838eabc06
+#   Ubuntu Server 18.04 LTS (HVM),EBS General Purpose (SSD) Volume Type
+# ami-0badcc5b522737046
+#   Red Hat Enterprise Linux version 8 (HVM), EBS General Purpose (SSD) Volume Type
+# ami-00e37cffd3bb3ac8d
+#   RHEL-7.6_HVM_GA-20181017-x86_64-0-Hourly2-GP2
+# ami-0c162e79e019adc1f
+#   Microsoft Windows 2016 Datacenter edition. [English]
+# ami-086486be06fe637e7
+#   Microsoft Windows 2012 R2
+# #####################################################################
+# Linux Jumphost Settings
+# #####################################################################
+jumphost_instance_name: jumphost
+jumphost_instance_count: 1
+jumphost_size_gb: 32
+jumphost_source_image: ami-0ac05733838eabc06
+jumphost_machine_type: t2.medium
+jumphost_startup_script: "{{ startup_script_linux }}"
+jumphost_tags: jumphost
+
+# #####################################################################
+# Kubernetes Settings
+# #####################################################################
+# crio or docker
+kubernetes_container_runtime: docker
+kubernetes_worker_count: 3
+
+# Cluster Networking Configration:
+# pod_network_cidr: "10.244.0.0/16"   cluster_networking: flannel_flannel
+# pod_network_cidr: "10.244.0.0/16"   cluster_networking: calico_flannel
+# pod_network_cidr: "192.168.0.0/16"  cluster_networking: calico_calico
+pod_network_cidr: "10.244.0.0/16"
+cluster_networking: flannel_flannel
+
+kubernetes_master_instance_name: k8smaster
+kubernetes_master_size_gb: 32
+kubernetes_master_source_image: ami-0ac05733838eabc06
+kubernetes_master_machine_type: t2.large
+kubernetes_master_startup_script: "{{ startup_script_linux }}"
+kubernetes_master_tags: k8smaster
+
+kubernetes_worker_instance_name: k8sworker
+kubernetes_worker_size_gb: 32
+kubernetes_worker_source_image: ami-0ac05733838eabc06
+kubernetes_worker_machine_type: t2.large
+kubernetes_worker_startup_script: "{{ startup_script_linux }}"
+kubernetes_worker_tags: k8sworker
+
+kubernetes_dashboard_nodeport: 30000
+rook_ceph_dashboard_nodeport: 30001
+linkerd_dashboard_nodeport: 30002
+
+# #####################################################################
+# Deep Security Settings
+# #####################################################################
+deepsecurity_download_url: 'https://files.trendmicro.com/products/deepsecurity/en/12.5/'
+deepsecurity_installer: 'Manager-Linux-12.5.349.x64.sh'
+
+postgresql_instance_name: postgresql
+postgresql_size_gb: 16
+postgresql_source_image: ami-0ac05733838eabc06
+postgresql_machine_type: t2.medium
+postgresql_startup_script: "{{ startup_script_linux }}"
+postgresql_tags: dsm-db
+
+deepsecurity_instance_name: dsm
+deepsecurity_size_gb: 32
+deepsecurity_source_image: ami-00e37cffd3bb3ac8d
+deepsecurity_machine_type: t2.large
+deepsecurity_startup_script: "{{ startup_script_linux }}"
+deepsecurity_tags: dsm
+
+deepsecurity_database_name: dsmdb
+deepsecurity_database_user: dsm
+deepsecurity_database_role_attr_flags: LOGIN,CREATEDB,CREATEROLE
+deepsecurity_database_priv: "CONNECT/ALL"
+
+databasescreen_port: 5432
+addressandportsscreen_managerport: 4119
+addressandportsscreen_heartbeatport: 4120
+addressandportsscreen_agentport: 4122
+
+# #####################################################################
+# Web Server for certificates
+# #####################################################################
+certserv_nodeport: 30012
+
+# #####################################################################
+# Deep Security Smart Check Settings
+# #####################################################################
+smartcheck_nodeport: 30010
+smartcheck_registry: 30011
+
+# #####################################################################
+# Jenkins Settings
+# #####################################################################
+jenkins_nodeport: 30013
+
+# #####################################################################
+# Docker Registry Settings
+# #####################################################################
+registry_nodeport: 30017
+
+# #####################################################################
+# Custom Port for self-created services in K8s
+# #####################################################################
+custom_nodeport: 30100
+
+# #####################################################################
+# Gitlab Settings
+# #####################################################################
+gitlab_instance_name: gitlab
+gitlab_hostname: moadsd-ng.hopto.org
+# GitLab Kubernetes Settings
+gitlab_nodeport_http: 30014
+gitlab_nodeport_https: 30015
+gitlab_nodeport_ssh: 30016
+# GitLab Docker Settings
+gitlab_docker_letsencrypt: 80
+gitlab_docker_registry: 443
+gitlab_docker_https: 8443
+gitlab_size_gb: 32
+gitlab_source_image: ami-0ac05733838eabc06
+gitlab_machine_type: t2.large
+gitlab_startup_script: "{{ startup_script_linux }}"
+gitlab_tags: gitlab
+
+# #####################################################################
+# Linux Endpoint Settings
+# #####################################################################
+linuxep_instance_name: linuxep
+linuxep_instance_count: 0
+linuxep_size_gb: 32
+linuxep_source_image: ami-00e37cffd3bb3ac8d
+linuxep_machine_type: t2.medium
+linuxep_startup_script: "{{ startup_script_linux }}"
+linuxep_tags: linuxep
+
+# #####################################################################
+# Windows Endpoint Settings
+# #####################################################################
+windowsep_instance_name: windowsep
+windowsep_instance_count: 1
+windowsep_size_gb: 50
+windowsep_source_image: ami-0c162e79e019adc1f
+windowsep_machine_type: t2.medium
+windowsep_startup_script: "{{ startup_script_windows }}"
+windowsep_tags: windowsep

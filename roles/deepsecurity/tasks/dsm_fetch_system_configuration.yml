@@ -1,0 +1,10 @@
+---
+# #####################################################################
+# Fetch Deep Security Configuration
+# #####################################################################
+- name: Fetch System Configuration
+  ds_fetch:
+    src: system_settings
+    flat: 'yes'
+    dsm_url: "{{ deepsecurity_url }}"
+    api_key: "{{ deepsecurity_api_key }}"

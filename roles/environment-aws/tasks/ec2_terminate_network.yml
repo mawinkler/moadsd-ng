@@ -1,0 +1,59 @@
+---
+# #####################################################################
+# Terminate the network in AWS environment
+# #####################################################################
+- name: Current play
+  debug:
+    msg:
+      - "Terminating network {{ moadsd_ng_prefix }}-vpc"
+
+- name: Create an EC2 VPC
+  ec2_vpc_net:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    name: "{{ moadsd_ng_prefix }}-vpc"
+    cidr_block: "{{ aws_vpc_cidr_block }}"
+    region: "{{ aws_region }}"
+    dns_support: yes
+    dns_hostnames: yes
+    tenancy: default
+    state: present
+  register: ec2_vpc_net_result
+
+- name: Terminate EC2 VPC Internet Gateway
+  ec2_vpc_igw:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+    region: "{{ aws_region }}"
+    state: absent
+
+- name: Terminate EC2 VPC Subnet within CIDR block
+  ec2_vpc_subnet:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+    region: "{{ aws_region }}"
+    state: absent
+    cidr: "{{ aws_subnet_cidr_block }}"
+
+- name: Terminate EC2 VPC Public Subnet Route Table
+  ec2_vpc_route_table:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+    region: "{{ aws_region }}"
+    state: absent
+    tags:
+      Name: "{{ moadsd_ng_prefix }}-rt"
+  register: public_route_table
+
+- name: Terminate VPC
+  local_action:
+    module: ec2_vpc_net
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    name: "{{ moadsd_ng_prefix }}-vpc"
+    cidr_block: "{{ aws_vpc_cidr_block }}"
+    region: "{{ aws_region }}"
+    state: absent

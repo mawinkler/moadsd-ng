@@ -1,0 +1,92 @@
+---
+# #####################################################################
+# Deploy pod network
+# #####################################################################
+#
+# Flannel
+#
+- name: Install flannel pod network
+  block:
+    - name: Flannel download kube-flannel.yml
+      become: true
+      become_user: ubuntu
+      get_url:
+        url: https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+        dest: /tmp/kube-flannel.yml
+        mode: '0640'
+
+    - name: CIDR
+      debug:
+        msg: "{{ pod_network_cidr }}"
+
+    - name: Flannel adapt CIDR
+      replace:
+        path: /tmp/kube-flannel.yml
+        regexp: '10.244.0.0/16'
+        replace: "{{ pod_network_cidr }}"
+
+    - name: Flannel install pod network
+      become: true
+      become_user: ubuntu
+      command: kubectl apply -f /tmp/kube-flannel.yml
+  when: cluster_networking == 'flannel_flannel'
+
+#
+# Calico for policy and networking
+#
+# https://docs.projectcalico.org/v3.7/getting-started/kubernetes/installation/calico
+- name: Install calico pod network
+  block:
+    - name: Calico download calico.yml
+      become: true
+      become_user: ubuntu
+      get_url:
+        url: https://docs.projectcalico.org/v3.7/manifests/calico.yaml
+        dest: /tmp/calico.yaml
+        mode: '0640'
+
+    - name: Calico adapt CIDR
+      become: true
+      become_user: ubuntu
+      replace:
+        path: /tmp/calico.yaml
+        regexp: '192.168.0.0/16'
+        replace: "{{ pod_network_cidr }}"
+
+    - name: Calico install pod network
+      become: true
+      become_user: ubuntu
+      command: kubectl apply -f /tmp/calico.yaml
+  when: cluster_networking == 'calico_calico'
+
+#
+# Calico for policy and flannel for networking
+#
+# https://docs.projectcalico.org/v3.7/getting-started/kubernetes/installation/flannel
+- name: Install calico for policy and flannel for networking
+  block:
+    - name: Calico canal download canal.yml
+      become: true
+      become_user: ubuntu
+      get_url:
+        url: https://docs.projectcalico.org/v3.7/manifests/canal.yaml
+        dest: /tmp/canal.yaml
+        mode: '0640'
+
+    - name: CIDR
+      debug:
+        msg: "{{ pod_network_cidr }}"
+
+    - name: Calico canal adapt CIDR
+      become: true
+      become_user: ubuntu
+      replace:
+        path: /tmp/canal.yaml
+        regexp: '10.244.0.0/16'
+        replace: "{{ pod_network_cidr }}"
+
+    - name: Calico canal install pod network
+      become: true
+      become_user: ubuntu
+      command: kubectl apply -f /tmp/canal.yaml
+  when: cluster_networking == 'calico_flannel'

@@ -1,0 +1,208 @@
+---
+# Depending on the environment, inventory_hostname might be a dns name or an ip
+# We now need effectively the ip on which ansible or we might reach the
+# k8s master.
+- name: Get ipaddr of k8smaster
+  set_fact:
+    remote_ip: "{{ inventory_hostname | ipaddr}}"
+
+- name: Get ipaddr of k8smaster
+  set_fact:
+    remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+  when: not remote_ip
+
+# - name: Check if Smart Check is up and running
+#   become: true
+#   become_user: ubuntu
+#   shell: if [ $(kubectl -n smartcheck get deployments -o=jsonpath='{range .items[*]}{.status.conditions[?(@.type=="Available")].status}{"\n"}{end}' | grep -v True) -eq '' ] ; then exit 0 ; else exit 1 ; fi
+#   register: grep_result
+#   until: grep_result.rc == 0
+#   retries: 60
+#   delay: 10
+#   ignore_errors: yes
+
+# Initial password change
+- name: Query password
+  become: true
+  become_user: ubuntu
+  k8s_facts:
+    api_version: v1
+    kind: secrets
+    name: deepsecurity-smartcheck-auth
+    namespace: smartcheck
+  register: dsscsecrets
+
+- name: Authenticate to Smart Check (waiting for Smart Check to be in running state)
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/sessions
+    method: POST
+    validate_certs: no
+    body_format: json
+    body: |
+      {
+        "user": {
+          "userid": "{{ dsscsecrets.resources[0].data.userName | b64decode }}",
+          "password": "{{ dsscsecrets.resources[0].data.password | b64decode }}"
+        }
+      }
+    status_code: 201
+  register: login
+  ignore_errors: yes
+  until: login.status == 201
+  retries: 60
+  delay: 10
+
+- name: Change initial administrator password
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/users/{{ login.json.user.id }}/password
+    method: POST
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body: |
+      {
+        "oldPassword": "{{ dsscsecrets.resources[0].data.password | b64decode }}",
+        "newPassword": "{{ smartcheck_password }}"
+      }
+    status_code: 200
+
+- name: Reauthenticate to Smart Check
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/sessions
+    method: POST
+    validate_certs: no
+    body_format: json
+    body: |
+      {
+        "user": {
+          "userid": "{{ dsscsecrets.resources[0].data.userName | b64decode }}",
+          "password": "{{ smartcheck_password }}"
+        }
+      }
+    status_code: 201
+  register: login
+  ignore_errors: yes
+  until: login.status == 201
+  retries: 60
+  delay: 10
+
+- name: Store Deep Security Smart Check credentials
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/dssc.txt
+    mode: 0640
+    content: |
+      URL: https://{{ inventory_hostname }}:{{ smartcheck_nodeport }}
+      Username: {{ dsscsecrets.resources[0].data.userName | b64decode }}
+      Password: {{ smartcheck_password }}
+
+- name: Fetch dssc.txt
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/dssc.txt
+    dest: ./site_{{ type }}/
+    flat: yes
+
+# Configure Smart Check
+- name: Create Content Override for libgnutls.so.30.23.2
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
+    method: POST
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body: |
+      {
+        "filename": "usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2",
+        "rule": "private_keys_pem",
+        "registry": "*",
+        "repository": "*",
+        "tag": "*",
+        "expires": "2029-10-01T00:00:00Z",
+        "comment": "Allowing crypto-selftests-pk.c private key for 10 years.."
+      }
+    status_code: 201
+
+- name: Create Content Override for ssl-cert-snakeoil.key
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
+    method: POST
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body: |
+      {
+        "filename": "etc/ssl/private/ssl-cert-snakeoil.key",
+        "rule": "private_keys_pem",
+        "registry": "*",
+        "repository": "*",
+        "tag": "*",
+        "expires": "2029-10-01T00:00:00Z",
+        "comment": "Allowing ssl-cert-snakeoil.key private key for 10 years.."
+      }
+    status_code: 201
+
+# - name: Create Registry
+#   uri:
+#     url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/registries?scan=true
+#     method: POST
+#     validate_certs: no
+#     headers:
+#       Authorization: "Bearer {{ login.json.token }}"
+#     body_format: json
+#     body: |
+#       {
+#         "name": "{{ gitlab_registry_name }}",
+#         "description": "{{ gitlab_registry_description }}\n",
+#         "host": "{{ gitlab_registry_host }}",
+#         "credentials": {
+#           "username": "{{ gitlab_registry_username }}",
+#           "password": "{{ gitlab_registry_password }}",
+#         },
+#         "insecureSkipVerify": false,
+#         "filter": {
+#           "include": [
+#             "*:latest"
+#           ],
+#           "exclude": [
+#             "experimental/*"
+#           ]
+#         },
+#         "schedule": true
+#       }
+#     status_code: 201
+
+- name: Create Registry to K8s Registry
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/registries?scan=true
+    method: POST
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body: |
+      {
+        "name": "K8S Registry",
+        "description": "Registry running within the cluster\n",
+        "host": "{{ inventory_hostname }}:{{ registry_nodeport }}",
+        "credentials": {
+          "username": "{{ cluster_registry_username }}",
+          "password": "{{ cluster_registry_password }}",
+        },
+        "insecureSkipVerify": true,
+        "filter": {
+          "include": [
+            "*"
+          ],
+          "exclude": [
+            "experimental/*"
+          ]
+        },
+        "schedule": true
+      }
+    status_code: 201

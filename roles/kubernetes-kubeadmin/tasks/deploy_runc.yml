@@ -1,0 +1,30 @@
+---
+# #####################################################################
+# Deploy Runc
+# #####################################################################
+# runc is conflicting with docker
+- name: Runc install packages
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - libglib2.0-dev
+      - libseccomp-dev
+
+- name: Runc clone
+  git:
+    repo: https://github.com/opencontainers/runc
+    dest: /root/src/github.com/opencontainers/runc
+
+- name: Runc build
+  shell: |
+    export PATH=/usr/local/go/bin:$PATH && \
+    cd /root/src/github.com/opencontainers/runc && \
+    export GOPATH=/root && \
+    make BUILDTAGS="seccomp selinux" && \
+    make install
+
+- name: Runc link
+  file: src=/usr/local/sbin/runc dest=/usr/bin/runc state=link force=yes

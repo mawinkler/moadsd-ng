@@ -1,0 +1,28 @@
+# #####################################################################
+# Create, Manafe and Terminate GCP environment
+# #####################################################################
+---
+- name: "Listing parameters"
+  debug:
+    msg:
+      - "operation                    : {{ operation }}"
+
+- name: Create network and firewall rules
+  include: gcp_create_network.yml
+  when: operation == 'create_network'
+
+- name: Create linux instance
+  include: gcp_create_linux_instance.yml
+  when: operation == 'create_linux_instance'
+
+- name: Create windows instance
+  include: gcp_create_windows_instance.yml
+  when: operation == 'create_windows_instance'
+
+- name: Terminate instance
+  include: gcp_terminate_instance.yml
+  when: operation == 'terminate_instance'
+
+- name: Terminate network
+  include: gcp_terminate_network.yml
+  when: operation == 'terminate_network'

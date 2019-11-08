@@ -1,0 +1,300 @@
+---
+# #####################################################################
+# Create a Kubernetes master with kubeadm
+# #####################################################################
+#
+# Preparations
+#
+# - name: Update all in Ubuntu
+#   apt:
+#     upgrade: dist
+#     update_cache: yes
+#     cache_valid_time: 86400 #One day
+- name: Deploy Golang
+  include: deploy_golang.yml
+  when: deploy_golang == True
+
+- name: Deploy Runc
+  include: deploy_runc.yml
+  when: deploy_runc == True
+
+- name: Deploy cni
+  include: deploy_cni.yml
+  when: deploy_cni == True
+
+- name: Deploy Docker
+  include: deploy_docker.yml
+  when: deploy_docker == True
+
+- name: Deploy Cri-O
+  include: deploy_crio.yml
+  when: deploy_crio == True
+
+- name: Deploy Kubernetes
+  block:
+    - include: deploy_kubernetes.yml
+
+    #
+    # Initialize cluster
+    #
+    - name: Kubeadm pull images
+      command: kubeadm config images pull --cri-socket="{{ kubeadm_container_runtime_socket }}"
+
+    - name: Kubeadm init
+      shell: kubeadm init --apiserver-advertise-address="{{ apiserver_advertise_address }}" --apiserver-cert-extra-sans="{{ apiserver_cert_extra_sans }}" --pod-network-cidr="{{ pod_network_cidr }}" --cri-socket="{{ kubeadm_container_runtime_socket }}" >> cluster_initialized.txt
+      args:
+        chdir: $HOME
+        creates: cluster_initialized.txt
+
+    - name: Kubernetes setup kubeconfig for ubuntu user make directory
+      file:
+        path: /home/ubuntu/.kube
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0755'
+
+    - name: Kubernetes setup kubeconfig for ubuntu user copy config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/ubuntu/.kube/config
+        owner: ubuntu
+        group: ubuntu
+        mode: '0600'
+        remote_src: yes
+
+    - name: Store Kubernetes Certificate to kubecfg.crt
+      become: true
+      become_user: ubuntu
+      shell: grep 'client-certificate-data' /home/ubuntu/.kube/config | head -n 1 | awk '{print $2}' | base64 -d > kubecfg.crt
+      args:
+        chdir: $HOME
+        creates: kubecfg.crt
+
+    - name: Fetch kubecfg.crt
+      become: true
+      become_user: ubuntu
+      fetch:
+        src: /home/ubuntu/kubecfg.crt
+        dest: ./site_{{ type }}/
+        flat: yes
+
+    - name: Store Kubernetes Key to kubecfg.key
+      become: true
+      become_user: ubuntu
+      shell: grep 'client-key-data' /home/ubuntu/.kube/config | head -n 1 | awk '{print $2}' | base64 -d > kubecfg.key
+      args:
+        chdir: $HOME
+        creates: kubecfg.key
+
+    - name: Fetch kubecfg.key
+      become: true
+      become_user: ubuntu
+      fetch:
+        src: /home/ubuntu/kubecfg.key
+        dest: ./site_{{ type }}/
+        flat: yes
+
+    - name: Create Kubernetes pkcs12
+      become: true
+      become_user: ubuntu
+      shell: openssl pkcs12 -export -clcerts -inkey kubecfg.key -in kubecfg.crt -out kubecfg.p12 -name "kubernetes-client" -passout pass:trendmicro
+      args:
+        chdir: $HOME
+        creates: kubecfg.p12
+
+    - name: Fetch kubecfg.p12
+      become: true
+      become_user: ubuntu
+      fetch:
+        src: /home/ubuntu/kubecfg.p12
+        dest: ./site_{{ type }}/
+        flat: yes
+
+    #
+    # Create admin user
+    #
+    - name: Create admin-user service account
+      become: true
+      become_user: ubuntu
+      k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ServiceAccount
+          metadata:
+            name: admin-user
+            namespace: kube-system
+
+    - name: Create admin-user ClusterRoleBinding
+      become: true
+      become_user: ubuntu
+      k8s:
+        state: present
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRoleBinding
+          metadata:
+            name: admin-user
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: cluster-admin
+          subjects:
+            - kind: ServiceAccount
+              name: admin-user
+              namespace: kube-system
+
+    - name: Query Kubernetes secrets
+      become: true
+      become_user: ubuntu
+      k8s_facts:
+        api_version: v1
+        kind: secret
+        namespace: kube-system
+      register: k8ssecrets
+
+    - name: Search admin-user-token
+      set_fact:
+        admintoken: "{% for resource in k8ssecrets.resources %}\
+                       {% if 'admin-user-token' in resource.metadata.name %}\
+                         {{ resource.data.token }}\
+                       {% endif %}\
+                     {% endfor %}"
+
+    - name: Store admin-user-token
+      become: true
+      become_user: ansible
+      copy:
+        dest: ./site_{{ type }}/kubetoken.txt
+        content: "{{ admintoken | b64decode }}"
+      delegate_to: localhost
+
+    #
+    # Label master
+    #
+    - name: Kubernetes label master as mds node
+      become: true
+      become_user: ubuntu
+      k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Node
+          metadata:
+            name: "{{ hostvars[inventory_hostname]['ansible_hostname'] }}"
+            labels:
+              role: mds-node
+      when: deploy_rook_ceph == True
+
+    #
+    # Kubernetes Dashboard
+    #
+    - name: Kubernetes download dashboard definition
+      get_url:
+        url: https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
+        dest: /tmp
+
+    - name: Kubernetes install dashboard
+      become: true
+      become_user: ubuntu
+      k8s:
+        state: present
+        src: /tmp/kubernetes-dashboard.yaml
+
+    # FIXME
+    # something like v--dry-run=true -o yaml | kubectl expose -f - possible?
+    - name: Kubernetes expose dashboard
+      become: true
+      become_user: ubuntu
+      command: kubectl expose -n kube-system deployment kubernetes-dashboard --type=NodePort --name=dashboard
+      ignore_errors: yes
+
+    - name: Kubernetes patch dashboard port
+      become: true
+      become_user: ubuntu
+      command: kubectl patch service -n kube-system dashboard --type='json' --patch='[{"op":"replace", "path":"/spec/ports/0/nodePort", "value":{{ kubernetes_dashboard_nodeport }}}]'
+
+    - name: Create link document for Kubernetes dashboard
+      become: true
+      become_user: ansible
+      local_action: copy content="https://{{ inventory_hostname }}:{{ kubernetes_dashboard_nodeport }}" dest="./site_{{ type }}/kube.txt"
+
+    #
+    # Create join command
+    #
+    # kubeadm token create has a bug and currently does not understand --cri-socket
+    # Therefore we need to create a config file for kubeadm
+    - name: Kubeadm create token create configuration file
+      copy:
+        dest: /root/kubeadm_token_create_config.yaml
+        mode: 0640
+        content: |
+          apiVersion: kubeadm.k8s.io/v1beta1
+          kind: InitConfiguration
+          nodeRegistration:
+            criSocket: "{{ kubeadm_container_runtime_socket }}"
+
+    - name: Kubeadm generate join command
+      command: kubeadm token create --print-join-command --config=/root/kubeadm_token_create_config.yaml
+      register: join_command
+
+    - name: Kubeadm copy join command to local file
+      become: true
+      become_user: ansible
+      local_action: copy content="{{ join_command.stdout_lines[0] }} --cri-socket={{ kubelet_container_runtime_socket }}" dest="./site_{{ type }}/join-command"
+
+    - name: Kubernetes bash command completion
+      become: true
+      become_user: ubuntu
+      lineinfile:
+        path: /home/ubuntu/.bashrc
+        insertafter: EOF
+        line: 'source <(kubectl completion bash)'
+
+    - name: Fun with kubectl aliases - generate aliases
+      script: generate_aliases.py
+      args:
+        executable: python3
+      register: aliases
+      delegate_to: localhost
+
+    - name: Fun with kubectl aliases - create aliases file
+      become: true
+      become_user: ubuntu
+      copy:
+        dest: /home/ubuntu/.kubectl_aliases
+        mode: 0640
+        owner: ubuntu
+        content: "{{ aliases.stdout }}"
+
+    - name: Fun with kubectl aliases - append aliaes to .bashrc
+      become: yes
+      become_user: ubuntu
+      lineinfile:
+        path: $HOME/.bashrc
+        insertafter: EOF
+        line: "{{ item }}"
+      loop:
+        - '[ -f ~/.kubectl_aliases ] && source ~/.kubectl_aliases'
+        - 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }'
+
+    - name: Copy stern (stern -n jenkins . -t --since 10m)
+      copy:
+        src: ./files/stern
+        dest: /usr/local/bin/stern
+        mode: 0755
+
+  when: deploy_kubernetes == True
+
+- name: Deploy pod network
+  include: deploy_pod_network.yml
+  when: deploy_pod_network == True
+
+- name: Deploy Helm
+  include: deploy_helm.yml
+  when: deploy_helm == True
+
+- name: Deploy Rook
+  include: deploy_rook.yml
+  when: deploy_rook_ceph == True

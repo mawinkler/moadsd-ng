@@ -1,0 +1,220 @@
+---
+# #####################################################################
+# Create a GitLab
+# #####################################################################
+- name: GitLab Hostname
+  debug:
+    msg: "{{ gitlab_hostname }}"
+
+- name: GitLab IP
+  debug:
+    msg: "{{ inventory_hostname }}"
+
+# Persistence defaults:
+# gitlab.gitaly.persistence.storageClass: rook-ceph-block
+# gitlab.gitaly.persistence.size: 50Gi
+# postgresql:.persistence.storageClass: rook-ceph-block
+# postgresql:.persistence.size: 8Gi
+# minio.persistence.storageClass: rook-ceph-block
+# minio.persistence.size: 10Gi
+# redis.persistence.storageClass: rook-ceph-block
+# redis.persistence.size: 5Gi
+- name: Create GitLab overrides file (minimal)
+  copy:
+    dest: /home/ubuntu/overrides-gitlab-minimal.yml
+    mode: 0640
+    owner: ubuntu
+    content: |
+      global:
+        edition: ce
+        ingress:
+          configureCertmanager: false
+          class: nginx
+        hosts:
+          domain: {{ gitlab_hostname }}
+          externalIP: {{ inventory_hostname }}
+      certmanager:
+        install: false
+      nginx-ingress:
+        enabled: false
+      gitlab-runner:
+        install: false
+      gitlab:
+        gitaly:
+          persistence:
+            storageClass: rook-ceph-block
+            size: 20Gi
+      postgresql:
+        persistence:
+          storageClass: rook-ceph-block
+          size: 4Gi
+      minio:
+        persistence:
+          storageClass: rook-ceph-block
+          size: 5Gi
+      redis:
+        persistence:
+          storageClass: rook-ceph-block
+          size: 3Gi
+
+- name: Create GitLab overrides file (nginx-ingress)
+  copy:
+    dest: /home/ubuntu/overrides-gitlab-nginx-ingress.yml
+    mode: 0640
+    owner: ubuntu
+    content: |
+      nginx-ingress:
+        controller:
+          service:
+            type: NodePort
+      #       externalTrafficPolicy: Cluster
+            nodePorts:
+              http: {{ gitlab_nodeport_http }}
+              https: {{ gitlab_nodeport_https }}
+      global:
+        edition: ce
+        hosts:
+          domain: {{ gitlab_hostname }}
+          externalIP: {{ inventory_hostname }}
+      certmanager-issuer:
+        email: winkler.info@icloud.com
+      gitlab:
+        gitaly:
+          persistence:
+            storageClass: rook-ceph-block
+            size: 20Gi
+      postgresql:
+        persistence:
+          storageClass: rook-ceph-block
+          size: 4Gi
+      minio:
+        persistence:
+          storageClass: rook-ceph-block
+          size: 5Gi
+      redis:
+        persistence:
+          storageClass: rook-ceph-block
+          size: 3Gi
+
+- name: Create GitLab overrides file (nginx)
+  copy:
+    dest: /home/ubuntu/overrides-gitlab-nginx.yml
+    mode: 0640
+    owner: ubuntu
+    content: |
+      global:
+        edition: ce
+        ingress:
+          configureCertmanager: false
+          class: nginx
+        hosts:
+          domain: {{ gitlab_hostname }}
+          externalIP: {{ inventory_hostname }}
+      certmanager:
+        install: false
+      nginx-ingress:
+        enabled: false
+      gitlab-runner:
+        install: false
+      gitlab:
+        gitaly:
+          persistence:
+            storageClass: rook-ceph-block
+            size: 20Gi
+      postgresql:
+        persistence:
+          storageClass: rook-ceph-block
+          size: 4Gi
+      minio:
+        persistence:
+          storageClass: rook-ceph-block
+          size: 5Gi
+      redis:
+        persistence:
+          storageClass: rook-ceph-block
+          size: 3Gi
+
+- name: Install GitLab Repo
+  become: true
+  become_user: ubuntu
+  shell: helm repo add gitlab https://charts.gitlab.io/
+
+- name: Update GitLab Repo
+  become: true
+  become_user: ubuntu
+  shell: helm repo update
+
+# --version v1.0.0
+- name: Install GitLab
+  become: true
+  become_user: ubuntu
+  shell: helm install --timeout 600 --namespace {{ gitlab_namespace }} --values overrides-gitlab-nginx-ingress.yml --name {{ gitlab_name }} {{ gitlab_chart }} >> gitlab.log
+  args:
+    chdir: $HOME
+    creates: gitlab.log
+
+# - name: Create GitLab Rails Secret
+#   become: true
+#   become_user: ubuntu
+#   shell: |
+#     cat << EOF > /home/ubuntu/gitlab-rails-secret.yml
+#     production:
+#       secret_key_base: $(head -c 512 /dev/urandom | LC_CTYPE=C tr -cd 'a-zA-Z0-9' | head -c 128)
+#       otp_key_base: $(head -c 512 /dev/urandom | LC_CTYPE=C tr -cd 'a-zA-Z0-9' | head -c 128)
+#       db_key_base: $(head -c 512 /dev/urandom | LC_CTYPE=C tr -cd 'a-zA-Z0-9' | head -c 128)
+#       openid_connect_signing_key: |
+#       $(openssl genrsa 2048 | awk '{print "    " $0}')
+#     EOF
+#   args:
+#     chdir: $HOME
+#     creates: gitlab-rails-secret.yml
+
+# - name: Create GitLab Rails Secret
+#   become: true
+#   become_user: ubuntu
+#   shell: kubectl -n gitlab create secret generic {{ gitlab_name }}-rails-secret --from-file=/home/ubuntu/gitlab-rails-secret.yml > gitlab-rails-secret-created.txt
+#   args:
+#     chdir: $HOME
+#     creates: gitlab-rails-secret-created.txt
+
+# - name: GitLab patch http port
+#   become: true
+#   become_user: ubuntu
+#   command: kubectl patch service -n {{ gitlab_namespace }} gitlab-nginx-ingress-controller --type='json' --patch='[{"op":"replace", "path":"/spec/ports/0/nodePort", "value":{{ gitlab_nodeport_http }}}]'
+#
+# - name: GitLab patch https port
+#   become: true
+#   become_user: ubuntu
+#   command: kubectl patch service -n {{ gitlab_namespace }} gitlab-nginx-ingress-controller --type='json' --patch='[{"op":"replace", "path":"/spec/ports/1/nodePort", "value":{{ gitlab_nodeport_https }}}]'
+#
+# - name: GitLab patch ssh port
+#   become: true
+#   become_user: ubuntu
+#   command: kubectl patch service -n {{ gitlab_namespace }} gitlab-nginx-ingress-controller --type='json' --patch='[{"op":"replace", "path":"/spec/ports/2/nodePort", "value":{{ gitlab_nodeport_ssh }}}]'
+
+- name: Fetch gitlab.log
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/gitlab.log
+    dest: ./site_{{ type }}/
+    flat: yes
+
+- name: Store GitLab credentials
+  become: true
+  become_user: ubuntu
+  shell: |
+    echo URL: http://{{ inventory_hostname }}:{{ gitlab_nodeport_https }} > gitlab.txt
+    echo Username: root >> gitlab.txt
+    echo Password: $(kubectl get --namespace {{ gitlab_namespace }} secret gitlab-gitlab-initial-root-password -ojsonpath='{.data.password}' | base64 --decode) >> gitlab.txt
+  args:
+    chdir: $HOME
+    creates: gitlab.txt
+
+- name: Fetch gitlab.txt
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/gitlab.txt
+    dest: ./site_{{ type }}/
+    flat: yes

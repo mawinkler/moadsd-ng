@@ -1,0 +1,18 @@
+service_type: NodePort
+service_port: "{{ jenkins_nodeport }}"
+persistence_storageClassName: rook-ceph-block
+persistence_size: 8Gi
+limits_cpu: 2000m
+limits_memory: 4096Mi
+agent_limits_cpu: 512m
+agent_limits_memory: 512Mi
+rbac_create: true
+admin_username: admin
+admin_password: TrendM1cr0
+
+jenkins_image: jenkins/jenkins
+jenkins_chart: stable/jenkins
+jenkins_tag: 2.201
+jenkins_chart_version: 1.7.8
+jenkins_namespace: jenkins
+jenkins_name: jenkins

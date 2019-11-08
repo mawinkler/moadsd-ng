@@ -1,0 +1,81 @@
+---
+# #####################################################################
+# Create a Jenkins instance
+# #####################################################################
+- name: Create Docker Registry overrides file
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/overrides-registry.yml
+    mode: 0640
+    owner: ubuntu
+    content: |
+      replicaCount: 1
+      image:
+        repository: registry
+        tag: {{ docker_registry_version }}
+        pullPolicy: IfNotPresent
+      tlsSecretName: k8s-certificate
+      service:
+        name: {{ docker_registry_name }}
+        namespace: {{ docker_registry_namespace }}
+        type: {{ docker_registry_service_type }}
+        port: 5000
+        nodePort: {{ docker_registry_service_port }}
+      persistence:
+        accessMode: 'ReadWriteOnce'
+        enabled: true
+        size: {{ docker_registry_persistence_size }}
+        storageClass: {{ docker_registry_persistence_storageClassName }}
+      storage: filesystem
+
+- name: Create Docker Registry Credentials
+  become: true
+  become_user: ubuntu
+  shell: |
+    docker run --entrypoint htpasswd registry:2 -Bbn {{ cluster_registry_username }} {{ cluster_registry_password }} > ./registry_htpasswd
+  args:
+    chdir: $HOME
+    creates: ./registry_htpasswd
+
+- name: Install Docker Registry
+  become: true
+  become_user: ubuntu
+  shell: helm install --namespace {{ docker_registry_namespace }} --values overrides-registry.yml --set secrets.htpasswd=$(cat ./registry_htpasswd) --name {{ docker_registry_name }} {{ docker_registry_chart }} >> registry.log
+  args:
+    chdir: $HOME
+    creates: registry.log
+
+- name: Creating Kubernetes secret k8s-certificate
+  become: true
+  become_user: ubuntu
+  shell: kubectl create secret tls k8s-certificate --namespace {{ docker_registry_namespace }} --cert=k8s.crt --key=k8s.key --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME
+
+- name: Store Cluster Registry credentials
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/registry.txt
+    mode: 0640
+    content: |
+      URL: https://{{ inventory_hostname }}:{{ docker_registry_service_port }}
+      Username: {{ cluster_registry_username }}
+      Password: {{ cluster_registry_password }}
+
+- name: Fetch registry.txt
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/registry.txt
+    dest: ./site_{{ type }}/
+    flat: yes
+
+- name: Fetch registry.log
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/registry.log
+    dest: ./site_{{ type }}/
+    flat: yes

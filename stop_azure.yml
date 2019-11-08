@@ -1,0 +1,48 @@
+---
+# #####################################################################
+# Create MOADSD-NG Environment in Azure
+# #####################################################################
+# - name: Check if Google cloud SDK is installed
+#   command: gcloud version
+#   register: gcloud_installed
+#   changed_when: false
+#   ignore_errors: yes
+#
+# - fail:
+#     msg: "Please make sure Google Cloud SDK is installed before executing the role."
+#   when: gcloud_installed is failed
+
+- name: Terminate instance of Kubernetes master
+  include_role:
+    name: environment-azure
+  vars:
+    operation: terminate_instance
+    instance_name: "{{ kubernetes_master_instance_name }}"
+
+- name: Terminate instance of Kubernetes worker
+  include_role:
+    name: environment-azure
+  vars:
+    operation: terminate_instance
+    instance_name: "{{ kubernetes_worker_instance_name }}{{ item }}"
+  with_sequence: count="{{ kubernetes_worker_count }}"
+
+- name: Terminate instance of PostgreSQL
+  include_role:
+    name: environment-azure
+  vars:
+    operation: terminate_instance
+    instance_name: "{{ postgresql_instance_name }}"
+
+- name: Terminate instance of Deep Security Manager
+  include_role:
+    name: environment-azure
+  vars:
+    operation: terminate_instance
+    instance_name: "{{ deepsecurity_instance_name }}"
+
+- name: Terminate Azure network
+  include_role:
+    name: environment-azure
+  vars:
+    operation: terminate_network

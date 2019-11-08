@@ -1,0 +1,122 @@
+---
+# #####################################################################
+# Create SSL certificate for k8s master
+# #####################################################################
+
+# Depending on the environment, inventory_hostname might be a dns name or an ip
+# We now need effectively the ip on which ansible or we might reach the
+# k8s master.
+- name: Get ipaddr of k8smaster
+  set_fact:
+    remote_ip: "{{ inventory_hostname | ipaddr}}"
+
+- name: Get ipaddr of k8smaster
+  set_fact:
+    remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+  when: not remote_ip
+
+- name: Create subdirectory site/moadsd-ng-certserv
+  become: true
+  become_user: ansible
+  file:
+    path: "./site_{{ type }}/moadsd-ng-certserv"
+    state: directory
+  delegate_to: localhost
+
+- name: Copy certificate to build context moadsd-ng-certserv
+  become: true
+  become_user: ansible
+  local_action: command cp ./site_{{ type }}/{{ remote_ip }}.crt ./site_{{ type }}/moadsd-ng-certserv/{{ remote_ip }}.crt
+
+- name: Create Dockerfile for certificate pod
+  become: true
+  become_user: ansible
+  copy:
+    dest: ./site_{{ type }}/moadsd-ng-certserv/Dockerfile
+    mode: 0640
+    content: |
+      FROM nginx:alpine
+      COPY {{ remote_ip }}.crt /usr/share/nginx/html/{{ remote_ip }}.crt
+  delegate_to: localhost
+
+- name: Build docker image for certificate pod
+  become: true
+  become_user: ansible
+  shell: docker build -t moadsd-ng-certserv moadsd-ng-certserv/.
+  args:
+    chdir: ./site_{{ type }}
+  delegate_to: localhost
+
+- name: Build docker image for certificate pod
+  become: true
+  become_user: ansible
+  shell: docker tag moadsd-ng-certserv {{ dockerhub_username }}/moadsd-ng-certserv:latest
+  args:
+    chdir: ./site_{{ type }}
+  delegate_to: localhost
+
+- name: Login to docker hub
+  become: true
+  become_user: ansible
+  shell: docker login -u {{ dockerhub_username }} -p {{ dockerhub_password }}
+  args:
+    chdir: ./site_{{ type }}
+  delegate_to: localhost
+
+- name: Push docker image for certificate pod
+  become: true
+  become_user: ansible
+  shell: docker push {{ dockerhub_username }}/moadsd-ng-certserv:latest
+  args:
+    chdir: ./site_{{ type }}
+  delegate_to: localhost
+
+- name: Create deployment for certificate pod
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/moadsd-ng-certserv.yml
+    mode: 0640
+    content: |
+      apiVersion: v1
+      kind: Service
+      metadata:
+        annotations:
+          service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+        name: moadsd-ng-certserv
+        labels:
+          app: moadsd-ng-certserv
+      spec:
+        type: NodePort
+        ports:
+        - port: 80
+          name: moadsd-ng-certserv
+          targetPort: 80
+          nodePort: {{ certserv_nodeport }}
+        selector:
+          app: moadsd-ng-certserv
+      ---
+      apiVersion: extensions/v1beta1
+      kind: Deployment
+      metadata:
+        name: moadsd-ng-certserv
+      spec:
+        replicas: 1
+        template:
+          metadata:
+            labels:
+              app: moadsd-ng-certserv
+          spec:
+            containers:
+            - name: moadsd-ng-certserv
+              image: {{ dockerhub_username }}/moadsd-ng-certserv:latest
+              imagePullPolicy: Always
+              ports:
+              - containerPort: 80
+
+- name: Create certificate pod deployment
+  become: true
+  become_user: ubuntu
+  shell: kubectl create -n default -f /home/ubuntu/moadsd-ng-certserv.yml --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME

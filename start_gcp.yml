@@ -1,0 +1,210 @@
+---
+# #####################################################################
+# Create MOADSD-NG Environment in GCP
+# #####################################################################
+- name: Check if Google cloud SDK is installed
+  command: gcloud version
+  register: gcloud_installed
+  changed_when: false
+  ignore_errors: yes
+
+- fail:
+    msg: "Please make sure Google Cloud SDK is installed before executing the role."
+  when: gcloud_installed is failed
+
+- name: Create GCP network
+  include_role:
+    name: environment-gcp
+  vars:
+    operation: create_network
+
+- name: Create linux instance for jumphost
+  include_role:
+    name: environment-gcp
+  vars:
+    operation: create_linux_instance
+    instance_name: "{{ jumphost_instance_name }}"
+    instance_source_image: "{{ jumphost_source_image }}"
+    instance_size_gb: "{{ jumphost_size_gb }}"
+    instance_machine_type: "{{ jumphost_machine_type }}"
+    instance_startup_script: "{{ jumphost_startup_script }}"
+    instance_tags: "{{ jumphost_tags }}"
+    instance_public_address: True
+    instance_ports_anywhere:
+      - '22'
+    instance_ports_network:
+      - '1-65535'
+      # - '10250'
+      # - '10255'
+      # - '30000-32767''
+  when: site_deploy_jumphost == True
+
+- name: Create instance for PostgreSQL
+  include_role:
+    name: environment-gcp
+  vars:
+    operation: create_linux_instance
+    instance_name: "{{ postgresql_instance_name }}"
+    instance_source_image: "{{ postgresql_source_image }}"
+    instance_size_gb: "{{ postgresql_size_gb }}"
+    instance_machine_type: "{{ postgresql_machine_type }}"
+    instance_startup_script: "{{ postgresql_startup_script }}"
+    instance_tags: "{{ postgresql_tags }}"
+    instance_public_address: True
+    instance_ports_anywhere:
+      - '22'
+    instance_ports_network:
+      - "{{ databasescreen_port |string }}"
+  when: site_deploy_deepsecurity == True
+
+- name: Create instance for Deep Security Manager
+  include_role:
+    name: environment-gcp
+  vars:
+    operation: create_linux_instance
+    instance_name: "{{ deepsecurity_instance_name }}"
+    instance_source_image: "{{ deepsecurity_source_image }}"
+    instance_size_gb: "{{ deepsecurity_size_gb }}"
+    instance_machine_type: "{{ deepsecurity_machine_type }}"
+    instance_startup_script: "{{ deepsecurity_startup_script }}"
+    instance_tags: "{{ deepsecurity_tags }}"
+    instance_public_address: True
+    instance_ports_anywhere:
+      - '22'
+      - "{{ addressandportsscreen_managerport |string }}"
+      - "{{ addressandportsscreen_heartbeatport |string }}"
+    instance_ports_network:
+      - "{{ addressandportsscreen_managerport |string }}"
+      - "{{ addressandportsscreen_heartbeatport |string }}"
+      - "{{ addressandportsscreen_agentport |string }}"
+  when: site_deploy_deepsecurity == True
+
+- name: Create instance for Kubernetes master
+  include_role:
+    name: environment-gcp
+  vars:
+    operation: create_linux_instance
+    instance_name: "{{ kubernetes_master_instance_name }}"
+    instance_source_image: "{{ kubernetes_master_source_image }}"
+    instance_size_gb: "{{ kubernetes_master_size_gb }}"
+    instance_machine_type: "{{ kubernetes_master_machine_type }}"
+    instance_startup_script: "{{ kubernetes_master_startup_script }}"
+    instance_tags: "{{ kubernetes_master_tags }}"
+    instance_public_address: True
+    instance_ports_anywhere:
+      - '22'
+      - '80'
+      - '443'
+      - "{{ kubernetes_dashboard_nodeport |string }}"
+      - "{{ rook_ceph_dashboard_nodeport |string }}"
+      - "{{ smartcheck_nodeport |string }}"
+      - "{{ smartcheck_registry |string }}"
+      - "{{ certserv_nodeport |string }}"
+      - "{{ jenkins_nodeport |string }}"
+      - "{{ gitlab_nodeport_http |string }}"
+      - "{{ gitlab_nodeport_https |string }}"
+      - "{{ gitlab_nodeport_ssh |string }}"
+      - "{{ linkerd_dashboard_nodeport | string }}"
+      - "{{ registry_nodeport | string }}"
+      - "{{ custom_nodeport | string }}"
+    instance_ports_network:
+      - '1-65535'
+      # - '6443'
+      # - '2379-2380'
+      # - '10250'
+      # - '10251'
+      # - '10252'
+      # - '10255'
+  when: site_deploy_kubernetes == True
+
+- name: Create instance for Kubernetes worker
+  include_role:
+    name: environment-gcp
+  vars:
+    operation: create_linux_instance
+    instance_name: "{{ kubernetes_worker_instance_name }}{{ item }}"
+    instance_source_image: "{{ kubernetes_worker_source_image }}"
+    instance_size_gb: "{{ kubernetes_worker_size_gb }}"
+    instance_machine_type: "{{ kubernetes_worker_machine_type }}"
+    instance_startup_script: "{{ kubernetes_worker_startup_script }}"
+    instance_tags: "{{ kubernetes_worker_tags }}"
+    instance_public_address: True
+    instance_ports_anywhere:
+      - '22'
+    instance_ports_network:
+      - '1-65535'
+      # - '10250'
+      # - '10255'
+      # - '30000-32767''
+  with_sequence: count="{{ kubernetes_worker_count }}"
+  when: site_deploy_kubernetes == True
+
+- name: Create instance for GitLab
+  include_role:
+    name: environment-gcp
+  vars:
+    operation: create_linux_instance
+    instance_name: "{{ gitlab_instance_name }}"
+    instance_source_image: "{{ gitlab_source_image }}"
+    instance_size_gb: "{{ gitlab_size_gb }}"
+    instance_machine_type: "{{ gitlab_machine_type }}"
+    instance_startup_script: "{{ gitlab_startup_script }}"
+    instance_tags: "{{ gitlab_tags }}"
+    instance_public_address: True
+    instance_ports_anywhere:
+      - '22'
+      - "{{ gitlab_docker_letsencrypt |string }}"
+      - "{{ gitlab_docker_https |string }}"
+      - "{{ gitlab_docker_registry |string }}"
+    instance_ports_network:
+      - '1-65535'
+      # - '10250'
+      # - '10255'
+      # - '30000-32767''
+  when: site_deploy_gitlab_docker == True
+
+- name: Create linux instances for endpoints / servers
+  include_role:
+    name: environment-gcp
+  vars:
+    operation: create_linux_instance
+    instance_name: "{{ linuxep_instance_name }}{{ item }}"
+    instance_source_image: "{{ linuxep_source_image }}"
+    instance_size_gb: "{{ linuxep_size_gb }}"
+    instance_machine_type: "{{ linuxep_machine_type }}"
+    instance_startup_script: "{{ linuxep_startup_script }}"
+    instance_tags: "{{ linuxep_tags }}"
+    instance_public_address: True
+    instance_ports_anywhere:
+      - '22'
+    instance_ports_network:
+      - '1-65535'
+      # - '10250'
+      # - '10255'
+      # - '30000-32767''
+  with_sequence: count="{{ linuxep_instance_count }}"
+  when: site_deploy_endpoints == True
+
+- name: Create windows instances for endpoints / servers
+  include_role:
+    name: environment-gcp
+  vars:
+    operation: create_windows_instance
+    instance_name: "{{ windowsep_instance_name }}{{ item }}"
+    instance_source_image: "{{ windowsep_source_image }}"
+    instance_size_gb: "{{ windowsep_size_gb }}"
+    instance_machine_type: "{{ windowsep_machine_type }}"
+    instance_startup_script: "{{ windowsep_startup_script }}"
+    instance_tags: "{{ windowsep_tags }}"
+    instance_public_address: True
+    instance_ports_anywhere:
+      - '3389'
+      - '5986'
+      - '5985'
+    instance_ports_network:
+      - '1-65535'
+      # - '10250'
+      # - '10255'
+      # - '30000-32767''
+  with_sequence: count="{{ windowsep_instance_count }}"
+  when: site_deploy_endpoints == True

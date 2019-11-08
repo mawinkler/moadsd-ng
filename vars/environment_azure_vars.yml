@@ -1,0 +1,113 @@
+---
+# #####################################################################
+# Site Deploy Components
+# #####################################################################
+site_deploy_kubernetes: yes
+site_deploy_deepsecurity: no
+site_deploy_smartcheck: no
+site_deploy_jenkins: no
+site_deploy_gitlab: no
+
+# #####################################################################
+# Google Cloud Settings
+# #####################################################################
+azure_resource_group: resourcegroupone
+azure_region: West Europe
+startup_script: |
+       #!/bin/sh
+       useradd -m -s /bin/bash ansible
+       mkdir -p /home/ansible/.ssh
+       chmod 700 /home/ansible/.ssh
+       chown ansible.ansible /home/ansible/.ssh
+       echo {{ ansible_ssh_key }} >> /home/ansible/.ssh/authorized_keys
+       chmod 600 /home/ansible/.ssh/authorized_keys
+       chown ansible.ansible /home/ansible/.ssh/authorized_keys
+       echo {{ ansible_ssh_key }} >> /home/ubuntu/.ssh/authorized_keys
+       echo "ansible ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/custom-users
+       apt update
+       apt install -y python3 python3-simplejson
+moadsd_ng_prefix: moadsd-ng
+
+# #####################################################################
+# Kubernetes Settings
+# #####################################################################
+# crio or docker
+kubernetes_container_runtime: docker
+kubernetes_worker_count: 1
+
+# Cluster Networking Configration:
+# pod_network_cidr: "10.244.0.0/16"   cluster_networking: flannel_flannel
+# pod_network_cidr: "10.244.0.0/16"   cluster_networking: calico_flannel
+# pod_network_cidr: "192.168.0.0/16"  cluster_networking: calico_calico
+pod_network_cidr: "10.244.0.0/16"
+cluster_networking: flannel_flannel
+
+kubernetes_master_instance_name: k8smaster
+kubernetes_master_size_gb: 32
+kubernetes_master_source_image: '18.04-LTS'
+kubernetes_master_machine_type: Standard_D2s_v3
+kubernetes_master_startup_script: "{{ startup_script }}"
+kubernetes_master_tags: role-k8smaster
+
+kubernetes_worker_instance_name: k8sworker
+kubernetes_worker_size_gb: 32
+kubernetes_worker_source_image: 18.04-LTS'
+kubernetes_worker_machine_type: Standard_D2s_v3
+kubernetes_worker_startup_script: "{{ startup_script }}"
+kubernetes_worker_tags: role-k8sworker
+
+kubernetes_dashboard_nodeport: 30000
+rook_ceph_dashboard_nodeport: 30001
+
+# #####################################################################
+# Deep Security Settings
+# #####################################################################
+deepsecurity_download_url: 'https://files.trendmicro.com/products/deepsecurity/en/12.5/'
+deepsecurity_installer: 'Manager-Linux-12.5.349.x64.sh'
+
+postgresql_instance_name: postgresql
+postgresql_size_gb: 16
+postgresql_source_image: '18.04-LTS'
+postgresql_machine_type: Standard_D2s_v3
+postgresql_startup_script: "{{ startup_script }}"
+postgresql_tags: role-dsm-db
+
+deepsecurity_instance_name: dsm
+deepsecurity_size_gb: 32
+deepsecurity_source_image: projects/rhel-cloud/global/images/family/rhel-7
+deepsecurity_machine_type: Standard_D2s_v3
+deepsecurity_startup_script: "{{ startup_script }}"
+deepsecurity_tags: role-dsm
+
+deepsecurity_database_name: dsmdb
+deepsecurity_database_user: dsm
+deepsecurity_database_role_attr_flags: LOGIN,CREATEDB,CREATEROLE
+deepsecurity_database_priv: "CONNECT/ALL"
+
+databasescreen_port: 5432
+addressandportsscreen_managerport: 4119
+addressandportsscreen_heartbeatport: 4120
+
+# #####################################################################
+# Deep Security Smart Check Settings
+# #####################################################################
+smartcheck_nodeport: 30010
+
+# #####################################################################
+# Jenkins Settings
+# #####################################################################
+jenkins_nodeport: 30011
+
+# #####################################################################
+# Gitlab Settings
+# #####################################################################
+gitlab_instance_name: gitlab
+gitlab_hostname: moadsd-ng.hopto.org
+gitlab_nodeport_http: 30012
+gitlab_nodeport_https: 30013
+gitlab_nodeport_ssh: 30014
+gitlab_size_gb: 32
+gitlab_source_image: '18.04-LTS'
+gitlab_machine_type: Standard_D2s_v3
+gitlab_startup_script: "{{ startup_script }}"
+gitlab_tags: gitlab

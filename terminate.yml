@@ -1,0 +1,38 @@
+---
+# #####################################################################
+# Terminate MOADSD-NG Environment
+# #####################################################################
+- name: Terminate MOADSD-NG Environment
+  hosts: localhost
+  gather_facts: no
+  connection: local
+
+  vars:
+    scopes:
+      - https://www.googleapis.com/auth/compute
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Delete subdirectory host_vars
+      file:
+        path: "./host_vars"
+        state: absent
+
+    - name: Delete subdirectory site
+      file:
+        path: "./site_{{ type }}"
+        state: absent
+
+    - name: Terminate GCP environment
+      include: stop_gcp.yml
+      when: type == 'gcp'
+
+    - name: Terminate AWS environment
+      include: stop_aws.yml
+      when: type == 'aws'
+
+    - name: Terminate Azure environment
+      include: stop_azure.yml
+      when: type == 'azure'

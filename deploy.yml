@@ -1,0 +1,439 @@
+---
+# #####################################################################
+# Deploy MOADSD-NG Environment
+# #####################################################################
+
+# #####################################################################
+# Store some private ips within the ansible hostvars
+# #####################################################################
+- hosts: tag_role_k8smaster
+  tasks:
+    - name: Get internal ip address of kubernetes master
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_k8smaster_instance"
+
+- hosts: tag_role_dsm
+  tasks:
+    - name: Get internal ip address of deep security
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_dsm_instance"
+
+- hosts: tag_role_dsm_db
+  tasks:
+    - name: Get internal ip address of postgresql
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_postgresql_instance"
+
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Listing environment
+      debug:
+        msg:
+          - "Kubernetes Master            : {{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+      when: site_deploy_kubernetes == True
+
+    - name: Listing environment
+      debug:
+        msg:
+          - "Deep Security                : {{ groups['moadsd_ng_dsm_instance'][0] }}"
+          - "PostgreSQL                   : {{ groups['moadsd_ng_postgresql_instance'][0] }}"
+      when: site_deploy_deepsecurity == True
+
+# #####################################################################
+# Deploy PostgreSQL database for Deep Security
+# #####################################################################
+- name: Create PostgreSQL database for Deep Security
+  hosts: tag_role_dsm_db
+  become: true
+
+  # vars:
+  #   ansible_ssh_common_args: '-o ProxyCommand="ssh -o StrictHostKeyChecking=no -W %h:%p ansible@18.185.46.236"'
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    # !! "{{ groups['dsm'] }}" holds the internal network ip of the dsm !!
+    - name: Deploy PostgreSQL
+      include_role:
+        name: postgresql
+      vars:
+        operation: create_instance
+        database_client: "{{ groups['moadsd_ng_dsm_instance'][0] }}"
+      when: site_deploy_deepsecurity == True
+
+    - name: Create Database for Deep Security in PostgreSQL
+      include_role:
+        name: postgresql
+      vars:
+        operation: create_database
+        database_name: "{{ deepsecurity_database_name }}"
+        database_user: "{{ deepsecurity_database_user }}"
+        database_password: "{{ deepsecurity_database_password }}"
+        database_role_attr_flags: "{{ deepsecurity_database_role_attr_flags }}"
+        database_priv: "{{ deepsecurity_database_priv }}"
+      when: site_deploy_deepsecurity == True
+
+
+    # I'd like to remove the nat ip after the installation on postgresql
+    # but for that, I'd need to detach the ip from the instance before
+    # which I don't know on how to do that easily...
+    # - name: Fetch natip
+    #   set_fact:
+    #     external_ip_address: "{{ hostvars[inventory_hostname]['name'] | regex_replace('-instance$','') + '-address'}}"
+    #
+    # - name: Terminate an address
+    #   gcp_compute_address:
+    #     name: "{{ external_ip_address }}"
+    #     region: "{{ gcp_region }}"
+    #     project: "{{ gcp_project_id }}"
+    #     auth_kind: "{{ gcp_auth_kind }}"
+    #     service_account_file: "{{ gcp_service_account_file }}"
+    #     scopes: "{{ scopes }}"
+    #     state: absent
+
+# #####################################################################
+# Deploy Deep Security
+# #####################################################################
+- name: Deploy Deep Security
+  hosts: tag_role_dsm
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    # !! "{{ groups['postgresql'] }}" holds the internal network ip of the postgresql !!
+    # !! "{{ groups['dsm'] }}" holds the internal network ip of deep security !!
+    - name: Deploy Deep Security
+      include_role:
+        name: deepsecurity
+      vars:
+        operation: create_instance
+        addressandportsscreen_manageraddress: "{{ groups['moadsd_ng_dsm_instance'][0] }}"
+        licensescreen_license: '{{ deepsecurity_license }}'
+        databasescreen_hostname: "{{ groups['moadsd_ng_postgresql_instance'][0] }}"
+        databasescreen_databasename: "{{ deepsecurity_database_name }}"
+        databasescreen_username: "{{ deepsecurity_database_user }}"
+        databasescreen_password: "{{ deepsecurity_database_password }}"
+        credentialsscreen_administrator_username: "{{ deepsecurity_administrator_username }}"
+        credentialsscreen_administrator_password: "{{ deepsecurity_administrator_password }}"
+        dsm_download_url: "{{ deepsecurity_download_url }}"
+        dsm_installer: "{{ deepsecurity_installer }}"
+      when: site_deploy_deepsecurity == True
+
+# #####################################################################
+# Deploy Kubernetes cluster with kubeadm
+# #####################################################################
+- name: Create Kubernetes cluster with kubeadm
+  hosts: tag_role_k8smaster
+  become: true
+  # 06/19/2019 Bug in systemd
+  # https://github.com/kubernetes/kubernetes/issues/76531
+  # therefore we use cgroupfs
+  # The 'missing' slice is created https://github.com/kubernetes/kubernetes/blob/master/vendor/github.com/opencontainers/runc/libcontainer/cgroups/systemd/apply_systemd.go#L170-L176 by runc's systemd code. This is why the error is only seen when systemd is configured as the cgroup manager.
+  # The error comes from https://github.com/kubernetes/kubernetes/blob/master/vendor/github.com/google/cadvisor/container/raw/watcher.go#L80-L99 when cadvisor starts trying to collect and process events from the newly created 'slice/container'.
+  # Presumably there is a race condition here, whereby cadvisor is unaware that the 'slice/container' it is trying to start an event watcher for has been deleted by runc.
+  # Perhaps cadvisor could close the watcher on receiving an error from inotify_add_watch of 'no such file or directory' and could perhaps generate a different error/warning message when this is the case?? Or perhaps it could just handle a race of this nature by gracefully closing the watcher and not logging an error of any kind?
+  # If I'm reading everything correctly, the slice is created only as part of runc's efforts to discover various systemd capabilities (or issues!!) and is deleted pretty much immediately after it is created. As such, the error generated by cadvisor is fairly innocuous and could probably be ignored if it didn't keep appearing in the kubelet logs every few seconds!
+  # It looks as though the runc code only creates the slice in an attempt to detect broken systemd implementations. Ironically, the error message littering the kubelet logs may only appear on systems where systemd has been patched to fix THIS error. Since that bug has most likely been fixed for all modern OSes running systemd perhaps a naive fix for this problem would be to remove the check altogether?
+
+  # Container Runtime Sockets:
+  # /var/run/crio/crio.sock       unix:///var/run/crio/crio.sock
+  # /var/run/dockershim.sock      unix:///var/run/dockershim.sock
+  vars:
+    operation: create_master
+    node_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+    apiserver_advertise_address: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+    apiserver_cert_extra_sans: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+    kubeadm_container_runtime_socket: /var/run/dockershim.sock
+    cgroupdriver: cgroupfs
+    deploy_golang: no
+    deploy_runc: no
+    deploy_cni: no
+    deploy_crio: no
+    deploy_docker: yes
+    deploy_kubernetes: yes
+    deploy_pod_network: yes
+    deploy_helm: yes
+    deploy_rook_ceph: yes
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Deploy Kubernetes master with Docker & Cri-O
+      include_role:
+        name: kubernetes-kubeadmin
+      vars:
+        kubelet_container_runtime_socket: /var/run/crio/crio.sock
+      when:
+        - site_deploy_kubernetes == True
+        - kubernetes_container_runtime == 'crio'
+
+    - name: Deploy Kubernetes master with Docker
+      include_role:
+        name: kubernetes-kubeadmin
+      vars:
+        kubelet_container_runtime_socket: /var/run/dockershim.sock
+      when:
+        - site_deploy_kubernetes == True
+        - kubernetes_container_runtime == 'docker'
+
+- name: Deploy Kubernetes workers
+  hosts: tag_role_k8sworker
+  become: true
+
+  vars:
+    operation: create_workers
+    node_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+    cgroupdriver: cgroupfs
+    deploy_kubernetes: yes
+    # FIXME
+    # ansible_ssh_common_args: '-o ProxyCommand="ssh -o StrictHostKeyChecking=no -W %h:%p ansible@34.89.236.127"'
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Deploy Kubernetes worker with Cri-O
+      include_role:
+        name: kubernetes-kubeadmin
+      vars:
+        kubelet_container_runtime_socket: /var/run/crio/crio.sock
+        deploy_golang: yes
+        deploy_runc: yes
+        deploy_cni: yes
+        deploy_crio: yes
+        deploy_docker: no
+      when:
+        - site_deploy_kubernetes == True
+        - kubernetes_container_runtime == 'crio'
+
+    - name: Deploy Kubernetes worker with Docker
+      include_role:
+        name: kubernetes-kubeadmin
+      vars:
+        kubelet_container_runtime_socket: /var/run/dockershim.sock
+        deploy_golang: no
+        deploy_runc: no
+        deploy_cni: no
+        deploy_crio: no
+        deploy_docker: yes
+      when:
+        - site_deploy_kubernetes == True
+        - kubernetes_container_runtime == 'docker'
+
+- name: Wait for Rook-Ceph to Initialize and create ssl certificate pod
+  hosts: tag_role_k8smaster
+  become: true
+  become_user: ubuntu
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Check if count of started OSD pods equals worker count
+      shell: if [ $(kubectl -n rook-ceph get pods | grep -c "\-[0-9]\-.*Running") -eq {{ kubernetes_worker_count }} ] ; then exit 0 ; else exit 1 ; fi
+      register: grep_result
+      until: grep_result.rc == 0
+      retries: 60
+      delay: 10
+      ignore_errors: yes
+      when: site_deploy_kubernetes == True
+
+    - name: Create k8s certificate
+      include_role:
+        name: kubernetes-kubeadmin
+      vars:
+        operation: k8s_create_certificate
+      when: site_deploy_kubernetes == True
+
+    - name: Create k8s certificate pod
+      include_role:
+        name: kubernetes-kubeadmin
+      vars:
+        operation: k8s_create_certificate_pod
+      when: site_deploy_kubernetes == True
+
+# #####################################################################
+# Deploy Docker Registry
+# #####################################################################
+- name: Deploy Docker Registry
+  hosts: tag_role_k8smaster
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Deploy Docker Registry
+      include_role:
+        name: registry
+      vars:
+        operation: create_instance
+      when: site_deploy_registry == True
+
+# #####################################################################
+# Deploy Deep Security Smart Check
+# #####################################################################
+- name: Deploy Deep Security Smart Check
+  hosts: tag_role_k8smaster
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Deploy Deep Security Smart Check
+      include_role:
+        name: smartcheck
+      vars:
+        operation: create_instance
+        activationCode: "{{ smartcheck_license }}"
+        auth_masterPassword: trendmicro
+      when: site_deploy_smartcheck == True
+
+    - name: Enable pre-registry scanning for Deep Security Smart Check
+      include_role:
+        name: smartcheck
+      vars:
+        operation: enable_pre_reg_scanning
+      when: site_deploy_smartcheck == True
+
+    - name: Configure Deep Security Smart Check
+      include_role:
+        name: smartcheck
+      vars:
+        operation: configure
+      when: site_deploy_smartcheck == True
+
+# #####################################################################
+# Deploy Jenkins
+# #####################################################################
+- name: Deploy Jenkins
+  hosts: tag_role_k8smaster
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Deploy Jenkins
+      include_role:
+        name: jenkins
+      vars:
+        operation: create_instance
+      when: site_deploy_jenkins == True
+
+# #####################################################################
+# Deploy GitLab
+# #####################################################################
+- name: Deploy GitLab
+  hosts: tag_role_k8smaster
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Deploy GitLab
+      include_role:
+        name: gitlab
+      vars:
+        operation: create_instance
+      when: site_deploy_gitlab == True
+
+# #####################################################################
+# Deploy GitLab on Docker
+# #####################################################################
+- name: Deploy GitLab
+  hosts: tag_role_gitlab
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Deploy GitLab
+      include_role:
+        name: gitlab
+      vars:
+        operation: create_instance_docker
+        cgroupdriver: cgroupfs
+      when: site_deploy_gitlab_docker == True
+
+# #####################################################################
+# Deploy Linkerd
+# #####################################################################
+- name: Deploy Linkerd
+  hosts: tag_role_k8smaster
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Deploy Linkerd
+      include_role:
+        name: linkerd
+      vars:
+        operation: create_instance
+      when: site_deploy_linkerd == True
+
+# #####################################################################
+# Patch Docker to allow insecure registries and docker.sock for all
+# local users. Only when k8s runtime is docker.
+# #####################################################################
+- hosts: tag_role_k8smaster
+  vars:
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Get ipaddr of k8smaster
+      set_fact:
+        remote_ip: "{{ inventory_hostname | ipaddr}}"
+
+    - name: Get ipaddr of k8smaster
+      set_fact:
+        remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+      when: not remote_ip
+
+    - name: Store external ip address of kubernetes master
+      add_host:
+        name: "{{ remote_ip }}"
+        groups: "moadsd_ng_k8smaster_instance_public"
+
+- hosts: tag_role_k8smaster, tag_role_k8sworker
+  vars:
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Change Docker Socket Permissions
+      become: true
+      file:
+        path: /var/run/docker.sock
+        mode: '666'
+
+    - name: Allow insecure registries
+      become: true
+      copy:
+        dest: /etc/docker/daemon.json
+        mode: 0640
+        content: |
+          {
+            "insecure-registries": ["{{ groups['moadsd_ng_k8smaster_instance_public'][0] }}:{{ smartcheck_registry }}", "{{ groups['moadsd_ng_k8smaster_instance_public'][0] }}:{{ registry_nodeport }}", "{{ kubernetes_master_instance_name }}:{{ smartcheck_registry }}", "{{ kubernetes_master_instance_name }}:{{ registry_nodeport }}"]
+          }
+
+    - name: Docker restart
+      become: true
+      command: systemctl reload docker

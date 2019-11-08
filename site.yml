@@ -1,0 +1,42 @@
+---
+# #####################################################################
+# Create MOADSD-NG Environment
+# #####################################################################
+- name: Create MOADSD-NG Environment
+  hosts: localhost
+  gather_facts: no
+  connection: local
+
+  vars:
+    scopes:
+      - https://www.googleapis.com/auth/compute
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Create subdirectory host_vars
+      file:
+        path: "./host_vars"
+        state: directory
+
+    - name: Create subdirectory site
+      file:
+        path: "./site_{{ type }}"
+        state: directory
+
+    - name: Create GCP environment
+      include: start_gcp.yml
+      when: type == 'gcp'
+
+    - name: Create AWS environment
+      include: start_aws.yml
+      when: type == 'aws'
+
+    - name: Create Azure environment
+      include: start_azure.yml
+      when: type == 'azure'
+
+    - name: Create ESXi environment
+      include: start_esx.yml
+      when: type == 'esx'

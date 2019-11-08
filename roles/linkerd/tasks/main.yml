@@ -1,0 +1,12 @@
+---
+# #####################################################################
+# Create, Manage and Terminate Jenkins
+# #####################################################################
+- name: "Listing parameters"
+  debug:
+    msg:
+      - "operation                    : {{ operation }}"
+
+- name: Create instance
+  include: linkerd_create_instance.yml
+  when: operation == 'create_instance'

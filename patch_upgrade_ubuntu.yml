@@ -1,0 +1,26 @@
+- hosts: all
+  vars:
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: APT update
+      become: true
+      apt:
+        update_cache: yes
+
+    - name: APT update
+      become: true
+      apt:
+        upgrade: yes
+
+    - name: APT update
+      become: true
+      apt:
+        autoclean: yes
+
+    - name: APT update
+      become: true
+      apt:
+        autoremove: yes

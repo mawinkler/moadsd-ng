@@ -1,0 +1,29 @@
+---
+# #####################################################################
+# Create a linux instance in Azure environment
+# #####################################################################
+- name: Current play
+  debug:
+    msg: "Creating instance {{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+
+- name: Ensure the project network is created
+  include: azure_create_network.yml
+
+- name: Create a linux server instance
+  azure_rm_virtualmachine:
+    resource_group: "{{ azure_resource_group }}"
+    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+    vm_size: "{{ instance_machine_type }}"
+    admin_username: "{{ az_admin_username }}"
+    admin_password: "{{ az_admin_password }}"
+    storage_account: examplestorage01
+    ssh_public_keys:
+      - path: /home/ansible/.ssh/authorized_keys
+        key_data: "{{ ansible_ssh_key }}"
+    image:
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: "{{ instance_source_image }}"
+      version: latest
+    tags:
+      env: development

@@ -1,0 +1,130 @@
+---
+# #####################################################################
+# Deploy MOADSD-NG Environment
+# #####################################################################
+
+# #####################################################################
+# Store some private ips within the ansible hostvars
+# #####################################################################
+- hosts: tag_role_k8smaster
+  tasks:
+    - name: Get internal ip address of kubernetes master
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_k8smaster_instance"
+
+- hosts: tag_role_dsm
+  tasks:
+    - name: Get internal ip address of deep security
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_dsm_instance"
+
+- hosts: tag_role_dsm_db
+  tasks:
+    - name: Get internal ip address of postgresql
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_postgresql_instance"
+
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Listing environment
+      debug:
+        msg:
+          - "Kubernetes Master            : {{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+      when: site_deploy_kubernetes == True
+
+    - name: Listing environment
+      debug:
+        msg:
+          - "Deep Security                : {{ groups['moadsd_ng_dsm_instance'][0] }}"
+          - "PostgreSQL                   : {{ groups['moadsd_ng_postgresql_instance'][0] }}"
+      when: site_deploy_deepsecurity == True
+
+# #####################################################################
+# Deploy PostgreSQL database for Deep Security
+# #####################################################################
+- name: Create PostgreSQL database for Deep Security
+  hosts: tag_role_dsm_db
+  become: true
+
+  # vars:
+  #   ansible_ssh_common_args: '-o ProxyCommand="ssh -o StrictHostKeyChecking=no -W %h:%p ansible@18.185.46.236"'
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    # !! "{{ groups['dsm'] }}" holds the internal network ip of the dsm !!
+    - name: Deploy PostgreSQL
+      include_role:
+        name: postgresql
+      vars:
+        operation: create_instance
+        database_client: "{{ groups['moadsd_ng_dsm_instance'][0] }}"
+      when: site_deploy_deepsecurity == True
+
+    - name: Create Database for Deep Security in PostgreSQL
+      include_role:
+        name: postgresql
+      vars:
+        operation: create_database
+        database_name: "{{ deepsecurity_database_name }}"
+        database_user: "{{ deepsecurity_database_user }}"
+        database_password: "{{ deepsecurity_database_password }}"
+        database_role_attr_flags: "{{ deepsecurity_database_role_attr_flags }}"
+        database_priv: "{{ deepsecurity_database_priv }}"
+      when: site_deploy_deepsecurity == True
+
+
+    # I'd like to remove the nat ip after the installation on postgresql
+    # but for that, I'd need to detach the ip from the instance before
+    # which I don't know on how to do that easily...
+    # - name: Fetch natip
+    #   set_fact:
+    #     external_ip_address: "{{ hostvars[inventory_hostname]['name'] | regex_replace('-instance$','') + '-address'}}"
+    #
+    # - name: Terminate an address
+    #   gcp_compute_address:
+    #     name: "{{ external_ip_address }}"
+    #     region: "{{ gcp_region }}"
+    #     project: "{{ gcp_project_id }}"
+    #     auth_kind: "{{ gcp_auth_kind }}"
+    #     service_account_file: "{{ gcp_service_account_file }}"
+    #     scopes: "{{ scopes }}"
+    #     state: absent
+
+# #####################################################################
+# Deploy Deep Security
+# #####################################################################
+- name: Deploy Deep Security
+  hosts: tag_role_dsm
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    # !! "{{ groups['postgresql'] }}" holds the internal network ip of the postgresql !!
+    # !! "{{ groups['dsm'] }}" holds the internal network ip of deep security !!
+    - name: Deploy Deep Security
+      include_role:
+        name: deepsecurity
+      vars:
+        operation: create_instance
+        addressandportsscreen_manageraddress: "{{ groups['moadsd_ng_dsm_instance'][0] }}"
+        licensescreen_license: '{{ deepsecurity_license }}'
+        databasescreen_hostname: "{{ groups['moadsd_ng_postgresql_instance'][0] }}"
+        databasescreen_databasename: "{{ deepsecurity_database_name }}"
+        databasescreen_username: "{{ deepsecurity_database_user }}"
+        databasescreen_password: "{{ deepsecurity_database_password }}"
+        credentialsscreen_administrator_username: "{{ deepsecurity_administrator_username }}"
+        credentialsscreen_administrator_password: "{{ deepsecurity_administrator_password }}"
+        dsm_download_url: "{{ deepsecurity_download_url }}"
+        dsm_installer: "{{ deepsecurity_installer }}"
+      when: site_deploy_deepsecurity == True

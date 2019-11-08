@@ -1,0 +1,10 @@
+---
+# #####################################################################
+# Fetch Deep Security Configuration
+# #####################################################################
+- name: Copy System Configuration
+  ds_copy:
+    src: system_settings
+    flat: 'yes'
+    dsm_url: https://35.234.120.27:4119
+    api_key: E177E9E2-3DE2-18EC-75A7-A5F90786F2E5:+dzOb3VdxZEr9Eg75GdCtYBZOoNIJXjsAtPwJpj48Jk=

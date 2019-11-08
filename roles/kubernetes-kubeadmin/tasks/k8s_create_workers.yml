@@ -1,0 +1,64 @@
+---
+# #####################################################################
+# Create a Kubernetes master with kubeadm
+# #####################################################################
+#
+# Preparations
+#
+# - name: Update all in Ubuntu
+#   apt:
+#     upgrade: dist
+#     update_cache: yes
+#     cache_valid_time: 86400 #One day
+- name: Deploy Golang
+  include: deploy_golang.yml
+  when: deploy_golang == True
+
+- name: Deploy Runc
+  include: deploy_runc.yml
+  when: deploy_runc == True
+
+- name: Deploy cni
+  include: deploy_cni.yml
+  when: deploy_cni == True
+
+- name: Deploy Docker
+  include: deploy_docker.yml
+  when: deploy_docker == True
+
+- name: Deploy Cri-O
+  include: deploy_crio.yml
+  when: deploy_crio == True
+
+- name: Deploy Kubernetes
+  block:
+    - include: deploy_kubernetes.yml
+
+    # kubeadm token create has a bug and currently does not understand --cri-socket
+    # Therefore we need to create a config file for kubeadm
+    - name: Kubeadm create token create configuration file
+      copy:
+        dest: /root/kubeadm_token_create_config.yaml
+        mode: 0640
+        content: |
+          apiVersion: kubeadm.k8s.io/v1beta1
+          kind: InitConfiguration
+          nodeRegistration:
+            criSocket: "{{ kubelet_container_runtime_socket }}"
+
+    - name: Kubeadm copy join command to server location
+      copy:
+        src: ./site_{{ type }}/join-command
+        dest: /tmp/join-command.sh
+        mode: '0777'
+
+    - name: Kubeadm join the node to cluster
+      shell: sh /tmp/join-command.sh  >> node_joined.txt
+      args:
+        chdir: $HOME
+        creates: node_joined.txt
+
+    # - name: Kubernetes label master as mds node
+    #   become: false
+    #   command: kubectl label nodes {{ansible_hostname}} role=storage-node
+  when: deploy_kubernetes == True

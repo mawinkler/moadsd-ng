@@ -1,0 +1,126 @@
+---
+# #####################################################################
+# Deploy MOADSD-NG Environment
+# #####################################################################
+
+# #####################################################################
+# Store some private ips within the ansible hostvars
+# #####################################################################
+- hosts: tag_role_k8smaster
+  tasks:
+    - name: Get internal ip address of kubernetes master
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_k8smaster_instance"
+
+- hosts: tag_role_dsm
+  tasks:
+    - name: Get internal ip address of deep security
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_dsm_instance"
+
+- hosts: tag_role_dsm_db
+  tasks:
+    - name: Get internal ip address of postgresql
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_postgresql_instance"
+
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Listing environment
+      debug:
+        msg:
+          - "Kubernetes Master            : {{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+      when: site_deploy_kubernetes == True
+
+    - name: Listing environment
+      debug:
+        msg:
+          - "Deep Security                : {{ groups['moadsd_ng_dsm_instance'][0] }}"
+          - "PostgreSQL                   : {{ groups['moadsd_ng_postgresql_instance'][0] }}"
+      when: site_deploy_deepsecurity == True
+
+# #####################################################################
+# Deploy Endpoints / Servers
+# #####################################################################
+- name: Deploy Endpoints
+  hosts: tag_role_linuxep, tag_role_windowsep
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Deploy DSA
+      include_role:
+        name: deepsecurity-agent
+      vars:
+        operation: deploy
+        # dsm_agent_download_hostname: app.deepsecurity.trendmicro.com
+        # dsm_agent_download_port: 443
+        dsm_agent_download_hostname: "{{ groups['moadsd_ng_dsm_instance'][0] }}"
+        dsm_agent_download_port: 4119
+        dsm_agent_activation_hostname: "{{ groups['moadsd_ng_dsm_instance'][0] }}"
+        dsm_agent_activation_port: 4120
+        force_reactivation: False
+      when: site_deploy_endpoints == True
+
+- name: Set Linux Server policy
+  hosts: tag_role_linuxep
+  tasks:
+    - name: Set Policy
+      include_role:
+        name: deepsecurity-agent
+      vars:
+        operation: set-policy-by-name
+        policy_name: Linux Server
+
+- name: Set Windows Server policy
+  hosts: tag_role_windowsep
+  tasks:
+    - name: Set Policy
+      include_role:
+        name: deepsecurity-agent
+      vars:
+        operation: set-policy-by-name
+        policy_name: Windows Server
+
+- name: Update Configuration
+  hosts: tag_role_linuxep, tag_role_windowsep
+  tasks:
+    - name: Update Configuration
+      include_role:
+        name: deepsecurity-agent
+      vars:
+        operation: update-configuration
+    - name: Initiate Recommendation Scan
+      include_role:
+        name: deepsecurity-agent
+      vars:
+        operation: run-recommendation-scans
+
+- name: Prepare Facter for Deep Security
+  hosts: tag_role_linuxep
+  become: yes
+  tasks:
+    - name: Update APT cache
+      yum:
+        update_cache: yes
+    - name: Install the latest version of "facter"
+      yum:
+        name: facter
+        state: present
+    - name: "Create custom fact directory"
+      file:
+        path: "/etc/ansible/facts.d"
+        state: "directory"
+    - name: "Insert custom fact file"
+      copy:
+        src: ./files/dsa_status.fact
+        dest: /etc/ansible/facts.d/dsa_status.fact
+        mode: 0755

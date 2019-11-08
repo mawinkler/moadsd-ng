@@ -1,0 +1,57 @@
+---
+# #####################################################################
+# Terminate a linux instance in GCP environment
+# #####################################################################
+- name: Current play
+  debug:
+    msg:
+      - "Terminating instance {{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+
+- name: Terminate an instance
+  gcp_compute_instance:
+    state: absent
+    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+    zone: "{{ gcp_zone }}"
+    project: "{{ gcp_project_id }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+    scopes: "{{ scopes }}"
+
+- name: Terminate a disk
+  gcp_compute_disk:
+    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-disk"
+    zone: "{{ gcp_zone }}"
+    project: "{{ gcp_project_id }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+    scopes:
+      - https://www.googleapis.com/auth/compute
+    state: absent
+
+- name: Terminate an address
+  gcp_compute_address:
+    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-address"
+    region: "{{ gcp_region }}"
+    project: "{{ gcp_project_id }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+    scopes: "{{ scopes }}"
+    state: absent
+
+- name: Terminate the firewall
+  gcp_compute_firewall:
+    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-anywhere-firewall"
+    project: "{{ gcp_project_id }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+    scopes: "{{ scopes }}"
+    state: absent
+
+- name: Terminate the firewall
+  gcp_compute_firewall:
+    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-firewall"
+    project: "{{ gcp_project_id }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+    scopes: "{{ scopes }}"
+    state: absent

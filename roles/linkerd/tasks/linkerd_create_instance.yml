@@ -1,0 +1,44 @@
+---
+# #####################################################################
+# Create a Linkerd instance
+# #####################################################################
+- name: Linkerd Download
+  become: true
+  become_user: ubuntu
+  shell: curl -sL https://run.linkerd.io/install | sh
+  args:
+    chdir: /tmp
+    warn: false
+
+- name: Linkerd path
+  become: true
+  become_user: ubuntu
+  lineinfile:
+    path: /home/ubuntu/.bashrc
+    insertafter: EOF
+    line: 'PATH=$PATH:$HOME/.linkerd2/bin'
+
+- name: Linkerd Deploy
+  become: true
+  become_user: ubuntu
+  shell: $HOME/.linkerd2/bin/linkerd install | kubectl apply -f -
+  args:
+    chdir: $HOME
+
+# FIXME
+# --dry-run=true -o yaml | kubectl expose -f -
+- name: Linkerd expose dashboard
+  become: true
+  become_user: ubuntu
+  command: kubectl expose -n linkerd deployment linkerd-web --type=NodePort --name=linkerd-web-svc
+  ignore_errors: yes
+
+- name: Linkerd patch dashboard port
+  become: true
+  become_user: ubuntu
+  command: kubectl patch service -n linkerd linkerd-web-svc --type='json' --patch='[{"op":"replace", "path":"/spec/ports/0/nodePort", "value":{{ linkerd_dashboard_nodeport }}}]'
+
+- name: Create link document for Linkerd dashboard
+  become: true
+  become_user: ansible
+  local_action: copy content="http://{{ inventory_hostname }}:{{ linkerd_dashboard_nodeport }}" dest="./site_{{ type }}/linkerd.txt"

@@ -1,0 +1,30 @@
+- name: Include site credentials
+  include_vars: vars/site_secrets.yml
+
+- name: Include vars for GCP
+  include_vars: "{{ item }}"
+  with_items:
+    - vars/environment_gcp_secrets.yml
+    - vars/environment_gcp_vars.yml
+  when: type == 'gcp'
+
+- name: Include vars for AWS
+  include_vars: "{{ item }}"
+  with_items:
+    - vars/environment_aws_secrets.yml
+    - vars/environment_aws_vars.yml
+  when: type == 'aws'
+
+- name: Include vars for AZURE
+  include_vars: "{{ item }}"
+  with_items:
+    - vars/environment_azure_secrets.yml
+    - vars/environment_azure_vars.yml
+  when: type == 'azure'
+
+- name: Include vars for ESX
+  include_vars: "{{ item }}"
+  with_items:
+    - vars/environment_esx_secrets.yml
+    - vars/environment_esx_vars.yml
+  when: type == 'esx'

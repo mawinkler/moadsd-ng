@@ -1,0 +1,63 @@
+---
+# #####################################################################
+# Enable registry scanning in Deep Security Smart Check
+# #####################################################################
+- name: Create Deep Security Smart Check overrides file
+  copy:
+    dest: /home/ubuntu/overrides-pre-registry.yml
+    mode: 0640
+    owner: ubuntu
+    content: |
+      registry:
+        enabled: true
+        auth:
+          username: {{ smartcheck_registry_username }}
+          password: {{ smartcheck_registry_password }}
+      certificate:
+        secret:
+          name: k8s-certificate
+          certificate: tls.crt
+          privateKey: tls.key
+
+- name: Creating Kubernetes secret k8s-certificate
+  become: true
+  become_user: ubuntu
+  shell: kubectl create secret tls k8s-certificate --namespace {{ dssc_namespace }} --cert=k8s.crt --key=k8s.key --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME
+
+- name: Enabling pre-registry scanning
+  become: true
+  become_user: ubuntu
+  shell: helm upgrade --namespace {{ dssc_namespace }} --values /home/ubuntu/overrides-pre-registry.yml {{ dssc_name }} {{ dssc_chart }} --reuse-values >> dssc.log
+  args:
+    chdir: $HOME
+
+# - name: Deleting proxy pod
+#   become: true
+#   become_user: ubuntu
+#   shell: kubectl delete pods --namespace {{ dssc_namespace }} -l "service=proxy,release=deepsecurity-smartcheck"
+
+- name: Deep Security Smart Check Registry patch port
+  become: true
+  become_user: ubuntu
+  command: kubectl patch service -n {{ dssc_namespace }} proxy --type='json' --patch='[{"op":"replace", "path":"/spec/ports/2/nodePort", "value":{{ smartcheck_registry }}}]'
+
+- name: Store Deep Security Smart Check Registry credentials
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/dsscreg.txt
+    mode: 0640
+    content: |
+      URL: https://{{ inventory_hostname }}:{{ smartcheck_registry }}
+      Username: {{ smartcheck_registry_username }}
+      Password: {{ smartcheck_registry_password }}
+
+- name: Fetch dsscreg.txt
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/dsscreg.txt
+    dest: ./site_{{ type }}/
+    flat: yes

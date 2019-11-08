@@ -1,0 +1,94 @@
+---
+# #####################################################################
+# Deploy Kubernetes
+# #####################################################################
+#
+# Networking
+#
+# - name: Iptables flush
+#   command: "iptables -F"
+
+#
+# Swap
+#
+- name: Swap remove swapfile from /etc/fstab
+  mount:
+    name: "{{ item }}"
+    fstype: swap
+    state: absent
+  with_items:
+    - swap
+    - none
+
+- name: Swap disable
+  command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+
+# KUBELET_EXTRA_ARGS=--node-ip={{ node_ip }} --feature-gates="AllAlpha=false,RunAsGroup=true" --container-runtime=remote --cgroup-driver={{ cgroupdriver }} --container-runtime-endpoint={{ kubelet_container_runtime_socket }} --runtime-request-timeout=5m --allow-privileged=true
+- name: Kubernetes defaults for kubelet
+  copy:
+    dest: /etc/default/kubelet
+    mode: 0640
+    content: |
+      [Service]
+      Environment=--node-ip={{ node_ip }} --feature-gates="AllAlpha=false,RunAsGroup=true" --container-runtime=remote --cgroup-driver={{ cgroupdriver }} --container-runtime-endpoint={{ kubelet_container_runtime_socket }} --runtime-request-timeout=5m --allow-privileged=true
+
+- name: Kubernetes setup required sysctl params
+  copy:
+    dest: /etc/sysctl.d/99-kubernetes-cri.conf
+    mode: 0640
+    content: |
+      net.bridge.bridge-nf-call-iptables  = 1
+      net.ipv4.ip_forward                 = 1
+      net.bridge.bridge-nf-call-ip6tables = 1
+
+- name: Kubernetes probing required modules
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - overlay
+    - br_netfilter
+
+- name: Kubernetes add apt signing key
+  apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+
+- name: Kubernetes add apt repository
+  apt_repository:
+    repo: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+    state: present
+    filename: kubernetes.list
+
+- name: Enable universe repository
+  apt_repository:
+    repo: "deb http://archive.ubuntu.com/ubuntu/ bionic universe"
+    state: present
+
+# Ansible k8s modules requires OpenShift python client which is installed by pip3
+- name: Kubernetes install binaries
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - kubelet=1.14.4-00
+      - kubeadm=1.14.4-00
+      - kubectl=1.14.4-00
+      - kubernetes-cni
+      - python3-pip
+
+- name: Install OpenShift python client
+  pip:
+    name: openshift
+
+- name: Kubelet kubelet restart
+  service:
+    name: kubelet
+    daemon_reload: yes
+    state: restarted
+
+- name: Daemon reload
+  command: systemctl daemon-reload

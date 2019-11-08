@@ -1,0 +1,93 @@
+---
+# #####################################################################
+# Deploy Docker
+# #####################################################################
+- name: Get ipaddr of k8smaster
+  set_fact:
+    remote_ip: "{{ inventory_hostname | ipaddr}}"
+
+- name: Get ipaddr of k8smaster
+  set_fact:
+    remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+  when: not remote_ip
+
+- name: Docker install packages
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+
+- name: Docker add an apt signing key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Docker add apt repository for stable version
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+    state: present
+
+- name: Docker install and its dependecies
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - docker-ce=5:18.09.8~3-0~ubuntu-xenial
+      - docker-ce-cli=5:18.09.8~3-0~ubuntu-xenial
+      - containerd.io
+
+- name: Docker create daemon configuration file
+  copy:
+    dest: /etc/docker/daemon.json
+    mode: 0640
+    content: |
+      {
+        "exec-opts": ["native.cgroupdriver={{ cgroupdriver }}"],
+        "log-driver": "json-file",
+        "log-opts": {
+          "max-size": "100m"
+        },
+        "storage-driver": "overlay2"
+      }
+
+- name: Change Docker Socket Permissions
+  become: true
+  file:
+    path: /var/run/docker.sock
+    mode: 666
+
+- name: Allow insecure registries
+  become: true
+  copy:
+    dest: /etc/docker/daemon.json
+    mode: 0640
+    content: |
+      {
+        "insecure-registries": ["{{ remote_ip }}:{{ smartcheck_registry }}", "{{ remote_ip }}:{{ registry_nodeport }}", "{{ kubernetes_master_instance_name }}:{{ smartcheck_registry }}", "{{ kubernetes_master_instance_name }}:{{ registry_nodeport }}"]
+      }
+
+- name: Docker add ubuntu user to group
+  user:
+    name: ubuntu
+    group: docker
+
+- name: Containerd configure
+  shell: |
+    containerd config default > /etc/containerd/config.toml
+
+- name: Daemon reload
+  command: systemctl daemon-reload
+
+- name: Docker restart
+  command: systemctl restart docker
+
+- name: Containerd restart
+  command: systemctl restart containerd

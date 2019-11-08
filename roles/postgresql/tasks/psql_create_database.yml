@@ -1,0 +1,33 @@
+---
+# #####################################################################
+# Creates a PostgreSQL database instance
+# #####################################################################
+# - name: PostgreSQL install packages
+#   apt:
+#     name: "{{ packages }}"
+#     state: present
+#     update_cache: yes
+#   vars:
+#     packages:
+#       - python-psycopg2
+
+- name: PostgreSQL create database
+  become: true
+  become_user: postgres
+  postgresql_db:
+    name: "{{ database_name }}"
+
+  # CREATE DATABASE "<database-name>";
+  # CREATE ROLE "<dsm-username>" WITH PASSWORD '<password>' LOGIN;
+  # GRANT ALL ON DATABASE "<database-name>" TO "<dsm-username>";
+  # GRANT CONNECT ON DATABASE "<database-name>" TO "<dsm-username>"
+  # ALTER ROLE <dsm-username> CREATEDB CREATEROLE;
+- name: PostgreSQL create role
+  become: true
+  become_user: postgres
+  postgresql_user:
+    db: "{{ database_name }}"
+    name: "{{ database_user }}"
+    password: "{{ database_password }}"
+    role_attr_flags: "{{ database_role_attr_flags }}"
+    priv: "{{ deepsecurity_database_priv }}"
