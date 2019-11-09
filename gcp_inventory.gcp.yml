@@ -12,8 +12,6 @@ hostnames:
   - private_ip
   - name
 groups:
-  webservers: "'-web-' in name"
-  databaseservers: "'-db-' in name"
 filters:
 scopes:
   - https://www.googleapis.com/auth/compute
