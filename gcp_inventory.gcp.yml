@@ -16,4 +16,4 @@ filters:
 scopes:
   - https://www.googleapis.com/auth/compute
 auth_kind: serviceaccount
-service_account_file: /home/ansible/erudite-variety-209408-00c77f90658d.json
+service_account_file: /home/ansible/ansible.json
