@@ -67,6 +67,10 @@
       }
     status_code: 200
 
+- name: Pause
+  pause:
+    seconds: 20
+
 - name: Reauthenticate to Smart Check
   uri:
     url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/sessions
