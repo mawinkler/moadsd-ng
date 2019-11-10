@@ -9,3 +9,4 @@ vars/environment_azure_secrets.yml
 vars/environment_esx_secrets.yml
 vars/environment_gcp_secrets.yml
 vars/site_secrets.yml
+get-docker.sh
