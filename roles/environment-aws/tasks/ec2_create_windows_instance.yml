@@ -62,7 +62,6 @@
       # $admin.SetPassword("Curry0000%")
       # ＜/powershell＞
     image_id: "{{ instance_source_image }}"
-    # wait: yes
     security_groups:
       - "{{ security_group_results.group_id }}"
     vpc_subnet_id: "{{ subnet_result.subnet.id }}"
@@ -128,7 +127,6 @@
       # $admin.SetPassword("Curry0000%")
       # ＜/powershell＞
     image_id: "{{ instance_source_image }}"
-    # wait: yes
     security_groups:
       - "{{ security_group_results.group_id }}"
     vpc_subnet_id: "{{ subnet_result.subnet.id }}"
