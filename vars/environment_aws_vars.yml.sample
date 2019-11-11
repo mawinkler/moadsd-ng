@@ -15,11 +15,16 @@ site_deploy_registry: yes
 
 # #####################################################################
 # AWS Cloud Settings
+# E.g.
+# aws_zone: eu-central-1a
+# aws_region: eu-central-1
+# aws_vpc_cidr_block: '10.0.0.0/16'
+# aws_subnet_cidr_block: '10.0.1.0/24'
 # #####################################################################
-aws_zone: eu-central-1a
-aws_region: eu-central-1
-aws_vpc_cidr_block: '10.0.0.0/16'
-aws_subnet_cidr_block: '10.0.1.0/24'
+aws_zone: <zone>
+aws_region: <region>
+aws_vpc_cidr_block: <vpc-cidr>
+aws_subnet_cidr_block: <subnet-cidr>
 startup_script_linux: |
        #!/bin/sh
        useradd -m -s /bin/bash ansible
