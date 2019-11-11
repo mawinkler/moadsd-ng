@@ -49,13 +49,11 @@
   ec2_instance:
     aws_access_key: "{{ aws_access_key }}"
     aws_secret_key: "{{ aws_secret_key }}"
-    key_name: "{{ aws_key_name }}"
     name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
     region: "{{ aws_region }}"
     instance_type: "{{ instance_machine_type }}"
     user_data: "{{ instance_startup_script }}"
     image_id: "{{ instance_source_image }}"
-    # wait: yes
     security_groups:
       - "{{ security_group_results.group_id }}"
     vpc_subnet_id: "{{ subnet_result.subnet.id }}"
@@ -78,13 +76,11 @@
   ec2_instance:
     aws_access_key: "{{ aws_access_key }}"
     aws_secret_key: "{{ aws_secret_key }}"
-    key_name: "{{ aws_key_name }}"
     name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
     region: "{{ aws_region }}"
     instance_type: "{{ instance_machine_type }}"
     user_data: "{{ instance_startup_script }}"
     image_id: "{{ instance_source_image }}"
-    # wait: yes
     security_groups:
       - "{{ security_group_results.group_id }}"
     vpc_subnet_id: "{{ subnet_result.subnet.id }}"
