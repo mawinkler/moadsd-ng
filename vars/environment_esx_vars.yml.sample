@@ -2,16 +2,20 @@
 # #####################################################################
 # Site Deploy Components
 # #####################################################################
-site_deploy_jumphost: no
 site_deploy_kubernetes: yes
-site_deploy_deepsecurity: no
 site_deploy_smartcheck: yes
 site_deploy_jenkins: yes
 site_deploy_gitlab: no
-site_deploy_gitlab_docker: no
-site_deploy_endpoints: no
 site_deploy_linkerd: yes
 site_deploy_registry: yes
+
+# #####################################################################
+# Site Deploy Components - Leave these to no
+# #####################################################################
+site_deploy_jumphost: no
+site_deploy_deepsecurity: no
+site_deploy_gitlab_docker: no
+site_deploy_endpoints: no
 
 # #####################################################################
 # ESXi Settings
