@@ -1,12 +1,17 @@
 join-command
+gcp_inventory.gcp.yml
 site_gcp/
 site_esx/
 site_aws/
 site_azure/
 host_vars/
 vars/environment_aws_secrets.yml
+vars/environment_aws_vars.yml
 vars/environment_azure_secrets.yml
+vars/environment_azure_vars.yml
 vars/environment_esx_secrets.yml
+vars/environment_esx_vars.yml
 vars/environment_gcp_secrets.yml
+vars/environment_gcp_vars.yml
 vars/site_secrets.yml
 get-docker.sh

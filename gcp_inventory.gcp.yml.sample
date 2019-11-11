@@ -1,0 +1,19 @@
+plugin: gcp_compute
+zones:
+  - europe-west3-c
+projects:
+  - moadsd-ng-4
+keyed_groups:
+  - prefix: tag
+    separator: '_'
+    key: tags['items']
+hostnames:
+  - public_ip
+  - private_ip
+  - name
+groups:
+filters:
+scopes:
+  - https://www.googleapis.com/auth/compute
+auth_kind: serviceaccount
+service_account_file: /home/ansible/ansible.json
