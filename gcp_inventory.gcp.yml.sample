@@ -1,8 +1,8 @@
 plugin: gcp_compute
 zones:
-  - europe-west3-c
+  - <zone>
 projects:
-  - moadsd-ng-4
+  - <project id>
 keyed_groups:
   - prefix: tag
     separator: '_'
@@ -16,4 +16,4 @@ filters:
 scopes:
   - https://www.googleapis.com/auth/compute
 auth_kind: serviceaccount
-service_account_file: /home/ansible/ansible.json
+service_account_file: <full path to service account json>
