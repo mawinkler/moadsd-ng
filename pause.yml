@@ -9,6 +9,7 @@
         name: environment-gcp
       vars:
         operation: stop_instance
+        instance_name: "{{ hostvars[inventory_hostname]['ansible_nodename'] }}"
       when: type == 'gcp'
 
     - name: Stop instance

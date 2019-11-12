@@ -4,8 +4,8 @@
 # #####################################################################
 - name: Current play
   debug:
-    msg: "Stopping instance {{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+    msg: "Stopping instance {{ instance_name }}"
 
 - name: Stop instance
   delegate_to: 127.0.0.1
-  command: gcloud compute instances stop --project "{{ gcp_project_id }}" --async "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance" --zone "{{ gcp_zone }}" --quiet
+  command: gcloud compute instances stop --project "{{ gcp_project_id }}" --async "{{ instance_name }}" --zone "{{ gcp_zone }}" --quiet
