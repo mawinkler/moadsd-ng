@@ -1,0 +1,11 @@
+---
+# #####################################################################
+# Stop an instance in GCP environment
+# #####################################################################
+- name: Current play
+  debug:
+    msg: "Stopping instance {{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+
+- name: Stop instance
+  delegate_to: 127.0.0.1
+  command: gcloud compute instances stop --project "{{ gcp_project_id }}" --async "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance" --zone "{{ gcp_zone }}" --quiet

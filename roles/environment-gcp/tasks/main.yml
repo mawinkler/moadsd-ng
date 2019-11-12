@@ -19,6 +19,14 @@
   include: gcp_create_windows_instance.yml
   when: operation == 'create_windows_instance'
 
+- name: Stop instance
+  include: gcp_stop_instance.yml
+  when: operation == 'stop_instance'
+
+- name: Start instance
+  include: gcp_start_instance.yml
+  when: operation == 'start_instance'
+
 - name: Terminate instance
   include: gcp_terminate_instance.yml
   when: operation == 'terminate_instance'
