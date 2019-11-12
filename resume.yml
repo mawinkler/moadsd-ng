@@ -4,11 +4,11 @@
     - name: Include vars
       include: site_vars.yml
 
-    - name: Stop instance
+    - name: Start instance
       include_role:
         name: environment-gcp
       vars:
-        operation: stop_instance
+        operation: start_instance
         instance_name: "{{ hostvars[inventory_hostname]['ansible_nodename'] }}"
       when: type == 'gcp'
 
