@@ -35,5 +35,5 @@ do
   break
 done
 
-echo 'Running Playbook'
+echo Running ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env}" ${run_pb}.yml
 ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env}" ${run_pb}.yml
