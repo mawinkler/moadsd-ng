@@ -1,4 +1,5 @@
 - hosts: tag_project_moadsd_ng
+  gather_facts: false
   vars:
   tasks:
     - name: Include vars
@@ -9,7 +10,7 @@
         name: environment-gcp
       vars:
         operation: stop_instance
-        instance_name: "{{ hostvars[inventory_hostname]['ansible_nodename'] }}"
+        instance_name: "{{ hostvars[inventory_hostname]['name'] }}"
       when: type == 'gcp'
 
     - name: Stop instance
