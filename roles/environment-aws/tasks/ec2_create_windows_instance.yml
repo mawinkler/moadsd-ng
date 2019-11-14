@@ -74,6 +74,7 @@
           delete_on_termination: true
     tags:
       role: "{{ instance_tags }}"
+      project: "{{ moadsd_ng_prefix }}"
     state: present
   register: ec2
   when:
@@ -139,6 +140,7 @@
           delete_on_termination: true
     tags:
       role: "{{ instance_tags }}"
+      project: "{{ moadsd_ng_prefix }}"
     state: present
   register: ec2
   when:
