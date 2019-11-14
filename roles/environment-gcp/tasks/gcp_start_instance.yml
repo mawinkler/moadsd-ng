@@ -6,6 +6,6 @@
   debug:
     msg: "Starting instance {{ instance_name }}"
 
-- name: Stop instance
+- name: Start instance
   delegate_to: 127.0.0.1
   command: gcloud compute instances start --project "{{ gcp_project_id }}" --async "{{ instance_name }}" --zone "{{ gcp_zone }}" --quiet
