@@ -103,7 +103,7 @@
         - linux
         - "{{ gcp_project_id }}"
         - "{{ instance_tags }}"
-        - project-"{{ moadsd_ng_prefix }}"
+        - "project-{{ moadsd_ng_prefix }}"
     auth_kind: "{{ gcp_auth_kind }}"
     service_account_file: "{{ gcp_service_account_file }}"
     scopes: "{{ scopes }}"
@@ -136,7 +136,7 @@
         - linux
         - "{{ gcp_project_id }}"
         - "{{ instance_tags }}"
-        - project-"{{ moadsd_ng_prefix }}"
+        - "project-{{ moadsd_ng_prefix }}"
     auth_kind: "{{ gcp_auth_kind }}"
     service_account_file: "{{ gcp_service_account_file }}"
     scopes: "{{ scopes }}"
