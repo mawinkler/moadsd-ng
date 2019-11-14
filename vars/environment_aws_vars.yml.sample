@@ -10,7 +10,7 @@ site_deploy_jenkins: yes
 site_deploy_gitlab: no
 site_deploy_gitlab_docker: no
 site_deploy_endpoints: no
-site_deploy_linkerd: yes
+site_deploy_linkerd: no
 site_deploy_registry: yes
 
 # #####################################################################
