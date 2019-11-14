@@ -1,4 +1,5 @@
 - hosts: all
+  gather_facts: false
   vars:
   tasks:
     - name: Include vars
@@ -9,17 +10,18 @@
         name: environment-gcp
       vars:
         operation: start_instance
-        instance_name: "{{ hostvars[inventory_hostname]['ansible_nodename'] }}"
+        instance_name: "{{ hostvars[inventory_hostname]['name'] }}"
       when: type == 'gcp'
 
-    - name: Stop instance
+    - name: Start instance
       include_role:
         name: environment-aws
       vars:
-        operation: stop_instance
+        operation: start_instance
+        instance_id: "{{ hostvars[inventory_hostname]['ec2_id'] }}"
       when: type == 'aws'
 
-    - name: Stop instance
+    - name: Start instance
       debug:
         msg: "not yet implemented"
       # include_role:

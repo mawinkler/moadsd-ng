@@ -1,4 +1,4 @@
-- hosts: all
+- hosts: tag_project_moadsd_ng
   vars:
   tasks:
     - name: Include vars
@@ -17,6 +17,7 @@
         name: environment-aws
       vars:
         operation: stop_instance
+        instance_id: "{{ hostvars[inventory_hostname]['ec2_id'] }}"
       when: type == 'aws'
 
     - name: Stop instance
