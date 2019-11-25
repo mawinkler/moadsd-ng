@@ -57,6 +57,32 @@
       become: true
       become_user: ubuntu
       command: kubectl apply -f /tmp/calico.yaml
+
+    - name: Calico download calico.yml
+      become: true
+      get_url:
+        url: https://github.com/projectcalico/calicoctl/releases/download/v3.5.8/calicoctl
+        dest: /usr/local/bin/calicoctl
+        mode: '0755'
+
+    - name: Create /etc/calico
+      become: true
+      file:
+        path: "/etc/calico"
+        state: directory
+        mode: '0755'
+
+    - name: Create Calico config
+      copy:
+        dest: /etc/calico/calicoctl.cfg
+        mode: 0644
+        content: |
+          apiVersion: projectcalico.org/v3
+          kind: CalicoAPIConfig
+          metadata:
+          spec:
+            datastoreType: "kubernetes"
+            kubeconfig: "/home/ubuntu/.kube/config"
   when: cluster_networking == 'calico_calico'
 
 #
