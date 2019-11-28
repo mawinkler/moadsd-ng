@@ -117,6 +117,6 @@
 - name: Create certificate pod deployment
   become: true
   become_user: ubuntu
-  shell: kubectl create -n default -f /home/ubuntu/moadsd-ng-certserv.yml --dry-run=true -o yaml | kubectl apply -f -
+  shell: kubectl apply -n default -f /home/ubuntu/moadsd-ng-certserv.yml --dry-run=true -o yaml | kubectl apply -f -
   args:
     chdir: $HOME
