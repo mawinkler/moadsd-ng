@@ -11,8 +11,8 @@
       master:
         image: {{ jenkins_image }}
         tag: {{ jenkins_tag }}
-        adminUser: {{ admin_username }}
-        adminPassword: {{ admin_password }}
+        adminUser: {{ jenkins_username }}
+        adminPassword: {{ jenkins_password }}
         resources:
           limits:
             cpu: {{ limits_cpu }}
@@ -78,8 +78,8 @@
   become_user: ubuntu
   shell: |
     echo URL: http://{{ inventory_hostname }}:{{ jenkins_nodeport }} > jenkins.txt
-    echo Username: admin >> jenkins.txt
-    echo Password: $(kubectl get secret --namespace jenkins jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 --decode) >> jenkins.txt
+    echo Username: {{ jenkins_username }} >> jenkins.txt
+    echo Password: {{ jenkins_password }} >> jenkins.txt
   args:
     chdir: $HOME
     creates: jenkins.txt
