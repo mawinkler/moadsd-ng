@@ -14,11 +14,13 @@
       when: type == 'gcp'
 
     - name: Stop instance
-      include_role:
-        name: environment-aws
-      vars:
-        operation: stop_instance
-        instance_id: "{{ hostvars[inventory_hostname]['ec2_id'] }}"
+      debug:
+        msg: "not yet implemented"
+            # include_role:
+      #   name: environment-aws
+      # vars:
+      #   operation: stop_instance
+      #   instance_id: "{{ hostvars[inventory_hostname]['ec2_id'] }}"
       when: type == 'aws'
 
     - name: Stop instance
