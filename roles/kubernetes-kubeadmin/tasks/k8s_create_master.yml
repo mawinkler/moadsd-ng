@@ -279,7 +279,7 @@
         - '[ -f ~/.kubectl_aliases ] && source ~/.kubectl_aliases'
         - 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }'
 
-    - name: Copy stern (stern -n jenkins . -t --since 10m)
+    - name: Copy stern
       copy:
         src: ./files/stern
         dest: /usr/local/bin/stern
