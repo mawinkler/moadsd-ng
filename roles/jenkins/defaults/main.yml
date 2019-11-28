@@ -7,8 +7,6 @@ limits_memory: 4096Mi
 agent_limits_cpu: 512m
 agent_limits_memory: 512Mi
 rbac_create: true
-admin_username: admin
-admin_password: TrendM1cr0
 
 jenkins_image: jenkins/jenkins
 jenkins_chart: stable/jenkins
