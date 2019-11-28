@@ -10,3 +10,7 @@
 - name: Create instance
   include: jenkins_create_instance.yml
   when: operation == 'create_instance'
+
+- name: Create credentials
+  include: jenkins_create_credentials.yml
+  when: operation == 'create_credentials'
