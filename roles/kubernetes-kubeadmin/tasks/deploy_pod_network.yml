@@ -58,7 +58,7 @@
       become_user: ubuntu
       command: kubectl apply -f /tmp/calico.yaml
 
-    - name: Calico download calico.yml
+    - name: Download calicoctl
       become: true
       get_url:
         url: https://github.com/projectcalico/calicoctl/releases/download/v3.5.8/calicoctl
@@ -72,7 +72,7 @@
         state: directory
         mode: '0755'
 
-    - name: Create Calico config
+    - name: Create calicoctl.cfg
       copy:
         dest: /etc/calico/calicoctl.cfg
         mode: 0644
