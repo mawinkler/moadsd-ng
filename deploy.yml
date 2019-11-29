@@ -424,16 +424,6 @@
         path: /var/run/docker.sock
         mode: '666'
 
-    - name: Allow insecure registries
-      become: true
-      copy:
-        dest: /etc/docker/daemon.json
-        mode: 0640
-        content: |
-          {
-            "insecure-registries": ["{{ groups['moadsd_ng_k8smaster_instance_public'][0] }}:{{ smartcheck_registry }}", "{{ groups['moadsd_ng_k8smaster_instance_public'][0] }}:{{ registry_nodeport }}", "{{ kubernetes_master_instance_name }}:{{ smartcheck_registry }}", "{{ kubernetes_master_instance_name }}:{{ registry_nodeport }}"]
-          }
-
     - name: Docker restart
       become: true
       command: systemctl reload docker
