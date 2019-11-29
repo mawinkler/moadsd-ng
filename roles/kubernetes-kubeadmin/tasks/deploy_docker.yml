@@ -56,7 +56,7 @@
           "max-size": "100m"
         },
         "storage-driver": "overlay2",
-        "insecure-registries": ["{{ remote_ip }}:{{ smartcheck_registry }}", "{{ remote_ip }}:{{ registry_nodeport }}", "{{ kubernetes_master_instance_name }}:{{ smartcheck_registry }}", "{{ kubernetes_master_instance_name }}:{{ registry_nodeport }}"]
+        "insecure-registries": ["{{ groups['moadsd_ng_k8smaster_instance_public'][0] }}:{{ smartcheck_registry }}", "{{ groups['moadsd_ng_k8smaster_instance_public'][0] }}:{{ registry_nodeport }}", "{{ kubernetes_master_instance_name }}:{{ smartcheck_registry }}", "{{ kubernetes_master_instance_name }}:{{ registry_nodeport }}"]
       }
 
 - name: Change Docker Socket Permissions
