@@ -3,7 +3,7 @@ run_env=""
 run_inv=""
 run_pb=""
 
-env_options=("gcp" "aws" "esx")
+env_options=("gcp" "aws" "esx" "site_secrets")
 echo 'Please choose the target environment: '
 select opt in "${env_options[@]}"
 do
@@ -22,6 +22,11 @@ do
     run_env=$opt
     run_inv="hosts"
     break
+    ;;
+    "site_secrets")
+    echo Running ansible-vault edit --vault-password-file ../.vault-pass.txt ./vars/site_secrets.yml
+    ansible-vault edit --vault-password-file ../.vault-pass.txt ./vars/site_secrets.yml
+    exit 0
     ;;
     *) echo "invalid option $REPLY";;
   esac
