@@ -154,7 +154,7 @@
     apiserver_advertise_address: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
     apiserver_cert_extra_sans: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
     kubeadm_container_runtime_socket: /var/run/dockershim.sock
-    cgroupdriver: cgroupfs
+    cgroupdriver: systemd
     deploy_golang: no
     deploy_runc: no
     deploy_cni: no
@@ -194,7 +194,7 @@
   vars:
     operation: create_workers
     node_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
-    cgroupdriver: cgroupfs
+    cgroupdriver: systemd
     deploy_kubernetes: yes
     # FIXME
     # ansible_ssh_common_args: '-o ProxyCommand="ssh -o StrictHostKeyChecking=no -W %h:%p ansible@34.89.236.127"'
