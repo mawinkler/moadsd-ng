@@ -29,6 +29,7 @@
           - blueocean
           - locale
           - python
+          - deepsecurity-smartcheck
           # - deepsecurity-smartcheck-plugin:1.1.2
         scriptApproval:
           - "new groovy.json.JsonBuilder java.lang.Object"
