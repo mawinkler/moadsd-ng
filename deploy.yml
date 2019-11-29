@@ -13,6 +13,20 @@
         name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
         groups: "moadsd_ng_k8smaster_instance"
 
+    - name: Get ipaddr of k8smaster
+      set_fact:
+        remote_ip: "{{ inventory_hostname | ipaddr}}"
+
+    - name: Get ipaddr of k8smaster
+      set_fact:
+        remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+      when: not remote_ip
+
+    - name: Store external ip address of kubernetes master
+      add_host:
+        name: "{{ remote_ip }}"
+        groups: "moadsd_ng_k8smaster_instance_public"
+
 - hosts: tag_role_dsm
   tasks:
     - name: Get internal ip address of deep security
