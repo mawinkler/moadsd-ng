@@ -55,7 +55,8 @@
         "log-opts": {
           "max-size": "100m"
         },
-        "storage-driver": "overlay2"
+        "storage-driver": "overlay2",
+        "insecure-registries": ["{{ remote_ip }}:{{ smartcheck_registry }}", "{{ remote_ip }}:{{ registry_nodeport }}", "{{ kubernetes_master_instance_name }}:{{ smartcheck_registry }}", "{{ kubernetes_master_instance_name }}:{{ registry_nodeport }}"]
       }
 
 - name: Change Docker Socket Permissions
@@ -63,16 +64,6 @@
   file:
     path: /var/run/docker.sock
     mode: 666
-
-- name: Allow insecure registries
-  become: true
-  copy:
-    dest: /etc/docker/daemon.json
-    mode: 0640
-    content: |
-      {
-        "insecure-registries": ["{{ remote_ip }}:{{ smartcheck_registry }}", "{{ remote_ip }}:{{ registry_nodeport }}", "{{ kubernetes_master_instance_name }}:{{ smartcheck_registry }}", "{{ kubernetes_master_instance_name }}:{{ registry_nodeport }}"]
-      }
 
 - name: Docker add ubuntu user to group
   user:
