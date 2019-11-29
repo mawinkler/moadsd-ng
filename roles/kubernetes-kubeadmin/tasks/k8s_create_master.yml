@@ -38,13 +38,27 @@
     # Initialize cluster
     #
     - name: Kubeadm pull images
-      command: kubeadm config images pull --cri-socket="{{ kubeadm_container_runtime_socket }}"
+      command: >
+        kubeadm config images pull
+        --cri-socket={{ kubeadm_container_runtime_socket }}
 
     - name: Kubeadm init
       shell: kubeadm init --apiserver-advertise-address="{{ apiserver_advertise_address }}" --apiserver-cert-extra-sans="{{ apiserver_cert_extra_sans }}" --pod-network-cidr="{{ pod_network_cidr }}" --cri-socket="{{ kubeadm_container_runtime_socket }}" >> cluster_initialized.txt
       args:
         chdir: $HOME
         creates: cluster_initialized.txt
+
+#>> cluster_initialized.txt
+    # - name: Kubeadm init
+    #   command: >
+    #     kubeadm init
+    #     --apiserver-advertise-address={{ apiserver_advertise_address }}
+    #     --apiserver-cert-extra-sans={{ apiserver_cert_extra_sans }}
+    #     --pod-network-cidr={{ pod_network_cidr }}
+    #     --cri-socket={{ kubeadm_container_runtime_socket }}
+    #   args:
+    #     chdir: $HOME
+        # creates: cluster_initialized.txt
 
     - name: Kubernetes setup kubeconfig for ubuntu user make directory
       file:
@@ -284,7 +298,6 @@
         src: ./files/stern
         dest: /usr/local/bin/stern
         mode: 0755
-
   when: deploy_kubernetes == True
 
 - name: Deploy pod network
