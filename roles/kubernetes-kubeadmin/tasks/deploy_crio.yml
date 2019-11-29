@@ -30,7 +30,7 @@
   apt_repository:
     repo: "deb http://archive.ubuntu.com/ubuntu/ bionic universe"
     state: present
-    
+
 - name: Cri-o install packages
   apt:
     name: "{{ packages }}"
@@ -120,7 +120,7 @@
 
 - name: Cri-o setup required sysctl params
   copy:
-    dest: /etc/sysctl.d/99-kubernetes-cri.conf
+    dest: /etc/sysctl.d/k8s.conf
     mode: 0640
     content: |
       net.bridge.bridge-nf-call-iptables  = 1
