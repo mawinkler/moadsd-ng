@@ -207,14 +207,14 @@
     - name: Kubernetes download dashboard definition
       get_url:
         url: https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
-        dest: /tmp
+        dest: /home/ubuntu
 
     - name: Kubernetes install dashboard
       become: true
       become_user: ubuntu
       k8s:
         state: present
-        src: /tmp/kubernetes-dashboard.yaml
+        src: /home/ubuntu/kubernetes-dashboard.yaml
 
     # FIXME
     # something like v--dry-run=true -o yaml | kubectl expose -f - possible?
