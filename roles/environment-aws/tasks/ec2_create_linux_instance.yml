@@ -72,6 +72,14 @@
   when:
     - instance_public_address == True
 
+- name: Disable AWS src dst checks
+  become: true
+  become_user: ansible
+  shell: aws ec2 modify-instance-attribute --instance-id {{ ec2.instance_ids[0] }} --no-source-dest-check
+  delegate_to: localhost
+  when:
+    - instance_public_address == True
+
 # FIXME VOLUME SIZE should be "{{ instance_size_gb | int }}"
 - name: Create a linux server instance
   ec2_instance:
@@ -99,6 +107,15 @@
   register: ec2
   when:
     - instance_public_address == False
+
+- name: Disable AWS src dst checks
+  become: true
+  become_user: ansible
+  shell: aws ec2 modify-instance-attribute --instance-id {{ ec2.instance_ids[0] }} --no-source-dest-check
+  delegate_to: localhost
+  when:
+    - instance_public_address == False
+
           # "{{VOLUMES_CONFIG|from_yaml|to_json}}"
 
           # volume_size: "{{ instance_size_gb | int }}"
