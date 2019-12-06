@@ -12,7 +12,7 @@
       become_user: ubuntu
       get_url:
         url: https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-        dest: /tmp/kube-flannel.yml
+        dest: /home/ubuntu/kube-flannel.yml
         mode: '0640'
 
     - name: CIDR
@@ -21,14 +21,14 @@
 
     - name: Flannel adapt CIDR
       replace:
-        path: /tmp/kube-flannel.yml
+        path: /home/ubuntu/kube-flannel.yml
         regexp: '10.244.0.0/16'
         replace: "{{ pod_network_cidr }}"
 
     - name: Flannel install pod network
       become: true
       become_user: ubuntu
-      command: kubectl apply -f /tmp/kube-flannel.yml
+      command: kubectl apply -f /home/ubuntu/kube-flannel.yml
   when: cluster_networking == 'flannel_flannel'
 
 #
@@ -37,28 +37,103 @@
 # https://docs.projectcalico.org/v3.7/getting-started/kubernetes/installation/calico
 - name: Install calico pod network
   block:
+    #
+    # Calico 3.10
+    #
     - name: Calico download calico.yml
       become: true
       become_user: ubuntu
       get_url:
-        url: https://docs.projectcalico.org/v3.7/manifests/calico.yaml
-        dest: /tmp/calico.yaml
+        url: https://docs.projectcalico.org/v3.10/manifests/calico.yaml
+        dest: /home/ubuntu/calico.yaml
         mode: '0640'
 
     - name: Calico adapt CIDR
       become: true
       become_user: ubuntu
       replace:
-        path: /tmp/calico.yaml
+        path: /home/ubuntu/calico.yaml
         regexp: '192.168.0.0/16'
         replace: "{{ pod_network_cidr }}"
+
+    # - name: Calico adapt MTU
+    #   become: true
+    #   become_user: ubuntu
+    #   replace:
+    #     path: /home/ubuntu/calico.yaml
+    #     regexp: 'veth_mtu: "1440"'
+    #     replace: 'veth_mtu: "1500"'
 
     - name: Calico install pod network
       become: true
       become_user: ubuntu
-      command: kubectl apply -f /tmp/calico.yaml
+      command: kubectl apply -f /home/ubuntu/calico.yaml
 
-    - name: Download calicoctl
+    #
+    # Calico CalicoCon
+    #
+    # - name: Copy calico.yml
+    #   become: true
+    #   become_user: ubuntu
+    #   copy:
+    #     src: ./files/calico.yaml
+    #     dest: /home/ubuntu/calico.yaml
+    #     mode: '0640'
+
+    # - name: Calico adapt CIDR
+    #   become: true
+    #   become_user: ubuntu
+    #   replace:
+    #     path: /home/ubuntu/calico.yaml
+    #     regexp: '10.48.0.0/24'
+    #     replace: "{{ pod_network_cidr }}"
+
+    #
+    # Calico 3.3
+    #
+    # - name: Calico download rbac-kdd
+    #   become: true
+    #   become_user: ubuntu
+    #   get_url:
+    #     url: https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml
+    #     dest: /home/ubuntu/rbac-kdd.yaml
+    #     mode: '0640'
+    #
+    # - name: Calico install roles and bindings
+    #   become: true
+    #   become_user: ubuntu
+    #   command: kubectl apply -f /home/ubuntu/rbac-kdd.yaml
+    #
+    # - name: Calico download calico.yml
+    #   become: true
+    #   become_user: ubuntu
+    #   get_url:
+    #     url: https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
+    #     dest: /home/ubuntu/calico.yaml
+    #     mode: '0640'
+    #
+    # - name: Calico adapt CIDR
+    #   become: true
+    #   become_user: ubuntu
+    #   replace:
+    #     path: /home/ubuntu/calico.yaml
+    #     regexp: '192.168.0.0/16'
+    #     replace: "{{ pod_network_cidr }}"
+
+    # - name: Calico adapt MTU
+    #   become: true
+    #   become_user: ubuntu
+    #   replace:
+    #     path: /home/ubuntu/calico.yaml
+    #     regexp: 'veth_mtu: "1440"'
+    #     replace: 'veth_mtu: "1500"'
+
+    # - name: Calico install pod network
+    #   become: true
+    #   become_user: ubuntu
+    #   command: kubectl apply -f /home/ubuntu/calico.yaml
+
+    - name: Calico download calicoctl
       become: true
       get_url:
         url: https://github.com/projectcalico/calicoctl/releases/download/v3.5.8/calicoctl
@@ -72,7 +147,7 @@
         state: directory
         mode: '0755'
 
-    - name: Create calicoctl.cfg
+    - name: Create Calicoctl config
       copy:
         dest: /etc/calico/calicoctl.cfg
         mode: 0644
@@ -83,6 +158,24 @@
           spec:
             datastoreType: "kubernetes"
             kubeconfig: "/home/ubuntu/.kube/config"
+
+    - name: Enable IP-in-IP Encapsulation
+      become: true
+      become_user: ubuntu
+      shell: |
+        calicoctl apply -f - << EOF
+        apiVersion: projectcalico.org/v3
+        kind: IPPool
+        metadata:
+          name: default-ipv4-ippool
+        spec:
+          cidr: {{ pod_network_cidr }}
+          ipipMode: Always
+          natOutgoing: true
+        EOF
+      args:
+        chdir: $HOME
+
   when: cluster_networking == 'calico_calico'
 
 #
@@ -96,7 +189,7 @@
       become_user: ubuntu
       get_url:
         url: https://docs.projectcalico.org/v3.7/manifests/canal.yaml
-        dest: /tmp/canal.yaml
+        dest: /home/ubuntu/canal.yaml
         mode: '0640'
 
     - name: CIDR
@@ -107,12 +200,12 @@
       become: true
       become_user: ubuntu
       replace:
-        path: /tmp/canal.yaml
+        path: /home/ubuntu/canal.yaml
         regexp: '10.244.0.0/16'
         replace: "{{ pod_network_cidr }}"
 
     - name: Calico canal install pod network
       become: true
       become_user: ubuntu
-      command: kubectl apply -f /tmp/canal.yaml
+      command: kubectl apply -f /home/ubuntu/canal.yaml
   when: cluster_networking == 'calico_flannel'
