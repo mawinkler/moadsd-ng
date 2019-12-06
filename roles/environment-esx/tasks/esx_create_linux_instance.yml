@@ -27,11 +27,11 @@
     chdir: $HOME
   delegate_to: localhost
 
-- name: Patch sysctl.con
-  lineinfile:
-    path: /etc/sysctl.conf
-    insertafter: EOF
-    line: "{{ item }}"
-  loop:
-    - vm.dirty_background_ratio = 0
-    - vm.dirty_ratio = 0
+# - name: Patch sysctl.conf
+#   lineinfile:
+#     path: /etc/sysctl.conf
+#     insertafter: EOF
+#     line: "{{ item }}"
+#   loop:
+#     - vm.dirty_background_ratio = 0
+#     - vm.dirty_ratio = 0
