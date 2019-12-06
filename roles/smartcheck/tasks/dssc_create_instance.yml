@@ -12,8 +12,10 @@
         type: {{ service_type }}
       networkPolicy:
         additionalRegistryPorts:
-          - 4567
+          - {{ smartcheck_registry }}
+          - {{ registry_nodeport }}
       auth:
+        userName: administrator
         masterPassword: {{ auth_masterPassword }}
       activationCode: {{ activationCode }}
       persistence:
@@ -24,6 +26,8 @@
           storageClassName: {{ persistence_storageClassName }}
         metrics:
           storageClassName: {{ persistence_storageClassName }}
+
+  # password: {{ smartcheck_password }}
 
 # Persistence variants - in k8s or external db
 # Variant 1: Within the k8s cluster
@@ -49,6 +53,40 @@
       #     mode: disable
       #   user: {{ smartcheck_database_username }}
       #   password: {{ smartcheck_database_password }}
+
+- name: Download Deep Security Smart Check Chart
+  become: true
+  become_user: ubuntu
+  get_url:
+    url: "{{ dssc_chart }}"
+    dest: /tmp/master.tar.gz
+    mode: '0640'
+
+- name: Unpack Chart
+  become: true
+  become_user: ubuntu
+  unarchive:
+    src: /tmp/master.tar.gz
+    dest: /tmp/
+    remote_src: yes
+
+- name: Create Manual Deployment Templates for Deep Security Smart Check
+  become: true
+  become_user: ubuntu
+  shell: helm template --namespace {{ dssc_namespace }} --values overrides-smartcheck.yml --name {{ dssc_name }} /tmp/smartcheck-helm-master/. > deepsecurity-smartcheck.yaml
+  args:
+    chdir: $HOME
+    creates: deepsecurity-smartcheck.yml
+
+- name: Print Manual Deployment Command
+  debug:
+    msg:
+      - kubectl create namespace {{ dssc_namespace }}
+      - kubectl apply --namespace {{ dssc_namespace }} -f deepsecurity-smartcheck.yaml >> dssc.log
+
+# - name: Pause for 30 mins
+#   pause:
+#     minutes: 30
 
 - name: Install Deep Security Smart Check
   become: true
