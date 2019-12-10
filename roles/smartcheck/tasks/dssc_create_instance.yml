@@ -73,7 +73,7 @@
 - name: Create Manual Deployment Templates for Deep Security Smart Check
   become: true
   become_user: ubuntu
-  shell: helm template --namespace {{ dssc_namespace }} --values overrides-smartcheck.yml --name {{ dssc_name }} /tmp/smartcheck-helm-master/. > deepsecurity-smartcheck.yaml
+  shell: helm template --namespace {{ dssc_namespace }} --values overrides-smartcheck.yml {{ dssc_name }} /tmp/smartcheck-helm-master/. > deepsecurity-smartcheck.yaml
   args:
     chdir: $HOME
     creates: deepsecurity-smartcheck.yml
@@ -88,10 +88,17 @@
 #   pause:
 #     minutes: 30
 
+- name: Create Deep Security Smart Check Namespace
+  become: true
+  become_user: ubuntu
+  shell: kubectl create namespace {{ dssc_namespace }} --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME
+
 - name: Install Deep Security Smart Check
   become: true
   become_user: ubuntu
-  shell: helm install --namespace {{ dssc_namespace }} --values overrides-smartcheck.yml --name {{ dssc_name }} {{ dssc_chart }} >> dssc.log
+  shell: helm install --namespace {{ dssc_namespace }} --values overrides-smartcheck.yml {{ dssc_name }} {{ dssc_chart }} >> dssc.log
   args:
     chdir: $HOME
     creates: dssc.log
