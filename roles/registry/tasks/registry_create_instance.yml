@@ -38,10 +38,17 @@
     chdir: $HOME
     creates: ./registry_htpasswd
 
+- name: Create Docker Registry Namespace
+  become: true
+  become_user: ubuntu
+  shell: kubectl create namespace {{ docker_registry_namespace }} --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME
+    
 - name: Install Docker Registry
   become: true
   become_user: ubuntu
-  shell: helm install --namespace {{ docker_registry_namespace }} --values overrides-registry.yml --set secrets.htpasswd=$(cat ./registry_htpasswd) --name {{ docker_registry_name }} {{ docker_registry_chart }} >> registry.log
+  shell: helm install --namespace {{ docker_registry_namespace }} --values overrides-registry.yml --set secrets.htpasswd=$(cat ./registry_htpasswd) {{ docker_registry_name }} {{ docker_registry_chart }} >> registry.log
   args:
     chdir: $HOME
     creates: registry.log
