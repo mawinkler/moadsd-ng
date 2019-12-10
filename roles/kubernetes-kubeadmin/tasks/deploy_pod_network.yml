@@ -34,12 +34,9 @@
 #
 # Calico for policy and networking
 #
-# https://docs.projectcalico.org/v3.7/getting-started/kubernetes/installation/calico
+# https://docs.projectcalico.org/v3.10/getting-started/kubernetes/installation/calico
 - name: Install calico pod network
   block:
-    #
-    # Calico 3.10
-    #
     - name: Calico download calico.yml
       become: true
       become_user: ubuntu
@@ -68,70 +65,6 @@
       become: true
       become_user: ubuntu
       command: kubectl apply -f /home/ubuntu/calico.yaml
-
-    #
-    # Calico CalicoCon
-    #
-    # - name: Copy calico.yml
-    #   become: true
-    #   become_user: ubuntu
-    #   copy:
-    #     src: ./files/calico.yaml
-    #     dest: /home/ubuntu/calico.yaml
-    #     mode: '0640'
-
-    # - name: Calico adapt CIDR
-    #   become: true
-    #   become_user: ubuntu
-    #   replace:
-    #     path: /home/ubuntu/calico.yaml
-    #     regexp: '10.48.0.0/24'
-    #     replace: "{{ pod_network_cidr }}"
-
-    #
-    # Calico 3.3
-    #
-    # - name: Calico download rbac-kdd
-    #   become: true
-    #   become_user: ubuntu
-    #   get_url:
-    #     url: https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml
-    #     dest: /home/ubuntu/rbac-kdd.yaml
-    #     mode: '0640'
-    #
-    # - name: Calico install roles and bindings
-    #   become: true
-    #   become_user: ubuntu
-    #   command: kubectl apply -f /home/ubuntu/rbac-kdd.yaml
-    #
-    # - name: Calico download calico.yml
-    #   become: true
-    #   become_user: ubuntu
-    #   get_url:
-    #     url: https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
-    #     dest: /home/ubuntu/calico.yaml
-    #     mode: '0640'
-    #
-    # - name: Calico adapt CIDR
-    #   become: true
-    #   become_user: ubuntu
-    #   replace:
-    #     path: /home/ubuntu/calico.yaml
-    #     regexp: '192.168.0.0/16'
-    #     replace: "{{ pod_network_cidr }}"
-
-    # - name: Calico adapt MTU
-    #   become: true
-    #   become_user: ubuntu
-    #   replace:
-    #     path: /home/ubuntu/calico.yaml
-    #     regexp: 'veth_mtu: "1440"'
-    #     replace: 'veth_mtu: "1500"'
-
-    # - name: Calico install pod network
-    #   become: true
-    #   become_user: ubuntu
-    #   command: kubectl apply -f /home/ubuntu/calico.yaml
 
     - name: Calico download calicoctl
       become: true
