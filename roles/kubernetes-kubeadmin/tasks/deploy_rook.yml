@@ -15,7 +15,7 @@
       become: true
       become_user: ubuntu
       git:
-        repo: https://github.com/rook/rook.git
+        repo: "{{ rook_git }}"
         dest: /home/ubuntu/rook
         version: v1.0.4
         force: yes
@@ -23,14 +23,16 @@
     - name: Rook-ceph install common
       become: true
       become_user: ubuntu
-      command: kubectl create -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/common.yaml
-      ignore_errors: yes
+      shell: kubectl apply -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/common.yaml --dry-run=true -o yaml | kubectl apply -f -
+      args:
+        chdir: $HOME
 
     - name: Rook-ceph install operator
       become: true
       become_user: ubuntu
-      command: kubectl create -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/operator.yaml
-      ignore_errors: yes
+      shell: kubectl apply -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/operator.yaml --dry-run=true -o yaml | kubectl apply -f -
+      args:
+        chdir: $HOME
 
     - name: Rook-ceph modify cluster.yml
       become: true
@@ -53,26 +55,30 @@
     - name: Rook-ceph install cluster
       become: true
       become_user: ubuntu
-      command: kubectl create -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/cluster.yaml
-      ignore_errors: yes
+      shell: kubectl apply -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/cluster.yaml --dry-run=true -o yaml | kubectl apply -f -
+      args:
+        chdir: $HOME
 
     - name: Rook-ceph install storage class
       become: true
       become_user: ubuntu
-      command: kubectl create -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/storageclass.yaml
-      ignore_errors: yes
+      shell: kubectl apply -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/storageclass.yaml --dry-run=true -o yaml | kubectl apply -f -
+      args:
+        chdir: $HOME
 
     - name: Rook-ceph mark storage class as default
       become: true
       become_user: ubuntu
-      command: kubectl patch storageclass rook-ceph-block -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
-      ignore_errors: yes
+      shell: kubectl patch storageclass rook-ceph-block -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}' --dry-run=true -o yaml | kubectl apply -f -
+      args:
+        chdir: $HOME
 
     - name: Rook-ceph install toolbox
       become: true
       become_user: ubuntu
-      command: kubectl create -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/toolbox.yaml
-      ignore_errors: yes
+      shell: kubectl apply -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/toolbox.yaml --dry-run=true -o yaml | kubectl apply -f -
+      args:
+        chdir: $HOME
 
     # - name: Rook-ceph expose dashboard
     #   become: true

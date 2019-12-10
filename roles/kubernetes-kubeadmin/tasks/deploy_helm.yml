@@ -4,12 +4,12 @@
 # #####################################################################
 - name: Helm download sources
   get_url:
-    url: https://get.helm.sh/helm-v2.14.2-linux-amd64.tar.gz
+    url: "{{ helm_url }}{{ helm_archive }}"
     dest: /tmp
 
 - name: Helm extract into /tmp
   unarchive:
-    src: /tmp/helm-v2.14.2-linux-amd64.tar.gz
+    src: /tmp/{{ helm_archive }}
     dest: /tmp
     remote_src: yes
 
@@ -22,61 +22,15 @@
     group: root
     mode: 0755
 
-- name: Helm init
+- name: Helm add repo
   become: true
   become_user: ubuntu
-  command: helm init
-  retries: 12
-  delay: 10
-  register: result
-  until: result.rc == 0
+  command: helm repo add stable https://kubernetes-charts.storage.googleapis.com/
 
-- name: Helm create service account for tiller
+- name: Helm repo update
   become: true
   become_user: ubuntu
-  k8s:
-    state: present
-    definition:
-      api_version: v1
-      kind: serviceaccount
-      metadata:
-        name: tiller
-        namespace: kube-system
-
-- name: Helm create cluster role binding for tiller
-  become: true
-  become_user: ubuntu
-  k8s:
-    state: present
-    definition:
-      api_version: v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: tiller-cluster-role
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: cluster-admin
-      subjects:
-        - kind: ServiceAccount
-          name: tiller
-          namespace: kube-system
-
-# FIXME
-#  --dry-run=true -o yaml | kubectl deploy -f -
-- name: Helm configure tiller - step 1
-  become: true
-  become_user: ubuntu
-  command: kubectl patch deploy --namespace kube-system tiller-deploy --patch '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
-  ignore_errors: yes
-
-# FIXME
-#  --dry-run=true -o yaml | kubectl deploy -f -
-- name: Helm configure tiller - step 2
-  become: true
-  become_user: ubuntu
-  command: kubectl -n kube-system patch deployment tiller-deploy -p '{"spec":{"template":{"spec":{"automountServiceAccountToken":true}}}}'
-  ignore_errors: yes
+  command: helm repo update
 
 - name: Helm bash command completion
   become: true
