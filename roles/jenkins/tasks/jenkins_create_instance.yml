@@ -30,7 +30,6 @@
           - locale
           - python
           - deepsecurity-smartcheck
-          # - deepsecurity-smartcheck-plugin:1.1.2
         scriptApproval:
           - "new groovy.json.JsonBuilder java.lang.Object"
           - "method groovy.lang.GroovyObject invokeMethod java.lang.String java.lang.Object"
@@ -58,10 +57,17 @@
       rbac:
         create: {{ rbac_create }}
 
+- name: Create Jenkins Namespace
+  become: true
+  become_user: ubuntu
+  shell: kubectl create namespace {{ jenkins_namespace }} --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME
+
 - name: Install Jenkins
   become: true
   become_user: ubuntu
-  shell: helm install --namespace {{ jenkins_namespace }} --values overrides-jenkins.yml --name {{ jenkins_name }} {{ jenkins_chart }} --version {{ jenkins_chart_version }} >> jenkins.log
+  shell: helm install --namespace {{ jenkins_namespace }} --values overrides-jenkins.yml {{ jenkins_name }} {{ jenkins_chart }} --version {{ jenkins_chart_version }} >> jenkins.log
   args:
     chdir: $HOME
     creates: jenkins.log
