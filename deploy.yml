@@ -235,7 +235,7 @@
         - site_deploy_kubernetes == True
         - kubernetes_container_runtime == 'docker'
 
-- name: Wait for Rook-Ceph to Initialize and create ssl certificate pod
+- name: Wait for Rook-Ceph to initialize and create ssl certificate pod and cluster registry
   hosts: tag_role_k8smaster
   become: true
   become_user: ubuntu
@@ -260,30 +260,21 @@
         operation: k8s_create_certificate
       when: site_deploy_kubernetes == True
 
+    - name: Deploy Docker Registry
+      include_role:
+        name: registry
+      vars:
+        operation: create_instance
+      when:
+        - site_deploy_registry == True
+        - site_deploy_kubernetes == True
+
     - name: Create k8s certificate pod
       include_role:
         name: kubernetes-kubeadmin
       vars:
         operation: k8s_create_certificate_pod
       when: site_deploy_kubernetes == True
-
-# #####################################################################
-# Deploy Docker Registry
-# #####################################################################
-- name: Deploy Docker Registry
-  hosts: tag_role_k8smaster
-  become: true
-
-  tasks:
-    - name: Include vars
-      include: site_vars.yml
-
-    - name: Deploy Docker Registry
-      include_role:
-        name: registry
-      vars:
-        operation: create_instance
-      when: site_deploy_registry == True
 
 # #####################################################################
 # Deploy Deep Security Smart Check
