@@ -25,6 +25,7 @@
           - workflow-aggregator
           - credentials-binding
           - git
+          - github-pullrequest
           - kubernetes-cd
           - blueocean
           - locale
