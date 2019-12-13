@@ -1,6 +1,6 @@
 ---
 # #####################################################################
-# Create a Jenkins instance
+# Create a little web werver serving a cluster wide ssl certificate
 # #####################################################################
 - name: Create Docker Registry overrides file
   become: true
@@ -44,7 +44,7 @@
   shell: kubectl create namespace {{ docker_registry_namespace }} --dry-run=true -o yaml | kubectl apply -f -
   args:
     chdir: $HOME
-    
+
 - name: Install Docker Registry
   become: true
   become_user: ubuntu
