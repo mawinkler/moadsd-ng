@@ -13,3 +13,15 @@
     - name: Docker restart
       become: true
       command: systemctl reload docker
+
+- hosts: tag_role_k8smaster
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+      
+    - name: Copy .kube/config to jenkins pod
+      become: true
+      become_user: ubuntu
+      shell: kubectl cp .kube/config jenkins/$(kubectl -n jenkins get pod --no-headers -o custom-columns=":metadata.name" | grep jenkins):/config
+      args:
+        chdir: $HOME
