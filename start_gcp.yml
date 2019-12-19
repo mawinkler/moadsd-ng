@@ -22,7 +22,9 @@
   delegate_to: 127.0.0.1
   command: gcloud compute routers describe {{ moadsd_ng_prefix }}-router --region {{ gcp_region }}
   register: gcloud_router_installed
-  failed_when: "'ERROR' is in gcloud_router_installed"
+  changed_when: false
+  #"'ERROR' is in gcloud_router_installed"
+  ignore_errors: yes
 
 - name: Create router
   delegate_to: 127.0.0.1
@@ -33,7 +35,9 @@
   delegate_to: 127.0.0.1
   command: gcloud compute routers nats describe nat-config --router={{ moadsd_ng_prefix }}-router --region {{ gcp_region }}
   register: gcloud_nat_config_installed
-  failed_when: "'ERROR' is in gcloud_nat_config_installed"
+  changed_when: false
+  #"'ERROR' is in gcloud_nat_config_installed"
+  ignore_errors: yes
 
 - name: Create nat config
   delegate_to: 127.0.0.1
