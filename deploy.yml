@@ -13,11 +13,11 @@
         name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
         groups: "moadsd_ng_k8smaster_instance"
 
-    - name: Get ipaddr of k8smaster
+    - name: Get ipaddr of kubernetes master
       set_fact:
         remote_ip: "{{ inventory_hostname | ipaddr}}"
 
-    - name: Get ipaddr of k8smaster
+    - name: Get ipaddr of kubernetes master
       set_fact:
         remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
       when: not remote_ip
@@ -26,6 +26,22 @@
       add_host:
         name: "{{ remote_ip }}"
         groups: "moadsd_ng_k8smaster_instance_public"
+
+- hosts: tag_role_jumphost
+  tasks:
+    - name: Get ipaddr of jumphost
+      set_fact:
+        remote_ip: "{{ inventory_hostname | ipaddr}}"
+
+    - name: Get ipaddr of jumphost
+      set_fact:
+        remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+      when: not remote_ip
+
+    - name: Store external ip address of jumphost
+      add_host:
+        name: "{{ remote_ip }}"
+        groups: "moadsd_ng_jumphost_instance_public"
 
 - hosts: tag_role_dsm
   tasks:
@@ -50,6 +66,12 @@
     - name: Listing environment
       debug:
         msg:
+          - "Kubernetes Master            : {{ groups['moadsd_ng_jumphost_instance_public'][0] }}"
+      when: site_deploy_jumphost == True
+
+    - name: Listing environment
+      debug:
+        msg:
           - "Kubernetes Master            : {{ groups['moadsd_ng_k8smaster_instance'][0] }}"
       when: site_deploy_kubernetes == True
 
@@ -67,8 +89,8 @@
   hosts: tag_role_dsm_db
   become: true
 
-  # vars:
-  #   ansible_ssh_common_args: '-o ProxyCommand="ssh -o StrictHostKeyChecking=no -W %h:%p ansible@18.185.46.236"'
+  vars:
+    ansible_ssh_common_args: -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p ansible@{{ groups['moadsd_ng_jumphost_instance_public'][0] }}"
 
   tasks:
     - name: Include vars
@@ -201,7 +223,7 @@
     cgroupdriver: systemd
     deploy_kubernetes: yes
     # FIXME
-    # ansible_ssh_common_args: '-o ProxyCommand="ssh -o StrictHostKeyChecking=no -W %h:%p ansible@34.89.236.127"'
+    ansible_ssh_common_args: -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p ansible@{{ groups['moadsd_ng_jumphost_instance_public'][0] }}"
 
   tasks:
     - name: Include vars
@@ -409,6 +431,8 @@
 
 - hosts: tag_role_k8smaster, tag_role_k8sworker
   vars:
+    ansible_ssh_common_args: -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p ansible@{{ groups['moadsd_ng_jumphost_instance_public'][0] }}"
+
   tasks:
     - name: Include vars
       include: site_vars.yml
