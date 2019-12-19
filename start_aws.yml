@@ -47,7 +47,7 @@
     instance_machine_type: "{{ postgresql_machine_type }}"
     instance_startup_script: "{{ postgresql_startup_script }}"
     instance_tags: "{{ postgresql_tags }}"
-    instance_public_address: True
+    instance_public_address: False
     instance_ports_anywhere:
       - '22'
     instance_ports_network:
@@ -123,7 +123,7 @@
     instance_machine_type: "{{ kubernetes_worker_machine_type }}"
     instance_startup_script: "{{ kubernetes_worker_startup_script }}"
     instance_tags: "{{ kubernetes_worker_tags }}"
-    instance_public_address: True
+    instance_public_address: False
     instance_ports_anywhere:
       - '22'
     instance_ports_network:
