@@ -7,6 +7,24 @@
     msg:
       - "Terminating network {{ moadsd_ng_prefix }}-vpc"
 
+- name: Create nat gateway and allocate EIP
+  ec2_vpc_nat_gateway:
+    state: present
+    subnet_id: "{{ subnet_result.subnet.id }}"
+    wait: yes
+    region: "{{ aws_region }}"
+    if_exist_do_not_create: true
+  register: nat_gateway
+
+- name: Delete nat gateway and wait for deleted status.
+  ec2_vpc_nat_gateway:
+    state: absent
+    nat_gateway_id: "{{ nat_gateway.NatGatewayId }}"
+    wait: yes
+    wait_timeout: 300
+    release_eip: yes
+    region: "{{ aws_region }}"
+
 - name: Create an EC2 VPC
   ec2_vpc_net:
     aws_access_key: "{{ aws_access_key }}"
