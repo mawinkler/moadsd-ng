@@ -80,7 +80,7 @@ kubernetes_worker_count: 3
 # Cluster Networking Configration:
 # pod_network_cidr: "10.244.0.0/16"   cluster_networking: flannel_flannel
 # pod_network_cidr: "10.244.0.0/16"   cluster_networking: calico_flannel
-# pod_network_cidr: "192.168.0.0/16"  cluster_networking: calico_calico
+# pod_network_cidr: "10.244.0.0/16"   cluster_networking: calico_calico
 pod_network_cidr: "10.244.0.0/16"
 cluster_networking: flannel_flannel
 
