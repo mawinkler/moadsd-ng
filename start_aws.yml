@@ -36,6 +36,18 @@
       - '1-65535'
   when: site_deploy_jumphost == True
 
+- name: Configure group_vars
+  delegate_to: 127.0.0.1
+  copy:
+    dest: "{{ item }}"
+    content: |
+      {% raw %}{% endraw %}
+    force: yes
+  loop:
+    - "./group_vars/tag_{{ kubernetes_worker_tags | regex_replace('-', '_') }}.yml"
+    - "./group_vars/tag_{{ postgresql_tags | regex_replace('-', '_') }}.yml"
+  when: site_deploy_jumphost == True
+
 - name: Create instance for PostgreSQL
   include_role:
     name: environment-aws
@@ -47,7 +59,7 @@
     instance_machine_type: "{{ postgresql_machine_type }}"
     instance_startup_script: "{{ postgresql_startup_script }}"
     instance_tags: "{{ postgresql_tags }}"
-    instance_public_address: False
+    instance_public_address: True
     instance_ports_anywhere:
       - '22'
     instance_ports_network:
@@ -123,7 +135,7 @@
     instance_machine_type: "{{ kubernetes_worker_machine_type }}"
     instance_startup_script: "{{ kubernetes_worker_startup_script }}"
     instance_tags: "{{ kubernetes_worker_tags }}"
-    instance_public_address: False
+    instance_public_address: True
     instance_ports_anywhere:
       - '22'
     instance_ports_network:
