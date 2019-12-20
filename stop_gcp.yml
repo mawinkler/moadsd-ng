@@ -84,6 +84,30 @@
     operation: terminate_instance
     instance_name: "{{ jumphost_instance_name }}"
 
+- name: Check if nat config still exists
+  delegate_to: 127.0.0.1
+  command: gcloud compute routers nats describe nat-config --router={{ moadsd_ng_prefix }}-router --region {{ gcp_region }}
+  register: gcloud_nat_config_installed
+  changed_when: false
+  ignore_errors: yes
+
+- name: Delete nat config
+  delegate_to: 127.0.0.1
+  command: gcloud compute routers nats delete nat-config --router={{ moadsd_ng_prefix }}-router --region {{ gcp_region }}
+  when: gcloud_nat_config_installed is not failed
+
+- name: Check if router still exists
+  delegate_to: 127.0.0.1
+  command: gcloud compute routers describe {{ moadsd_ng_prefix }}-router --region {{ gcp_region }}
+  register: gcloud_router_installed
+  changed_when: false
+  ignore_errors: yes
+
+- name: Delete router
+  delegate_to: 127.0.0.1
+  command: gcloud compute routers delete {{ moadsd_ng_prefix }}-router --region {{ gcp_region }}
+  when: gcloud_router_installed is not failed
+
 - name: Terminate GCP network
   include_role:
     name: environment-gcp

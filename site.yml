@@ -20,6 +20,11 @@
         path: "./host_vars"
         state: directory
 
+    - name: Create subdirectory group_vars
+      file:
+        path: "./group_vars"
+        state: directory
+
     - name: Create subdirectory site
       file:
         path: "./site_{{ type }}"

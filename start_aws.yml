@@ -36,6 +36,30 @@
       - '1-65535'
   when: site_deploy_jumphost == True
 
+- name: Find yml files in group_vars
+  find:
+    paths: "./group_vars"
+    patterns: "*.yml"
+  register: files_to_delete
+
+- name: Delete yml files in group_vars
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ files_to_delete.files }}"
+
+- name: Configure group_vars
+  delegate_to: 127.0.0.1
+  copy:
+    dest: "{{ item }}"
+    content: |
+      {% raw %}{% endraw %}
+    force: yes
+  loop:
+    - "./group_vars/tag_{{ kubernetes_worker_tags | regex_replace('-', '_') }}.yml"
+    - "./group_vars/tag_{{ postgresql_tags | regex_replace('-', '_') }}.yml"
+  when: site_deploy_jumphost == True
+
 - name: Create instance for PostgreSQL
   include_role:
     name: environment-aws

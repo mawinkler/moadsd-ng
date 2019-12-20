@@ -18,6 +18,32 @@
   vars:
     operation: create_network
 
+- name: Check if router already exists
+  delegate_to: 127.0.0.1
+  command: gcloud compute routers describe {{ moadsd_ng_prefix }}-router --region {{ gcp_region }}
+  register: gcloud_router_installed
+  changed_when: false
+  #"'ERROR' is in gcloud_router_installed"
+  ignore_errors: yes
+
+- name: Create router
+  delegate_to: 127.0.0.1
+  command: gcloud compute routers create {{ moadsd_ng_prefix }}-router --network {{ moadsd_ng_prefix }}-network --region {{ gcp_region }}
+  when: gcloud_router_installed is failed
+
+- name: Check if nat config already exists
+  delegate_to: 127.0.0.1
+  command: gcloud compute routers nats describe nat-config --router={{ moadsd_ng_prefix }}-router --region {{ gcp_region }}
+  register: gcloud_nat_config_installed
+  changed_when: false
+  #"'ERROR' is in gcloud_nat_config_installed"
+  ignore_errors: yes
+
+- name: Create nat config
+  delegate_to: 127.0.0.1
+  command: gcloud compute routers nats create nat-config --router={{ moadsd_ng_prefix }}-router --auto-allocate-nat-external-ips --nat-all-subnet-ip-ranges --enable-logging --region {{ gcp_region }}
+  when: gcloud_nat_config_installed is failed
+
 - name: Create linux instance for jumphost
   include_role:
     name: environment-gcp
@@ -39,6 +65,30 @@
       # - '30000-32767''
   when: site_deploy_jumphost == True
 
+- name: Find yml files in group_vars
+  find:
+    paths: "./group_vars"
+    patterns: "*.yml"
+  register: files_to_delete
+
+- name: Delete yml files in group_vars
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ files_to_delete.files }}"
+
+- name: Configure group_vars
+  delegate_to: 127.0.0.1
+  copy:
+    dest: "{{ item }}"
+    content: |
+      {% raw %}ansible_ssh_common_args: -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p ansible@{{ groups['moadsd_ng_jumphost_instance_public'][0] }}"{% endraw %}
+    force: yes
+  loop:
+    - "./group_vars/tag_{{ kubernetes_worker_tags | regex_replace('-', '_') }}.yml"
+    - "./group_vars/tag_{{ postgresql_tags | regex_replace('-', '_') }}.yml"
+  when: site_deploy_jumphost == True
+
 - name: Create instance for PostgreSQL
   include_role:
     name: environment-gcp
@@ -50,7 +100,7 @@
     instance_machine_type: "{{ postgresql_machine_type }}"
     instance_startup_script: "{{ postgresql_startup_script }}"
     instance_tags: "{{ postgresql_tags }}"
-    instance_public_address: True
+    instance_public_address: False
     instance_ports_anywhere:
       - '22'
     instance_ports_network:
@@ -128,7 +178,7 @@
     instance_machine_type: "{{ kubernetes_worker_machine_type }}"
     instance_startup_script: "{{ kubernetes_worker_startup_script }}"
     instance_tags: "{{ kubernetes_worker_tags }}"
-    instance_public_address: True
+    instance_public_address: False
     instance_ports_anywhere:
       - '22'
     instance_ports_network:
