@@ -7,6 +7,15 @@
     msg:
       - "Terminating network {{ moadsd_ng_prefix }}-network"
 
+- name: Terminate the ip-in-ip firewall
+  gcp_compute_firewall:
+    name: "{{ moadsd_ng_prefix }}-ipip-firewall"
+    project: "{{ gcp_project_id }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+    scopes: "{{ scopes }}"
+    state: absent
+
 - name: Terminate the network
   gcp_compute_network:
     name: "{{ moadsd_ng_prefix }}-network"
