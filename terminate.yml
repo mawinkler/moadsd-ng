@@ -20,6 +20,18 @@
         path: "./host_vars"
         state: absent
 
+    - name: Find yml files in group_vars
+      find:
+        paths: "./group_vars"
+        patterns: "*.yml"
+      register: files_to_delete
+
+    - name: Delete yml files in group_vars
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ files_to_delete.files }}"
+
     - name: Delete subdirectory site
       file:
         path: "./site_{{ type }}"
