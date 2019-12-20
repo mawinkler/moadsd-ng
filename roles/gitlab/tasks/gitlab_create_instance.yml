@@ -31,7 +31,7 @@
           configureCertmanager: false
           class: nginx
         hosts:
-          domain: {{ gitlab_hostname }}
+          domain: "{{ inventory_hostname }}.nip.io"
           externalIP: {{ inventory_hostname }}
       certmanager:
         install: false
@@ -42,19 +42,19 @@
       gitlab:
         gitaly:
           persistence:
-            storageClass: rook-ceph-block
+            storageClass: {{ persistence_storageClassName }}
             size: 20Gi
       postgresql:
         persistence:
-          storageClass: rook-ceph-block
+          storageClass: {{ persistence_storageClassName }}
           size: 4Gi
       minio:
         persistence:
-          storageClass: rook-ceph-block
+          storageClass: {{ persistence_storageClassName }}
           size: 5Gi
       redis:
         persistence:
-          storageClass: rook-ceph-block
+          storageClass: {{ persistence_storageClassName }}
           size: 3Gi
 
 - name: Create GitLab overrides file (nginx-ingress)
@@ -74,26 +74,27 @@
       global:
         edition: ce
         hosts:
-          domain: {{ gitlab_hostname }}
+          domain: "{{ inventory_hostname }}.nip.io"
           externalIP: {{ inventory_hostname }}
       certmanager-issuer:
         email: winkler.info@icloud.com
+      serviceType: {{ service_type }}
       gitlab:
         gitaly:
           persistence:
-            storageClass: rook-ceph-block
+            storageClass: {{ persistence_storageClassName }}
             size: 20Gi
       postgresql:
         persistence:
-          storageClass: rook-ceph-block
+          storageClass: {{ persistence_storageClassName }}
           size: 4Gi
       minio:
         persistence:
-          storageClass: rook-ceph-block
+          storageClass: {{ persistence_storageClassName }}
           size: 5Gi
       redis:
         persistence:
-          storageClass: rook-ceph-block
+          storageClass: {{ persistence_storageClassName }}
           size: 3Gi
 
 - name: Create GitLab overrides file (nginx)
@@ -105,13 +106,16 @@
       global:
         edition: ce
         ingress:
-          configureCertmanager: false
+          configureCertmanager: true
           class: nginx
         hosts:
-          domain: {{ gitlab_hostname }}
+          domain: "{{ inventory_hostname }}.nip.io"
           externalIP: {{ inventory_hostname }}
+      serviceType: {{ service_type }}
       certmanager:
-        install: false
+        install: true
+      certmanager-issuer:
+        email: winkler.info@icloud.com
       nginx-ingress:
         enabled: false
       gitlab-runner:
@@ -119,19 +123,19 @@
       gitlab:
         gitaly:
           persistence:
-            storageClass: rook-ceph-block
+            storageClass: {{ persistence_storageClassName }}
             size: 20Gi
       postgresql:
         persistence:
-          storageClass: rook-ceph-block
+          storageClass: {{ persistence_storageClassName }}
           size: 4Gi
       minio:
         persistence:
-          storageClass: rook-ceph-block
+          storageClass: {{ persistence_storageClassName }}
           size: 5Gi
       redis:
         persistence:
-          storageClass: rook-ceph-block
+          storageClass: {{ persistence_storageClassName }}
           size: 3Gi
 
 - name: Install GitLab Repo
@@ -148,7 +152,7 @@
 - name: Install GitLab
   become: true
   become_user: ubuntu
-  shell: helm install --timeout 600 --namespace {{ gitlab_namespace }} --values overrides-gitlab-nginx-ingress.yml --name {{ gitlab_name }} {{ gitlab_chart }} >> gitlab.log
+  shell: helm install --timeout 600 --namespace {{ gitlab_namespace }} --values overrides-gitlab-nginx-ingress.yml {{ gitlab_name }} {{ gitlab_chart }} >> gitlab.log
   args:
     chdir: $HOME
     creates: gitlab.log

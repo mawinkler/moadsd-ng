@@ -1,5 +1,4 @@
 service_type: NodePort
-service_port: 30012
 persistence_storageClassName: rook-ceph-block
 
 gitlab_chart: gitlab/gitlab

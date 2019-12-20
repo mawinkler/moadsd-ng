@@ -2,7 +2,7 @@
 # #####################################################################
 # Site Deploy Components
 # #####################################################################
-site_deploy_jumphost: no
+site_deploy_jumphost: yes
 site_deploy_kubernetes: yes
 site_deploy_deepsecurity: no
 site_deploy_smartcheck: yes
@@ -64,9 +64,9 @@ kubernetes_worker_count: 3
 # Cluster Networking Configration:
 # pod_network_cidr: "10.244.0.0/16"   cluster_networking: flannel_flannel
 # pod_network_cidr: "10.244.0.0/16"   cluster_networking: calico_flannel
-# pod_network_cidr: "192.168.0.0/16"  cluster_networking: calico_calico
+# pod_network_cidr: "10.244.0.0/16"   cluster_networking: calico_calico
 pod_network_cidr: "10.244.0.0/16"
-cluster_networking: flannel_flannel
+cluster_networking: calico_calico
 
 kubernetes_master_instance_name: k8smaster
 kubernetes_master_size_gb: 32

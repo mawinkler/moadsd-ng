@@ -9,22 +9,6 @@
 - name: Ensure the project network is created
   include: gcp_create_network.yml
 
-- name: Create a firewall for ip-in-ip encapsulation
-  gcp_compute_firewall:
-    name: "{{ moadsd_ng_prefix }}-ipip-firewall"
-    network:
-      selfLink: "global/networks/{{ network.name }}"
-    allowed:
-      - ip_protocol: ipip
-    source_tags:
-      - "{{ gcp_project_id }}"
-    project: "{{ gcp_project_id }}"
-    priority: 1000
-    auth_kind: "{{ gcp_auth_kind }}"
-    service_account_file: "{{ gcp_service_account_file }}"
-    scopes: "{{ scopes }}"
-    state: present
-
 - name: Create a firewall opening ports for anywhere
   gcp_compute_firewall:
     name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-anywhere-firewall"
@@ -109,9 +93,6 @@
     network_interfaces:
       - network:
           selfLink: "global/networks/{{ network.name }}"
-        access_configs:
-          - name: 'External NAT'
-            type: 'ONE_TO_ONE_NAT'
     zone: "{{ gcp_zone }}"
     project: "{{ gcp_project_id }}"
     tags:
