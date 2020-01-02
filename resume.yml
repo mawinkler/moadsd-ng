@@ -1,3 +1,20 @@
+- hosts: tag_role_jumphost
+  gather_facts: false
+  tasks:
+    - name: Get ipaddr of jumphost
+      set_fact:
+        remote_ip: "{{ inventory_hostname | ipaddr}}"
+
+    - name: Get ipaddr of jumphost
+      set_fact:
+        remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+      when: not remote_ip
+
+    - name: Store external ip address of jumphost
+      add_host:
+        name: "{{ remote_ip }}"
+        groups: "moadsd_ng_jumphost_instance_public"
+
 - hosts: tag_project_moadsd_ng
   gather_facts: false
   vars:
