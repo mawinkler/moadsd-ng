@@ -216,13 +216,15 @@
         state: present
         src: /home/ubuntu/kubernetes-dashboard.yaml
 
-    # FIXME
-    # something like v--dry-run=true -o yaml | kubectl expose -f - possible?
+    - name: Kubernetes delete exposed dashboard port if existing
+      become: true
+      become_user: ubuntu
+      command: kubectl delete --ignore-not-found=true -n kube-system service dashboard
+
     - name: Kubernetes expose dashboard
       become: true
       become_user: ubuntu
       command: kubectl expose -n kube-system deployment kubernetes-dashboard --type=NodePort --name=dashboard
-      ignore_errors: yes
 
     - name: Kubernetes patch dashboard port
       become: true
