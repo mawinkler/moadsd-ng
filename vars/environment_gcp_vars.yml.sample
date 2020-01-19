@@ -31,7 +31,7 @@ startup_script_linux: |
        chmod 700 /home/ansible/.ssh
        chown ansible.ansible /home/ansible/.ssh
        echo {{ ansible_ssh_key }} >> /home/ansible/.ssh/authorized_keys
-       chmod 600 /home/ansibl/.ssh/authorized_keys
+       chmod 600 /home/ansible/.ssh/authorized_keys
        chown ansible.ansible /home/ansible/.ssh/authorized_keys
        echo {{ ansible_ssh_key }} >> /home/ubuntu/.ssh/authorized_keys
        echo "ansible ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/custom-users
