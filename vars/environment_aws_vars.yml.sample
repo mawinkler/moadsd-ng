@@ -2,7 +2,7 @@
 # #####################################################################
 # Site Deploy Components
 # #####################################################################
-site_deploy_jumphost: yes
+site_deploy_jumphost: no
 site_deploy_kubernetes: yes
 site_deploy_deepsecurity: yes
 site_deploy_smartcheck: yes
