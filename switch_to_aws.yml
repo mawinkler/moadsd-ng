@@ -23,14 +23,14 @@
         state: absent
       with_items: "{{ files_to_delete.files }}"
 
-    # - name: Configure group_vars
-    #   delegate_to: 127.0.0.1
-    #   copy:
-    #     dest: "{{ item }}"
-    #     content: |
-    #       {% raw %}ansible_ssh_common_args: -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p ansible@{{ groups['moadsd_ng_jumphost_instance_public'][0] }}"{% endraw %}
-    #     force: yes
-    #   loop:
-    #     - "./group_vars/tag_{{ kubernetes_worker_tags | regex_replace('-', '_') }}.yml"
-    #     - "./group_vars/tag_{{ postgresql_tags | regex_replace('-', '_') }}.yml"
-    #   when: site_deploy_jumphost == True
+    - name: Configure group_vars
+      delegate_to: 127.0.0.1
+      copy:
+        dest: "{{ item }}"
+        content: |
+          {% raw %}ansible_ssh_common_args: -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p ansible@{{ groups['moadsd_ng_jumphost_instance_public'][0] }}"{% endraw %}
+        force: yes
+      loop:
+        - "./group_vars/tag_role_{{ kubernetes_worker_tags | regex_replace('-', '_') }}.yml"
+        - "./group_vars/tag_role_{{ postgresql_tags | regex_replace('-', '_') }}.yml"
+      when: site_deploy_jumphost == True
