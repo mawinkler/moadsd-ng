@@ -22,10 +22,6 @@
     - name: Include vars
       include: site_vars.yml
 
-    # - name: Debug
-    #   debug:
-    #     msg: "{{ hostvars[inventory_hostname]['name'] }}"
-
     - name: Stop instance
       include_role:
         name: environment-gcp
