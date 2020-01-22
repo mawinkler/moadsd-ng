@@ -80,6 +80,26 @@
   when:
     - instance_public_address == True
 
+- name: Create a windows server public address
+  ec2_eip:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    release_on_disassociation: yes
+    # reuse_existing_ip_allowed: yes
+    in_vpc: yes
+    region: "{{ aws_region }}"
+    device_id: "{{ ec2.instance_ids[0] }}"
+    state: present
+  register: eip
+  when:
+    - instance_public_address == True
+
+- name: Output the IP
+  debug:
+    msg: "Allocated IP is {{ eip.public_ip }}"
+  when:
+    - instance_public_address == True
+
 - name: Create admin password
   delegate_to: 127.0.0.1
   command: aws ec2 get-password-data --instance-id {{ ec2.instance_ids[0] }} --priv-launch-key {{ aws_pem }}

@@ -57,8 +57,8 @@
     security_groups:
       - "{{ security_group_results.group_id }}"
     vpc_subnet_id: "{{ subnet_result.subnet.id }}"
-    network:
-      assign_public_ip: true
+    # network:
+    #   assign_public_ip: true
     volumes:
       - device_name: /dev/sda1
         ebs:
@@ -69,6 +69,26 @@
       project: "{{ moadsd_ng_prefix }}"
     state: present
   register: ec2
+  when:
+    - instance_public_address == True
+
+- name: Create a linux server public address
+  ec2_eip:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    release_on_disassociation: yes
+    # reuse_existing_ip_allowed: yes
+    in_vpc: yes
+    region: "{{ aws_region }}"
+    device_id: "{{ ec2.instance_ids[0] }}"
+    state: present
+  register: eip
+  when:
+    - instance_public_address == True
+
+- name: Output the IP
+  debug:
+    msg: "Allocated IP is {{ eip.public_ip }}"
   when:
     - instance_public_address == True
 
