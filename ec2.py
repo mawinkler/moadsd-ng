@@ -914,7 +914,14 @@ class Ec2Inventory(object):
         elif instance.subnet_id:
             dest = getattr(instance, self.vpc_destination_variable, None)
             if dest is None:
-                dest = getattr(instance, 'tags').get(self.vpc_destination_variable, None)
+                #
+                # PATCHED
+                # this patch enables ec2.py to return a public address if
+                # existing, else the prive ip is returned
+                dest = getattr(instance, 'private_ip_address', None)
+                # dest = getattr(instance, 'tags').get(self.vpc_destination_variable, None)
+                #
+                # /PATCHED
         else:
             dest = getattr(instance, self.destination_variable, None)
             if dest is None:
