@@ -15,7 +15,7 @@
           - {{ smartcheck_registry }}
           - {{ registry_nodeport }}
       auth:
-        userName: administrator
+        userName: {{ smartcheck_username }}
         masterPassword: {{ auth_masterPassword }}
       activationCode: {{ activationCode }}
       persistence:
