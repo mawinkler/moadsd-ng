@@ -210,3 +210,33 @@
         "schedule": true
       }
     status_code: 201
+
+- name: Create Registry to PreRegistry Scan Registry
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/registries?scan=true
+    method: POST
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body: |
+      {
+        "name": "Smart Check Registry",
+        "description": "Built in Registry of Smart Check\n",
+        "host": "{{ inventory_hostname }}:{{ smartcheck_registry }}",
+        "credentials": {
+          "username": "{{ smartcheck_registry_username }}",
+          "password": "{{ smartcheck_registry_password }}",
+        },
+        "insecureSkipVerify": true,
+        "filter": {
+          "include": [
+            "*"
+          ],
+          "exclude": [
+            "experimental/*"
+          ]
+        },
+        "schedule": true
+      }
+    status_code: 201
