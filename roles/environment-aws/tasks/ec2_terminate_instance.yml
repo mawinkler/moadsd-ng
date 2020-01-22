@@ -16,6 +16,16 @@
       "tag:Name": "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
     state: absent
 
+# - name: Release a linux server public address
+#   ec2_eip:
+#     aws_access_key: "{{ aws_access_key }}"
+#     aws_secret_key: "{{ aws_secret_key }}"
+#     name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-address"
+#     region: "{{ aws_region }}"
+#     # device_id: "{{ ec2.instance_ids[0] }}"
+#     state: absent
+#   register: eip
+
 - name: Terminate EC2 Security Group
   ec2_group:
     aws_access_key: "{{ aws_access_key }}"
