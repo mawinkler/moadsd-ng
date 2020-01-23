@@ -2,7 +2,6 @@
 # #####################################################################
 # Site Deploy Components
 # #####################################################################
-site_deploy_jumphost: yes
 site_deploy_kubernetes: yes
 site_deploy_deepsecurity: no
 site_deploy_smartcheck: yes
@@ -46,6 +45,7 @@ moadsd_ng_prefix: moadsd-ng
 # #####################################################################
 # Linux Jumphost Settings
 # #####################################################################
+site_deploy_jumphost: yes
 jumphost_instance_name: jumphost
 jumphost_instance_count: 1
 jumphost_size_gb: 32
