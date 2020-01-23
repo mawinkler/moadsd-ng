@@ -9,190 +9,212 @@
 - name: Ensure the project network is created
   include: ec2_create_network.yml
 
-- name: Create EC2 Security Group
-  ec2_group:
-    aws_access_key: "{{ aws_access_key }}"
-    aws_secret_key: "{{ aws_secret_key }}"
-    vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
-    region: "{{ aws_region }}"
-    state: present
-    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
-    description: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
-    tags:
-      Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
-    rules:
-      - proto: tcp
-        ports: "{{ instance_ports_anywhere }}"
-        cidr_ip: '0.0.0.0/0'
-      - proto: udp
-        ports: "{{ instance_ports_anywhere }}"
-        cidr_ip: '0.0.0.0/0'
-      - proto: icmp
-        from_port: 8
-        to_port: -1
-        cidr_ip: '0.0.0.0/0'
-      - proto: tcp
-        ports: "{{ instance_ports_network }}"
-        cidr_ip: "{{ aws_subnet_cidr_block }}"
-      - proto: udp
-        ports: "{{ instance_ports_network }}"
-        cidr_ip: "{{ aws_subnet_cidr_block }}"
-  register: security_group_results
+- name: Create EC2 public instance
+  block:
+    - name: Create EC2 Security Group for public instance
+      ec2_group:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+        region: "{{ aws_region }}"
+        state: present
+        name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
+        description: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
+        tags:
+          Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
+        rules:
+          - proto: tcp
+            ports: "{{ instance_ports_anywhere }}"
+            cidr_ip: '0.0.0.0/0'
+          - proto: udp
+            ports: "{{ instance_ports_anywhere }}"
+            cidr_ip: '0.0.0.0/0'
+          - proto: icmp
+            from_port: 8
+            to_port: -1
+            cidr_ip: '0.0.0.0/0'
+          - proto: tcp
+            ports: "{{ instance_ports_network }}"
+            cidr_ip: "{{ aws_public_subnet_cidr_block }}"
+          - proto: udp
+            ports: "{{ instance_ports_network }}"
+            cidr_ip: "{{ aws_public_subnet_cidr_block }}"
+          - proto: tcp
+            ports: "{{ instance_ports_network }}"
+            cidr_ip: "{{ aws_private_subnet_cidr_block }}"
+          - proto: udp
+            ports: "{{ instance_ports_network }}"
+            cidr_ip: "{{ aws_private_subnet_cidr_block }}"
+      register: public_security_group_results
 
-# - set_fact:
-#     VOLUMES_CONFIG: "{{ instance_size_gb | int }}"
-# - debug:
-#     msg: "{{VOLUMES_CONFIG|from_yaml|to_json}}"
+    - name: Create a windows server instance
+      ec2_instance:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        key_name: "{{ aws_key_name }}"
+        name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+        region: "{{ aws_region }}"
+        instance_type: "{{ instance_machine_type }}"
+        user_data: "{{ instance_startup_script }}"
+        image_id: "{{ instance_source_image }}"
+        security_groups:
+          - "{{ public_security_group_results.group_id }}"
+        vpc_subnet_id: "{{ public_subnet_result.subnet.id }}"
+        network:
+          assign_public_ip: true
+        volumes:
+          - device_name: /dev/sda1
+            ebs:
+              volume_size: 32
+              delete_on_termination: true
+        tags:
+          role: "{{ instance_tags }}"
+          project: "{{ moadsd_ng_prefix }}"
+        state: present
+      register: ec2
 
-# FIXME VOLUME SIZE should be "{{ instance_size_gb | int }}"
-- name: Create a windows server instance
-  ec2_instance:
-    aws_access_key: "{{ aws_access_key }}"
-    aws_secret_key: "{{ aws_secret_key }}"
-    key_name: "{{ aws_key_name }}"
-    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
-    region: "{{ aws_region }}"
-    instance_type: "{{ instance_machine_type }}"
-    user_data: "{{ instance_startup_script }}"
-      # |
-      # ＜powershell＞
-      # Invoke-WebRequest -Uri https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 -OutFile ConfigureRemotingForAnsible.ps1
-      # powershell -ExecutionPolicy RemoteSigned .\ConfigureRemotingForAnsible.ps1
-      # $admin = [ADSI]("WinNT://./administrator, user")
-      # $admin.SetPassword("Curry0000%")
-      # ＜/powershell＞
-    image_id: "{{ instance_source_image }}"
-    security_groups:
-      - "{{ security_group_results.group_id }}"
-    vpc_subnet_id: "{{ subnet_result.subnet.id }}"
-    network:
-      assign_public_ip: true
-    volumes:
-      - device_name: /dev/sda1
-        ebs:
-          volume_size: 32
-          delete_on_termination: true
-    tags:
-      role: "{{ instance_tags }}"
-      project: "{{ moadsd_ng_prefix }}"
-    state: present
-  register: ec2
+    - name: Create a windows server public address
+      ec2_eip:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        release_on_disassociation: yes
+        in_vpc: yes
+        region: "{{ aws_region }}"
+        device_id: "{{ ec2.instance_ids[0] }}"
+        state: present
+      register: eip
+
+    - name: Output the IP
+      debug:
+        msg: "Allocated IP is {{ eip.public_ip }}"
+
+    - name: Create admin password
+      delegate_to: 127.0.0.1
+      command: aws ec2 get-password-data --instance-id {{ ec2.instance_ids[0] }} --priv-launch-key {{ aws_pem }}
+      retries: 10
+      delay: 5
+      register: username_password
+      until: username_password.rc == 0
+
+    - name: Create admin password
+      delegate_to: 127.0.0.1
+      command: aws ec2 get-password-data --instance-id {{ ec2.instance_ids[0] }} --priv-launch-key {{ aws_pem }}
+      retries: 10
+      delay: 5
+      register: username_password
+      until: username_password.rc == 0
+
+    - name: Store Password
+      set_fact:
+        password: "{{ username_password.stdout_lines | select('match', '.*PasswordData.*') | list | regex_replace('    \"PasswordData\": \"') | regex_replace('\",') | regex_replace('\"') }}"
+
+    - name: Configure host_vars for windows instance
+      delegate_to: 127.0.0.1
+      copy:
+        dest: "./host_vars/{{ ec2.instances[0].public_ip_address }}.yml"
+        content: |
+          ansible_connection: winrm
+          ansible_port: 5985
+          ansible_winrm_transport: ntlm
+          ansible_winrm_server_cert_validation: ignore
+          ansible_password: '{{ password[0] }}'
+          ansible_user: 'administrator'
+        force: yes
   when:
     - instance_public_address == True
 
-- name: Create a windows server public address
-  ec2_eip:
-    aws_access_key: "{{ aws_access_key }}"
-    aws_secret_key: "{{ aws_secret_key }}"
-    release_on_disassociation: yes
-    # reuse_existing_ip_allowed: yes
-    in_vpc: yes
-    region: "{{ aws_region }}"
-    device_id: "{{ ec2.instance_ids[0] }}"
-    state: present
-  register: eip
-  when:
-    - instance_public_address == True
+- name: Create EC2 private instance
+  block:
+    - name: Create EC2 Security Group for private instance
+      ec2_group:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+        region: "{{ aws_region }}"
+        state: present
+        name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
+        description: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
+        tags:
+          Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
+        rules:
+          - proto: icmp
+            from_port: 8
+            to_port: -1
+            cidr_ip: '0.0.0.0/0'
+          - proto: tcp
+            ports: "{{ instance_ports_network }}"
+            cidr_ip: "{{ aws_public_subnet_cidr_block }}"
+          - proto: udp
+            ports: "{{ instance_ports_network }}"
+            cidr_ip: "{{ aws_public_subnet_cidr_block }}"
+          - proto: tcp
+            ports: "{{ instance_ports_network }}"
+            cidr_ip: "{{ aws_private_subnet_cidr_block }}"
+          - proto: udp
+            ports: "{{ instance_ports_network }}"
+            cidr_ip: "{{ aws_private_subnet_cidr_block }}"
+      register: private_security_group_results
 
-- name: Output the IP
-  debug:
-    msg: "Allocated IP is {{ eip.public_ip }}"
-  when:
-    - instance_public_address == True
+    - name: Create a windows server instance
+      ec2_instance:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        key_name: "{{ aws_key_name }}"
+        name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+        region: "{{ aws_region }}"
+        instance_type: "{{ instance_machine_type }}"
+        user_data: "{{ instance_startup_script }}"
+        image_id: "{{ instance_source_image }}"
+        security_groups:
+          - "{{ private_security_group_results.group_id }}"
+        vpc_subnet_id: "{{ private_subnet_result.subnet.id }}"
+        network:
+          assign_public_ip: false
+        volumes:
+          - device_name: /dev/sda1
+            ebs:
+              volume_size: 32
+              delete_on_termination: true
+        tags:
+          role: "{{ instance_tags }}"
+          project: "{{ moadsd_ng_prefix }}"
+        state: present
+      register: ec2
 
-- name: Create admin password
-  delegate_to: 127.0.0.1
-  command: aws ec2 get-password-data --instance-id {{ ec2.instance_ids[0] }} --priv-launch-key {{ aws_pem }}
-  retries: 10
-  delay: 5
-  register: username_password
-  until: username_password.rc == 0
-  when:
-    - instance_public_address == True
+    - name: Create admin password
+      delegate_to: 127.0.0.1
+      command: aws ec2 get-password-data --instance-id {{ ec2.instance_ids[0] }} --priv-launch-key {{ aws_pem }}
+      retries: 10
+      delay: 5
+      register: username_password
+      until: username_password.rc == 0
 
-- name: Store Password
-  set_fact:
-    password: "{{ username_password.stdout_lines | select('match', '.*PasswordData.*') | list | regex_replace('    \"PasswordData\": \"') | regex_replace('\",') | regex_replace('\"') }}"
-  when:
-    - instance_public_address == True
+    - name: Store Password
+      set_fact:
+        password: "{{ username_password.stdout_lines | select('match', '.*PasswordData.*') | list | regex_replace('    \"PasswordData\": \"') | regex_replace('\",') }}"
 
-- name: Configure group_vars for windows instance
-  delegate_to: 127.0.0.1
-  copy:
-    dest: "./host_vars/{{ ec2.instances[0].public_ip_address }}.yml"
-    content: |
-      ansible_connection: winrm
-      ansible_port: 5985
-      ansible_winrm_transport: ntlm
-      ansible_winrm_server_cert_validation: ignore
-      ansible_password: '{{ password[0] }}'
-      ansible_user: 'administrator'
-    force: yes
-  when:
-    - instance_public_address == True
-
-- name: Create a windows server instance
-  ec2_instance:
-    aws_access_key: "{{ aws_access_key }}"
-    aws_secret_key: "{{ aws_secret_key }}"
-    key_name: "{{ aws_key_name }}"
-    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
-    region: "{{ aws_region }}"
-    instance_type: "{{ instance_machine_type }}"
-    user_data: "{{ instance_startup_script }}"
-      # |
-      # ＜powershell＞
-      # Invoke-WebRequest -Uri https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 -OutFile ConfigureRemotingForAnsible.ps1
-      # powershell -ExecutionPolicy RemoteSigned .\ConfigureRemotingForAnsible.ps1
-      # $admin = [ADSI]("WinNT://./administrator, user")
-      # $admin.SetPassword("Curry0000%")
-      # ＜/powershell＞
-    image_id: "{{ instance_source_image }}"
-    security_groups:
-      - "{{ security_group_results.group_id }}"
-    vpc_subnet_id: "{{ subnet_result.subnet.id }}"
-    network:
-      assign_public_ip: false
-    volumes:
-      - device_name: /dev/sda1
-        ebs:
-          volume_size: 32
-          delete_on_termination: true
-    tags:
-      role: "{{ instance_tags }}"
-      project: "{{ moadsd_ng_prefix }}"
-    state: present
-  register: ec2
+    - name: Configure group_vars for windows instance
+      delegate_to: 127.0.0.1
+      copy:
+        dest: "./host_vars/{{ ec2.instances[0].private_ip_address }}.yml"
+        content: |
+          ansible_connection: winrm
+          ansible_port: 5985
+          ansible_winrm_transport: ntlm
+          ansible_winrm_server_cert_validation: ignore
+          ansible_password: '{{ password[0] }}'
+          ansible_user: 'administrator'
+        force: yes
   when:
     - instance_public_address == False
 
-- name: Create admin password
-  delegate_to: 127.0.0.1
-  command: aws ec2 get-password-data --instance-id {{ ec2.instance_ids[0] }} --priv-launch-key {{ aws_pem }}
-  retries: 10
-  delay: 5
-  register: username_password
-  until: username_password.rc == 0
-  when:
-    - instance_public_address == False
 
-- name: Store Password
-  set_fact:
-    password: "{{ username_password.stdout_lines | select('match', '.*PasswordData.*') | list | regex_replace('    \"PasswordData\": \"') | regex_replace('\",') }}"
-  when:
-    - instance_public_address == False
 
-- name: Configure group_vars for windows instance
-  delegate_to: 127.0.0.1
-  copy:
-    dest: "./host_vars/{{ ec2.instances[0].private_ip_address }}.yml"
-    content: |
-      ansible_connection: winrm
-      ansible_port: 5985
-      ansible_winrm_transport: ntlm
-      ansible_winrm_server_cert_validation: ignore
-      ansible_password: '{{ password[0] }}'
-      ansible_user: 'administrator'
-    force: yes
-  when:
-    - instance_public_address == False
+
+
+    # - set_fact:
+    #     VOLUMES_CONFIG: "{{ instance_size_gb | int }}"
+    # - debug:
+    #     msg: "{{VOLUMES_CONFIG|from_yaml|to_json}}"
+
+    # FIXME VOLUME SIZE should be "{{ instance_size_gb | int }}"
