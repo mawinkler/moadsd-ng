@@ -87,6 +87,7 @@
   loop:
     - "./group_vars/tag_{{ kubernetes_worker_tags | regex_replace('-', '_') }}.yml"
     - "./group_vars/tag_{{ postgresql_tags | regex_replace('-', '_') }}.yml"
+    - "./group_vars/tag_{{ linuxep_tags | regex_replace('-', '_') }}.yml"
   when: site_deploy_jumphost == True
 
 - name: Create instance for PostgreSQL
@@ -224,7 +225,7 @@
     instance_machine_type: "{{ linuxep_machine_type }}"
     instance_startup_script: "{{ linuxep_startup_script }}"
     instance_tags: "{{ linuxep_tags }}"
-    instance_public_address: True
+    instance_public_address: False
     instance_ports_anywhere:
       - '22'
     instance_ports_network:

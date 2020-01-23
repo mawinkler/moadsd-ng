@@ -10,7 +10,7 @@
   tasks:
     - name: Include vars
       include: site_vars.yml
-      
+
     - name: Find yml files in group_vars
       find:
         paths: "./group_vars"
@@ -33,4 +33,5 @@
       loop:
         - "./group_vars/tag_{{ kubernetes_worker_tags | regex_replace('-', '_') }}.yml"
         - "./group_vars/tag_{{ postgresql_tags | regex_replace('-', '_') }}.yml"
+        - "./group_vars/tag_{{ linuxep_tags | regex_replace('-', '_') }}.yml"
       when: site_deploy_jumphost == True
