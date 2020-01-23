@@ -54,7 +54,7 @@ moadsd_ng_prefix: moadsd-ng
 #   Red Hat Enterprise Linux version 8 (HVM), EBS General Purpose (SSD) Volume Type
 # ami-00e37cffd3bb3ac8d
 #   RHEL-7.6_HVM_GA-20181017-x86_64-0-Hourly2-GP2
-# ami-0c162e79e019adc1f
+# ami-0cbf1b1038bbb408d
 #   Microsoft Windows 2016 Datacenter edition. [English]
 # ami-086486be06fe637e7
 #   Microsoft Windows 2012 R2
@@ -194,7 +194,7 @@ linuxep_tags: linuxep
 windowsep_instance_name: windowsep
 windowsep_instance_count: 1
 windowsep_size_gb: 50
-windowsep_source_image: ami-0c162e79e019adc1f
+windowsep_source_image: ami-0cbf1b1038bbb408d
 windowsep_machine_type: t2.medium
 windowsep_startup_script: "{{ startup_script_windows }}"
 windowsep_tags: windowsep
