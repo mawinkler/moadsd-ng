@@ -7,114 +7,98 @@
     msg:
       - "Terminating network {{ moadsd_ng_prefix }}-vpc"
 
-- name: Create an EC2 VPC
-  ec2_vpc_net:
-    aws_access_key: "{{ aws_access_key }}"
-    aws_secret_key: "{{ aws_secret_key }}"
-    name: "{{ moadsd_ng_prefix }}-vpc"
-    cidr_block: "{{ aws_vpc_cidr_block }}"
+- name: Query VPC id
+  ec2_vpc_net_facts:
     region: "{{ aws_region }}"
-    dns_support: yes
-    dns_hostnames: yes
-    tenancy: default
-    state: present
+    filters:
+      "tag:Name": "{{ moadsd_ng_prefix }}-vpc"
   register: ec2_vpc_net_result
 
-- name: Create EC2 VPC Public Subnet within CIDR block
-  ec2_vpc_subnet:
-    aws_access_key: "{{ aws_access_key }}"
-    aws_secret_key: "{{ aws_secret_key }}"
-    vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+- name: Query Public Subnet id
+  ec2_vpc_subnet_facts:
     region: "{{ aws_region }}"
-    az: "{{ aws_zone }}"
-    state: present
-    cidr: "{{ aws_public_subnet_cidr_block }}"
-    map_public: yes
-    resource_tags:
-      Name: "{{ moadsd_ng_prefix }}-public-subnet"
+    filters:
+      "tag:Name": "{{ moadsd_ng_prefix }}-public-subnet"
   register: public_subnet_result
 
-- name: Create EC2 VPC Private Subnet within CIDR block
-  ec2_vpc_subnet:
-    aws_access_key: "{{ aws_access_key }}"
-    aws_secret_key: "{{ aws_secret_key }}"
-    vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+- name: Query Private Subnet id
+  ec2_vpc_subnet_facts:
     region: "{{ aws_region }}"
-    az: "{{ aws_zone }}"
-    state: present
-    cidr: "{{ aws_private_subnet_cidr_block }}"
-    map_public: yes
-    resource_tags:
-      Name: "{{ moadsd_ng_prefix }}-private-subnet"
+    filters:
+      "tag:Name": "{{ moadsd_ng_prefix }}-private-subnet"
   register: private_subnet_result
 
-# - name: Create nat gateway and allocate EIP
-#   ec2_vpc_nat_gateway:
-#     state: present
-#     subnet_id: "{{ public_subnet_result.subnet.id }}"
-#     wait: yes
-#     region: "{{ aws_region }}"
-#     if_exist_do_not_create: true
-#   register: nat_gateway_result
-#
-#
-# - name: Terminate nat gateway and wait for deleted status.
-#   ec2_vpc_nat_gateway:
-#     state: absent
-#     nat_gateway_id: "{{ nat_gateway_result.nat_gateway_id }}"
-#     wait: yes
-#     wait_timeout: 300
-#     release_eip: yes
-#     region: "{{ aws_region }}"
+- name: Query nat gateway id
+  ec2_vpc_nat_gateway_facts:
+    region: "{{ aws_region }}"
+    filters:
+      subnet-id: "{{ public_subnet_result.subnets[0].subnet_id }}"
+  register: nat_gateway_result
+  when: public_subnet_result.subnets
 
-- name: Terminate EC2 VPC Internet Gateway
+- name: Terminate nat gateway and wait for deleted status.
+  ec2_vpc_nat_gateway:
+    state: absent
+    nat_gateway_id: "{{ item.nat_gateway_id }}"
+    wait: yes
+    wait_timeout: 500
+    release_eip: yes
+    region: "{{ aws_region }}"
+  loop: "{{ nat_gateway_result.result }}"
+  when: nat_gateway_result|bool == True
+
+- name: Terminate ec2 VPC internet gateway
   ec2_vpc_igw:
     aws_access_key: "{{ aws_access_key }}"
     aws_secret_key: "{{ aws_secret_key }}"
-    vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+    vpc_id: "{{ ec2_vpc_net_result.vpcs[0].id }}"
     region: "{{ aws_region }}"
     state: absent
+  when: ec2_vpc_net_result|bool == True
 
-
-- name: Terminate EC2 VPC Private Subnet within CIDR block
+- name: Terminate ec2 VPC Private Subnet
   ec2_vpc_subnet:
     aws_access_key: "{{ aws_access_key }}"
     aws_secret_key: "{{ aws_secret_key }}"
-    vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+    vpc_id: "{{ ec2_vpc_net_result.vpcs[0].id }}"
     region: "{{ aws_region }}"
     state: absent
     cidr: "{{ aws_private_subnet_cidr_block }}"
+  when: ec2_vpc_net_result|bool == True
 
-- name: Terminate EC2 VPC Public Subnet within CIDR block
+- name: Terminate ec2 VPC Public Subnet
   ec2_vpc_subnet:
     aws_access_key: "{{ aws_access_key }}"
     aws_secret_key: "{{ aws_secret_key }}"
-    vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+    vpc_id: "{{ ec2_vpc_net_result.vpcs[0].id }}"
     region: "{{ aws_region }}"
     state: absent
     cidr: "{{ aws_public_subnet_cidr_block }}"
+  when: ec2_vpc_net_result|bool == True
 
-- name: Terminate EC2 VPC Public Subnet Route Table
+- name: Terminate ec2 VPC Public Subnet Route Table
   ec2_vpc_route_table:
     aws_access_key: "{{ aws_access_key }}"
     aws_secret_key: "{{ aws_secret_key }}"
-    vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+    vpc_id: "{{ ec2_vpc_net_result.vpcs[0].id }}"
     region: "{{ aws_region }}"
     state: absent
     tags:
       Name: "{{ moadsd_ng_prefix }}-public-rt"
   register: public_route_table
+  when: ec2_vpc_net_result|bool == True
 
-- name: Terminate EC2 VPC Public Subnet Route Table
+- name: Terminate ec2 VPC Private Subnet Route Table
   ec2_vpc_route_table:
     aws_access_key: "{{ aws_access_key }}"
     aws_secret_key: "{{ aws_secret_key }}"
-    vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+    vpc_id: "{{ ec2_vpc_net_result.vpcs[0].id }}"
     region: "{{ aws_region }}"
     state: absent
     tags:
       Name: "{{ moadsd_ng_prefix }}-private-rt"
   register: public_route_table
+  when: ec2_vpc_net_result|bool == True
 
 - name: Terminate VPC
   local_action:
