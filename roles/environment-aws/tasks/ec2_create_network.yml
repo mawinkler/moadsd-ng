@@ -20,10 +20,6 @@
     state: present
   register: ec2_vpc_net_result
 
-# - name: pause
-#   pause:
-#     minutes: 5
-
 - name: Create EC2 VPC Internet Gateway
   ec2_vpc_igw:
     aws_access_key: "{{ aws_access_key }}"
@@ -63,11 +59,7 @@
       Name: "{{ moadsd_ng_prefix }}-private-subnet"
   register: private_subnet_result
 
-# - name: pause
-#   pause:
-#     minutes: 5
-
-- name: Create nat gateway and allocate EIP
+- name: Create NAT Gateway and allocate EIP
   ec2_vpc_nat_gateway:
     state: present
     subnet_id: "{{ public_subnet_result.subnet.id }}"
