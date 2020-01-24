@@ -105,6 +105,7 @@
     instance_ports_anywhere:
       - '22'
     instance_ports_network:
+      - '22'
       - "{{ databasescreen_port |string }}"
   when: site_deploy_deepsecurity == True
 
