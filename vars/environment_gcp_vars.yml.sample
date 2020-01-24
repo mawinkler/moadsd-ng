@@ -38,6 +38,8 @@ startup_script_linux: |
        apt install -y python3 python3-simplejson
 startup_script_windows: |
        Invoke-Expression -Command ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1')); Enable-WSManCredSSP -Role Server -Force
+       $regitem = "HKLM:\SYSTEM\CurrentControlSet\Control\Network\NewNetworkWindowOff"
+       New-Item -Path $regitem
 scopes:
   - https://www.googleapis.com/auth/compute
 moadsd_ng_prefix: moadsd-ng
@@ -168,7 +170,6 @@ linuxep_instance_name: linuxep
 linuxep_instance_count: 0
 linuxep_size_gb: 32
 linuxep_source_image: projects/rhel-cloud/global/images/family/rhel-7
-#projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts
 linuxep_machine_type: n1-standard-1
 linuxep_startup_script: "{{ startup_script_linux }}"
 linuxep_tags: role-linuxep
