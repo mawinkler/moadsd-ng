@@ -8,28 +8,28 @@
       - "Terminating network {{ moadsd_ng_prefix }}-vpc"
 
 - name: Query VPC id
-  ec2_vpc_net_facts:
+  ec2_vpc_net_info:
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ moadsd_ng_prefix }}-vpc"
   register: ec2_vpc_net_result
 
 - name: Query Public Subnet id
-  ec2_vpc_subnet_facts:
+  ec2_vpc_subnet_info:
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ moadsd_ng_prefix }}-public-subnet"
   register: public_subnet_result
 
 - name: Query Private Subnet id
-  ec2_vpc_subnet_facts:
+  ec2_vpc_subnet_info:
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ moadsd_ng_prefix }}-private-subnet"
   register: private_subnet_result
 
 - name: Query NAT Gateway id
-  ec2_vpc_nat_gateway_facts:
+  ec2_vpc_nat_gateway_info:
     region: "{{ aws_region }}"
     filters:
       subnet-id: "{{ public_subnet_result.subnets[0].subnet_id }}"
