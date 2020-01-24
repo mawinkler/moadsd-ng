@@ -79,106 +79,94 @@
   when:
     - instance_public_address == False
 
-- name: Create a windows webserver instance
-  gcp_compute_instance:
-    state: present
-    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
-    machine_type: "{{ instance_machine_type }}"
-    disks:
-      - auto_delete: true
-        boot: true
-        source: "{{ disk }}"
-    metadata:
-      sysprep-specialize-script-ps1: "{{ instance_startup_script }}"
-      # sysprep-specialize-script-ps1: |
-      #   Invoke-Expression -Command ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1')); Enable-WSManCredSSP -Role Server -Force
-    network_interfaces:
-      - network:
-          selfLink: "global/networks/{{ network.name }}"
-        access_configs:
-          - name: 'External NAT'
-            type: 'ONE_TO_ONE_NAT'
-    zone: "{{ gcp_zone }}"
-    project: "{{ gcp_project_id }}"
-    tags:
-      items:
-        - windows
-        - "{{ gcp_project_id }}"
-        - "{{ instance_tags }}"
-        - "project-{{ moadsd_ng_prefix }}"
-    auth_kind: "{{ gcp_auth_kind }}"
-    service_account_file: "{{ gcp_service_account_file }}"
-    scopes: "{{ scopes }}"
-  register: instance
+- name: Create GCP public instance
+  block:
+    - name: Create a windows instance
+      gcp_compute_instance:
+        state: present
+        name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+        machine_type: "{{ instance_machine_type }}"
+        disks:
+          - auto_delete: true
+            boot: true
+            source: "{{ disk }}"
+        metadata:
+          sysprep-specialize-script-ps1: "{{ instance_startup_script }}"
+        network_interfaces:
+          - network:
+              selfLink: "global/networks/{{ network.name }}"
+            access_configs:
+              - name: 'External NAT'
+                nat_ip: "{{ address }}"
+                type: 'ONE_TO_ONE_NAT'
+        zone: "{{ gcp_zone }}"
+        project: "{{ gcp_project_id }}"
+        tags:
+          items:
+            - windows
+            - "{{ gcp_project_id }}"
+            - "{{ instance_tags }}"
+            - "project-{{ moadsd_ng_prefix }}"
+        auth_kind: "{{ gcp_auth_kind }}"
+        service_account_file: "{{ gcp_service_account_file }}"
+        scopes: "{{ scopes }}"
+      register: instance
+
+    - name: Create admin password
+      delegate_to: 127.0.0.1
+      command: gcloud beta compute --project "{{ gcp_project_id }}" reset-windows-password "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance" --zone "{{ gcp_zone }}" --quiet
+      retries: 10
+      delay: 5
+      register: username_password
+      until: username_password.rc == 0
+
+    - name: Configure group_vars for windows instance
+      delegate_to: 127.0.0.1
+      copy:
+        dest: "./host_vars/{{ instance.networkInterfaces[0].accessConfigs[0].natIP }}.yml"
+        content: |
+          ansible_connection: winrm
+          ansible_port: 5986
+          ansible_winrm_transport: ntlm
+          ansible_winrm_server_cert_validation: ignore
+          ansible_password: '{{ username_password.stdout_lines[1] | regex_replace('password:   ') }}'
+          ansible_user: '{{ username_password.stdout_lines[2] | regex_replace('username:   ') }}'
+        force: yes
+
+  when:
+    - instance_public_address == True
+
+- name: Create GCP private instance
+  block:
+    - name: Create a windows instance
+      gcp_compute_instance:
+        state: present
+        name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+        machine_type: "{{ instance_machine_type }}"
+        disks:
+          - auto_delete: true
+            boot: true
+            source: "{{ disk }}"
+        metadata:
+          sysprep-specialize-script-ps1: "{{ instance_startup_script }}"
+        network_interfaces:
+          - network:
+              selfLink: "global/networks/{{ network.name }}"
+            access_configs:
+              - name: 'External NAT'
+                type: 'ONE_TO_ONE_NAT'
+        zone: "{{ gcp_zone }}"
+        project: "{{ gcp_project_id }}"
+        tags:
+          items:
+            - windows
+            - "{{ gcp_project_id }}"
+            - "{{ instance_tags }}"
+            - "project-{{ moadsd_ng_prefix }}"
+        auth_kind: "{{ gcp_auth_kind }}"
+        service_account_file: "{{ gcp_service_account_file }}"
+        scopes: "{{ scopes }}"
+      register: instance
+
   when:
     - instance_public_address == False
-
-- name: debug
-  debug:
-    msg:
-      - "{{ instance }}"
-
-# - name: debug2
-#   debug:
-#     msg:
-#       - "{{ instance.networkInterfaces[0].accessConfigs[0].natIP }}"
-
-- name: Create a windows webserver instance
-  gcp_compute_instance:
-    state: present
-    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
-    machine_type: "{{ instance_machine_type }}"
-    disks:
-      - auto_delete: true
-        boot: true
-        source: "{{ disk }}"
-    metadata:
-      sysprep-specialize-script-ps1: "{{ instance_startup_script }}"
-      # sysprep-specialize-script-ps1: |
-      #   Invoke-Expression -Command ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1')); Enable-WSManCredSSP -Role Server -Force
-    network_interfaces:
-      - network:
-          selfLink: "global/networks/{{ network.name }}"
-        access_configs:
-          - name: 'External NAT'
-            nat_ip: "{{ address }}"
-            type: 'ONE_TO_ONE_NAT'
-    zone: "{{ gcp_zone }}"
-    project: "{{ gcp_project_id }}"
-    tags:
-      items:
-        - windows
-        - "{{ gcp_project_id }}"
-        - "{{ instance_tags }}"
-        - "project-{{ moadsd_ng_prefix }}"
-    auth_kind: "{{ gcp_auth_kind }}"
-    service_account_file: "{{ gcp_service_account_file }}"
-    scopes: "{{ scopes }}"
-  register: instance
-  when:
-    - instance_public_address == True
-
-- name: Create admin password
-  delegate_to: 127.0.0.1
-  command: gcloud beta compute --project "{{ gcp_project_id }}" reset-windows-password "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance" --zone "{{ gcp_zone }}" --quiet
-  retries: 10
-  delay: 5
-  register: username_password
-  until: username_password.rc == 0
-  when:
-    - instance_public_address == True
-
-- name: Configure group_vars for windows instance
-  delegate_to: 127.0.0.1
-  copy:
-    dest: "./host_vars/{{ instance.networkInterfaces[0].accessConfigs[0].natIP }}.yml"
-    content: |
-      ansible_connection: winrm
-      ansible_port: 5986
-      ansible_winrm_transport: ntlm
-      ansible_winrm_server_cert_validation: ignore
-      ansible_password: '{{ username_password.stdout_lines[1] | regex_replace('password:   ') }}'
-      ansible_user: '{{ username_password.stdout_lines[2] | regex_replace('username:   ') }}'
-    force: yes
-  when:
-    - instance_public_address == True
