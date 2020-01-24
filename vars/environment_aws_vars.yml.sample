@@ -23,7 +23,8 @@ site_deploy_registry: yes
 aws_zone: <zone>
 aws_region: <region>
 aws_vpc_cidr_block: <vpc-cidr>
-aws_subnet_cidr_block: <subnet-cidr>
+aws_public_subnet_cidr_block: '10.0.1.0/24'
+aws_private_subnet_cidr_block: '10.0.2.0/24'
 startup_script_linux: |
        #!/bin/sh
        useradd -m -s /bin/bash ansible
