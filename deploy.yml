@@ -433,3 +433,62 @@
     - name: Docker restart
       become: true
       command: systemctl reload docker
+
+# #####################################################################
+# Print some environment information
+# #####################################################################
+- hosts: localhost
+  tasks:
+    - name: Jenkins Details
+      command: cat "site_{{ type }}/jenkins.txt"
+      register: details_jenkins
+      ignore_errors: yes
+
+    - name: Smart Check Details
+      command: cat "site_{{ type }}/dssc.txt"
+      register: details_dssc
+      ignore_errors: yes
+
+
+    - name: Cluster Registry Details
+      command: cat "site_{{ type }}/registry.txt"
+      register: details_registry
+      ignore_errors: yes
+
+    - name: Deep Security Details
+      command: cat "site_{{ type }}/dsm.txt"
+      register: details_dsm
+      ignore_errors: yes
+
+    - name: Kubernetes Details
+      command: cat "site_{{ type }}/kube.txt"
+      register: details_kube
+      ignore_errors: yes
+
+    - name: Kubernetes Token Details
+      command: cat "site_{{ type }}/kubetoken.txt"
+      register: details_kubetoken
+      ignore_errors: yes
+
+    - name: Kubernetes Details
+      debug:
+        msg:
+          - "{{ details_kube.stdout_lines }}"
+          - "{{ details_kubetoken.stdout_lines }}"
+
+    - name: Cluster Registry Details
+      debug:
+        msg: "{{ details_registry.stdout_lines }}"
+
+    - name: Jenkins Details
+      debug:
+        msg: "{{ details_jenkins.stdout_lines }}"
+
+    - name: Smart Check Details
+      debug:
+        msg: "{{ details_dssc.stdout_lines }}"
+
+    - name: Deep Security Details
+      debug:
+        msg:
+          - "{{ details_dsm.stdout_lines }}"
