@@ -111,7 +111,7 @@
     - name: Configure host_vars for windows instance
       delegate_to: 127.0.0.1
       copy:
-        dest: "./host_vars/{{ ec2.instances[0].public_ip_address }}.yml"
+        dest: "./host_vars/{{ eip.public_ip }}.yml"
         content: |
           ansible_connection: winrm
           ansible_port: 5985
