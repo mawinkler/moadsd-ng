@@ -2,12 +2,12 @@ server {
   listen 443 ssl;
   listen [::]:443 ssl;
 
-  server_name {{ service_name }}.{{ jumphost_external_ip | regex_replace('.', '-') }}.nip.io;
+  server_name {{ service_dns_name }};
   access_log /var/log/nginx/reverse-access.log;
   error_log /var/log/nginx/reverse-error.log;
 
-  ssl_certificate /etc/letsencrypt/live/{{ service_name }}.{{ jumphost_external_ip | regex_replace('.', '-') }}.nip.io/fullchain.pem;
-  ssl_certificate_key /etc/letsencrypt/live/{{ service_name }}.{{ jumphost_external_ip | regex_replace('.', '-') }}.nip.io/privkey.pem;
+  ssl_certificate /etc/letsencrypt/live/{{ service_dns_name }}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/{{ service_dns_name }}/privkey.pem;
   ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
   ssl_ciphers         HIGH:!aNULL:!MD5;
 

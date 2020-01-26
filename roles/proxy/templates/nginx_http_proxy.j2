@@ -2,7 +2,7 @@ server {
   listen 80;
   listen [::]:80;
 
-  server_name {{ service_name }}.{{ jumphost_external_ip | | regex_replace('.', '-') }}.nip.io;
+  server_name {{ service_dns_name }};
   access_log /var/log/nginx/reverse-access.log;
   error_log /var/log/nginx/reverse-error.log;
 
