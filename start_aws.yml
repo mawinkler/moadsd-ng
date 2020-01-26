@@ -32,6 +32,8 @@
     instance_public_address: True
     instance_ports_anywhere:
       - '22'
+      - '80'
+      - '443'
     instance_ports_network:
       - '1-65535'
   when: site_deploy_jumphost == True
