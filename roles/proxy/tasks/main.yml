@@ -7,10 +7,10 @@
     msg:
       - "operation                    : {{ operation }}"
 
-- name: Create Proxy
+- name: Create Proxy Instance
   include: proxy_create_instance.yml
   when: operation == 'create_instance'
 
-- name: Create credentials
+- name: Create Site Config
   include: proxy_create_site.yml
   when: operation == 'create_site'

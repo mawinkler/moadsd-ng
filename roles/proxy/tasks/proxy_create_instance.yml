@@ -22,3 +22,9 @@
   file:
     name: /etc/nginx/sites-enabled/default
     state: absent
+
+- name: Nginx restart
+  service:
+    name: nginx
+    daemon_reload: yes
+    state: restarted

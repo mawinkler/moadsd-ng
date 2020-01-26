@@ -2,22 +2,23 @@
 # #####################################################################
 # Create a Site Config for a MOADSD-NG Service
 # #####################################################################
-- name: debug
-  debug:
-    msg: "{{ service_name }}.{{ jumphost_external_ip | regex_replace('\\.', '-') }}.nip.io"
-
 - name: Generate DNS name
   set_fact:
     service_dns_name: "{{ service_name }}.{{ jumphost_external_ip | regex_replace('\\.', '-') }}.nip.io"
 
-- name: Debug
+- name: Creating Site Config
   debug:
     msg: "{{ service_dns_name }}"
+
+- name: Nginx stop
+  service:
+    name: nginx
+    state: stopped
 
 - name: Install nginx site for http site
   template:
     src: nginx_http_proxy.j2
-    dest: /etc/nginx/sites-enabled/http-{{ service_name }}
+    dest: /etc/nginx/sites-enabled/http-{{ service_name }}.conf
   when: target_type == "http"
 
 - name: Install https site
@@ -30,7 +31,7 @@
     - name: Request Certificate
       command: >-
         certbot --test-cert --noninteractive --agree-tos
-        --email {{ certbot_admin_email }} --standalone certonly
+        --email {{ admin_email }} {{ certbot_create_method }}
         -d {{ service_dns_name }}
   when: target_type == "https"
 
