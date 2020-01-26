@@ -1,0 +1,16 @@
+---
+# #####################################################################
+# Create and Manage the MOADSD-NG Proxy
+# #####################################################################
+- name: "Listing parameters"
+  debug:
+    msg:
+      - "operation                    : {{ operation }}"
+
+- name: Create Proxy
+  include: proxy_create_instance.yml
+  when: operation == 'create_instance'
+
+- name: Create credentials
+  include: proxy_create_site.yml
+  when: operation == 'create_site'

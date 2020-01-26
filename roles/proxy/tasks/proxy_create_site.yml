@@ -1,0 +1,29 @@
+---
+# #####################################################################
+# Create a Site Config for a MOADSD-NG Service
+# #####################################################################
+- name: Install nginx site for http site
+  template:
+    src: nginx_http_proxy.j2
+    dest: /etc/nginx/sites-enabled/http-{{ service_name }}
+  when: target_type == "http"
+
+- name: Install https site
+  block:
+    - name: Install nginx site for https site
+      template:
+        src: nginx_https_proxy.j2
+        dest: /etc/nginx/sites-enabled/https-{{ service_name }}
+
+    - name: Request Certificate
+      command: >-
+        certbot --test-cert --noninteractive --agree-tos
+        --email {{ certbot_admin_email }}
+        -d {{ service_name }}.{{ jumphost_external_ip | | regex_replace('.', '-') }}.nip.io
+  when: target_type == "https"
+
+- name: Nginx restart
+  service:
+    name: nginx
+    daemon_reload: yes
+    state: restarted

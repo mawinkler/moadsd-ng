@@ -1,0 +1,20 @@
+server {
+  listen 443 ssl;
+  listen [::]:443 ssl;
+
+  server_name {{ service_name }}.{{ jumphost_external_ip | regex_replace('.', '-') }}.nip.io;
+  access_log /var/log/nginx/reverse-access.log;
+  error_log /var/log/nginx/reverse-error.log;
+
+  ssl_certificate /etc/letsencrypt/live/{{ service_name }}.{{ jumphost_external_ip | regex_replace('.', '-') }}.nip.io/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/{{ service_name }}.{{ jumphost_external_ip | regex_replace('.', '-') }}.nip.io/privkey.pem;
+  ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+  ssl_ciphers         HIGH:!aNULL:!MD5;
+
+  location / {
+    proxy_ssl_verify off;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+    proxy_pass https://{{ k8smaster_ip }}:{{ node_port }}/;
+  }
+}
