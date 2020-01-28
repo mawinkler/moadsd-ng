@@ -98,7 +98,7 @@
 - name: Install Deep Security Smart Check
   become: true
   become_user: ubuntu
-  shell: helm install --namespace {{ dssc_namespace }} --values overrides-smartcheck.yml {{ dssc_name }} {{ dssc_chart }} >> dssc.log
+  shell: helm install --namespace {{ dssc_namespace }} --values overrides-smartcheck.yml {{ dssc_name }} {{ dssc_chart }} >> smartcheck.log
   args:
     chdir: $HOME
     creates: dssc.log
@@ -108,10 +108,10 @@
   become_user: ubuntu
   command: kubectl patch service -n {{ dssc_namespace }} proxy --type='json' --patch='[{"op":"replace", "path":"/spec/ports/0/nodePort", "value":{{ smartcheck_nodeport }}}]'
 
-- name: Fetch dssc.log
+- name: Fetch smartcheck.log
   become: true
   become_user: ubuntu
   fetch:
-    src: /home/ubuntu/dssc.log
+    src: /home/ubuntu/smartcheck.log
     dest: ./site_{{ type }}/
     flat: yes
