@@ -83,16 +83,21 @@
     dest: ./site_{{ type }}/
     flat: yes
 
+- name: Generate DNS name
+  set_fact:
+    service_dns_name: "http://jenkins.{{ groups['moadsd_ng_jumphost_instance_public'][0] | regex_replace('\\.', '-') }}.nip.io"
+
 - name: Store Jenkins credentials
   become: true
   become_user: ubuntu
-  shell: |
-    echo URL: http://{{ inventory_hostname }}:{{ jenkins_nodeport }} > jenkins.txt
-    echo Username: {{ jenkins_username }} >> jenkins.txt
-    echo Password: {{ jenkins_password }} >> jenkins.txt
-  args:
-    chdir: $HOME
-    creates: jenkins.txt
+  copy:
+    dest: /home/ubuntu/jenkins.txt
+    mode: 0640
+    content: |
+      URL: http://{{ inventory_hostname }}:{{ jenkins_nodeport }}
+      URL: {{ service_dns_name }}
+      Username: {{ jenkins_username }}
+      Password: {{ jenkins_password }}
 
 - name: Fetch jenkins.txt
   become: true
