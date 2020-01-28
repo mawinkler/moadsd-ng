@@ -58,9 +58,11 @@
       {% raw %}ansible_ssh_common_args: -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p ansible@{{ groups['moadsd_ng_jumphost_instance_public'][0] }}"{% endraw %}
     force: yes
   loop:
+    - "./group_vars/tag_role_{{ kubernetes_master_tags | regex_replace('-', '_') }}.yml"
     - "./group_vars/tag_role_{{ kubernetes_worker_tags | regex_replace('-', '_') }}.yml"
     - "./group_vars/tag_role_{{ postgresql_tags | regex_replace('-', '_') }}.yml"
     - "./group_vars/tag_role_{{ linuxep_tags | regex_replace('-', '_') }}.yml"
+    - "./group_vars/tag_role_{{ gitlab_tags | regex_replace('-', '_') }}.yml"
   when: site_deploy_jumphost == True
 
 - name: Create instance for PostgreSQL
@@ -98,6 +100,7 @@
       - '22'
       - "{{ addressandportsscreen_managerport |string }}"
       - "{{ addressandportsscreen_heartbeatport |string }}"
+      - "{{ addressandportsscreen_agentport |string }}"
     instance_ports_network:
       - "{{ addressandportsscreen_managerport |string }}"
       - "{{ addressandportsscreen_heartbeatport |string }}"
@@ -115,29 +118,23 @@
     instance_machine_type: "{{ kubernetes_master_machine_type }}"
     instance_startup_script: "{{ kubernetes_master_startup_script }}"
     instance_tags: "{{ kubernetes_master_tags }}"
-    instance_public_address: True
+    instance_public_address: False
     instance_ports_anywhere:
       - '22'
-      - "{{ kubernetes_dashboard_nodeport |string }}"
-      - "{{ rook_ceph_dashboard_nodeport |string }}"
-      - "{{ smartcheck_nodeport |string }}"
-      - "{{ smartcheck_registry |string }}"
-      - "{{ certserv_nodeport |string }}"
-      - "{{ jenkins_nodeport |string }}"
-      - "{{ gitlab_nodeport_http |string }}"
-      - "{{ gitlab_nodeport_https |string }}"
-      - "{{ gitlab_nodeport_ssh |string }}"
-      - "{{ linkerd_dashboard_nodeport |string }}"
-      - "{{ registry_nodeport |string }}"
-      - "{{ custom_nodeport |string }}"
+      # - "{{ kubernetes_dashboard_nodeport |string }}"
+      # - "{{ rook_ceph_dashboard_nodeport |string }}"
+      # - "{{ smartcheck_nodeport |string }}"
+      # - "{{ smartcheck_registry |string }}"
+      # - "{{ certserv_nodeport |string }}"
+      # - "{{ jenkins_nodeport |string }}"
+      # - "{{ gitlab_nodeport_http |string }}"
+      # - "{{ gitlab_nodeport_https |string }}"
+      # - "{{ gitlab_nodeport_ssh |string }}"
+      # - "{{ linkerd_dashboard_nodeport |string }}"
+      # - "{{ registry_nodeport |string }}"
+      # - "{{ custom_nodeport |string }}"
     instance_ports_network:
       - '1-65535'
-      # - '6443'
-      # - '2379-2380'
-      # - '10250'
-      # - '10251'
-      # - '10252'
-      # - '10255'
   when: site_deploy_kubernetes == True
 
 - name: Create instance for Kubernetes worker
@@ -156,9 +153,6 @@
       - '22'
     instance_ports_network:
       - '1-65535'
-      # - '10250'
-      # - '10255'
-      # - '30000-32767''
   with_sequence: count="{{ kubernetes_worker_count }}"
   when: site_deploy_kubernetes == True
 
@@ -173,12 +167,12 @@
     instance_machine_type: "{{ gitlab_machine_type }}"
     instance_startup_script: "{{ gitlab_startup_script }}"
     instance_tags: "{{ gitlab_tags }}"
-    instance_public_address: True
+    instance_public_address: False
     instance_ports_anywhere:
       - '22'
-      - "{{ gitlab_docker_letsencrypt |string }}"
-      - "{{ gitlab_docker_https |string }}"
-      - "{{ gitlab_docker_registry |string }}"
+      # - "{{ gitlab_docker_letsencrypt |string }}"
+      # - "{{ gitlab_docker_https |string }}"
+      # - "{{ gitlab_docker_registry |string }}"
     instance_ports_network:
       - '1-65535'
       # - '10250'
@@ -202,9 +196,6 @@
       - '22'
     instance_ports_network:
       - '1-65535'
-      # - '10250'
-      # - '10255'
-      # - '30000-32767''
   with_sequence: count="{{ linuxep_instance_count }}"
   when: site_deploy_endpoints == True
 
@@ -226,8 +217,5 @@
       - '5985'
     instance_ports_network:
       - '1-65535'
-      # - '10250'
-      # - '10255'
-      # - '30000-32767''
   with_sequence: count="{{ windowsep_instance_count }}"
   when: site_deploy_endpoints == True
