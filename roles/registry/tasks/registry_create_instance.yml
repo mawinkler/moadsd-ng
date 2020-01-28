@@ -60,7 +60,11 @@
   args:
     chdir: $HOME
 
-- name: Store Cluster Registry credentials
+- name: Generate DNS name
+  set_fact:
+    service_dns_name: "https://registry.{{ groups['moadsd_ng_jumphost_instance_public'][0] | regex_replace('\\.', '-') }}.nip.io"
+
+- name: Create link document for Cluster Registry
   become: true
   become_user: ubuntu
   copy:
@@ -68,6 +72,7 @@
     mode: 0640
     content: |
       URL: https://{{ inventory_hostname }}:{{ docker_registry_service_port }}
+      URL: {{ service_dns_name }}
       Username: {{ cluster_registry_username }}
       Password: {{ cluster_registry_password }}
 
