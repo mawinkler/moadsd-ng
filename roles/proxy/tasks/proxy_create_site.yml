@@ -4,7 +4,7 @@
 # #####################################################################
 - name: Generate DNS name
   set_fact:
-    service_dns_name: "{{ service_name }}.{{ jumphost_external_ip | regex_replace('\\.', '-') }}.nip.io"
+    service_dns_name: "{{ service_name }}-{{ jumphost_external_ip | regex_replace('\\.', '-') }}.nip.io"
 
 - name: Creating Site Config
   debug:
@@ -28,11 +28,19 @@
         src: nginx_https_proxy.j2
         dest: /etc/nginx/sites-enabled/https-{{ service_name }}.conf
 
-    - name: Request Certificate
+    - name: Request Certificate from Staging Certification Authority
       command: >-
         certbot --test-cert --noninteractive --agree-tos
         --email {{ admin_email }} {{ certbot_create_method }}
         -d {{ service_dns_name }}
+      when: trusted_certificates == False
+
+    - name: Request Certificate from Production Certification Authority
+      command: >-
+        certbot --noninteractive --agree-tos
+        --email {{ admin_email }} {{ certbot_create_method }}
+        -d {{ service_dns_name }}
+      when: trusted_certificates == True
   when: target_type == "https"
 
 - name: Nginx restart

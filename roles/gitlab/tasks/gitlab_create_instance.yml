@@ -31,8 +31,8 @@
           configureCertmanager: false
           class: nginx
         hosts:
-          domain: "{{ inventory_hostname }}.nip.io"
-          externalIP: {{ inventory_hostname }}
+          domain: gitlab-{{ groups['moadsd_ng_jumphost_instance_public'][0] | regex_replace('\\.', '-') }}
+          externalIP: {{ groups['moadsd_ng_jumphost_instance_public'][0] }}
       certmanager:
         install: false
       nginx-ingress:
@@ -149,10 +149,17 @@
   shell: helm repo update
 
 # --version v1.0.0
+- name: Create Deep Security Smart Check Namespace
+  become: true
+  become_user: ubuntu
+  shell: kubectl create namespace {{ gitlab_namespace }} --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME
+
 - name: Install GitLab
   become: true
   become_user: ubuntu
-  shell: helm install --timeout 600 --namespace {{ gitlab_namespace }} --values overrides-gitlab-nginx-ingress.yml {{ gitlab_name }} {{ gitlab_chart }} >> gitlab.log
+  shell: helm install --namespace {{ gitlab_namespace }} --values overrides-gitlab-minimal {{ gitlab_name }} {{ gitlab_chart }} >> gitlab.log
   args:
     chdir: $HOME
     creates: gitlab.log
@@ -204,16 +211,21 @@
     dest: ./site_{{ type }}/
     flat: yes
 
-- name: Store GitLab credentials
+- name: Generate DNS name
+  set_fact:
+    service_dns_name: "https://gitlab-{{ groups['moadsd_ng_jumphost_instance_public'][0] | regex_replace('\\.', '-') }}.nip.io"
+
+- name: Create link document for GitLab
   become: true
   become_user: ubuntu
-  shell: |
-    echo URL: http://{{ inventory_hostname }}:{{ gitlab_nodeport_https }} > gitlab.txt
-    echo Username: root >> gitlab.txt
-    echo Password: $(kubectl get --namespace {{ gitlab_namespace }} secret gitlab-gitlab-initial-root-password -ojsonpath='{.data.password}' | base64 --decode) >> gitlab.txt
-  args:
-    chdir: $HOME
-    creates: gitlab.txt
+  copy:
+    dest: /home/ubuntu/gitlab.txt
+    mode: 0640
+    content: |
+      echo URL: http://{{ inventory_hostname }}:{{ gitlab_nodeport_https }}
+      URL: {{ service_dns_name }}
+      echo Username: root
+      echo Password: $(kubectl get --namespace {{ gitlab_namespace }} secret gitlab-gitlab-initial-root-password -ojsonpath='{.data.password}' | base64 --decode)
 
 - name: Fetch gitlab.txt
   become: true
