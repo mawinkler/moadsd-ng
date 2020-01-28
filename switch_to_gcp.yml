@@ -31,7 +31,9 @@
           {% raw %}ansible_ssh_common_args: -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p ansible@{{ groups['moadsd_ng_jumphost_instance_public'][0] }}"{% endraw %}
         force: yes
       loop:
+        - "./group_vars/tag_{{ kubernetes_master_tags | regex_replace('-', '_') }}.yml"
         - "./group_vars/tag_{{ kubernetes_worker_tags | regex_replace('-', '_') }}.yml"
         - "./group_vars/tag_{{ postgresql_tags | regex_replace('-', '_') }}.yml"
         - "./group_vars/tag_{{ linuxep_tags | regex_replace('-', '_') }}.yml"
+        - "./group_vars/tag_{{ gitlab_tags | regex_replace('-', '_') }}.yml"
       when: site_deploy_jumphost == True
