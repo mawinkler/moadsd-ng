@@ -48,7 +48,7 @@
     chdir: $HOME
 
   # shell: docker tag moadsd-ng-certserv {{ dockerhub_username }}/moadsd-ng-certserv:latest
-- name: Build docker image for certificate pod
+- name: Tag docker image for certificate pod
   become: true
   become_user: ubuntu
   shell: docker tag moadsd-ng-certserv {{ remote_ip }}:{{ registry_nodeport }}/cert/moadsd-ng-certserv:latest
