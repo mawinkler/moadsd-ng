@@ -78,36 +78,41 @@
   when: st.stat.exists == False
 
 - name: Install custom DSM
-  shell: "/root/dsm.sh -q -varfile /root/dsm.properties >> /root/dsm.log"
+  shell: "/root/dsm.sh -q -varfile /root/dsm.properties >> /root/deepsecurity.log"
   args:
     chdir: $HOME
     creates: dsm.log
   when: st.stat.exists == True
 
 - name: Install DSM
-  shell: "/root/{{ deepsecurity_installer }} -q -varfile /root/dsm.properties >> /root/dsm.log"
+  shell: "/root/{{ deepsecurity_installer }} -q -varfile /root/dsm.properties >> /root/deepsecurity.log"
   args:
     chdir: $HOME
     creates: dsm.log
   when: st.stat.exists == False
 
-- name: Fetch dsm.log
+- name: Fetch deepsecurity.log
   fetch:
-    src: /root/dsm.log
+    src: /root/deepsecurity.log
     dest: ./site_{{ type }}/
     flat: yes
 
-- name: Store Deep Security credentials
-  shell: |
-    echo URL: https://{{ inventory_hostname }}:{{ addressandportsscreen_managerport }} > dsm.txt
-    echo Username: {{ credentialsscreen_administrator_username }} >> dsm.txt
-    echo Password: {{ credentialsscreen_administrator_password }} >> dsm.txt
-  args:
-    chdir: $HOME
-    creates: dsm.txt
+- name: Generate DNS name
+  set_fact:
+    service_dns_name: "https://deepsecurity.{{ groups['moadsd_ng_jumphost_instance_public'][0] | regex_replace('\\.', '-') }}.nip.io"
 
-- name: Fetch dsm.txt
+- name: Create link document for Deep Security
+  copy:
+    dest: /root/deepsecurity.txt
+    mode: 0640
+    content: |
+      URL: https://{{ inventory_hostname }}:{{ addressandportsscreen_managerport }}
+      URL: {{ service_dns_name }}
+      Username: {{ credentialsscreen_administrator_username }}
+      Password: {{ credentialsscreen_administrator_password }}
+
+- name: Fetch deepsecurity.txt
   fetch:
-    src: /root/dsm.txt
+    src: /root/deepsecurity.txt
     dest: ./site_{{ type }}/
     flat: yes
