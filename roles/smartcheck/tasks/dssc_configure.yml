@@ -91,22 +91,27 @@
   retries: 60
   delay: 10
 
-- name: Store Deep Security Smart Check credentials
+- name: Generate DNS name
+  set_fact:
+    service_dns_name: "https://smartcheck.{{ groups['moadsd_ng_jumphost_instance_public'][0] | regex_replace('\\.', '-') }}.nip.io"
+
+- name: Create link document for Deep Security Smart Check
   become: true
   become_user: ubuntu
   copy:
-    dest: /home/ubuntu/dssc.txt
+    dest: /home/ubuntu/smartcheck.txt
     mode: 0640
     content: |
       URL: https://{{ inventory_hostname }}:{{ smartcheck_nodeport }}
+      URL: {{ service_dns_name }}
       Username: {{ dsscsecrets.resources[0].data.userName | b64decode }}
       Password: {{ smartcheck_password }}
 
-- name: Fetch dssc.txt
+- name: Fetch smartcheck.txt
   become: true
   become_user: ubuntu
   fetch:
-    src: /home/ubuntu/dssc.txt
+    src: /home/ubuntu/smartcheck.txt
     dest: ./site_{{ type }}/
     flat: yes
 
