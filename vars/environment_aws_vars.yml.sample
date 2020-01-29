@@ -70,6 +70,7 @@ jumphost_source_image: ami-0ac05733838eabc06
 jumphost_machine_type: t2.medium
 jumphost_startup_script: "{{ startup_script_linux }}"
 jumphost_tags: jumphost
+jumphost_tld: nip.io
 
 # #####################################################################
 # Kubernetes Settings

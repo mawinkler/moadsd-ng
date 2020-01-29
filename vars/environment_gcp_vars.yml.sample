@@ -55,6 +55,7 @@ jumphost_source_image: projects/ubuntu-os-cloud/global/images/family/ubuntu-1804
 jumphost_machine_type: n1-standard-1
 jumphost_startup_script: "{{ startup_script_linux }}"
 jumphost_tags: role-jumphost
+jumphost_tld: nip.io
 
 # #####################################################################
 # Kubernetes Settings
