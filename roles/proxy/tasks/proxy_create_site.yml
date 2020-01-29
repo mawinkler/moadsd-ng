@@ -4,7 +4,7 @@
 # #####################################################################
 - name: Generate DNS name
   set_fact:
-    service_dns_name: "{{ service_name }}-{{ jumphost_external_ip | regex_replace('\\.', '-') }}.nip.io"
+    service_dns_name: "{{ service_name }}-{{ jumphost_external_ip | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
 - name: Creating Site Config
   debug:

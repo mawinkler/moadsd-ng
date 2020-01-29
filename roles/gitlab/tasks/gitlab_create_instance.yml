@@ -74,7 +74,7 @@
       global:
         edition: ce
         hosts:
-          domain: "{{ inventory_hostname }}.nip.io"
+          domain: "{{ inventory_hostname }}.{{ jumphost_tld }}"
           externalIP: {{ inventory_hostname }}
       certmanager-issuer:
         email: winkler.info@icloud.com
@@ -109,7 +109,7 @@
           configureCertmanager: true
           class: nginx
         hosts:
-          domain: "{{ inventory_hostname }}.nip.io"
+          domain: "{{ inventory_hostname }}.{{ jumphost_tld }}"
           externalIP: {{ inventory_hostname }}
       serviceType: {{ service_type }}
       certmanager:
@@ -213,7 +213,7 @@
 
 - name: Generate DNS name
   set_fact:
-    service_dns_name: "https://gitlab-{{ groups['moadsd_ng_jumphost_instance_public'][0] | regex_replace('\\.', '-') }}.nip.io"
+    service_dns_name: "https://gitlab-{{ groups['moadsd_ng_jumphost_instance_public'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
 - name: Create link document for GitLab
   become: true

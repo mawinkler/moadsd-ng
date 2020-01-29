@@ -85,7 +85,7 @@
 
 - name: Generate DNS name
   set_fact:
-    service_dns_name: "http://jenkins-{{ groups['moadsd_ng_jumphost_instance_public'][0] | regex_replace('\\.', '-') }}.nip.io"
+    service_dns_name: "http://jenkins-{{ groups['moadsd_ng_jumphost_instance_public'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
 - name: Store Jenkins credentials
   become: true
