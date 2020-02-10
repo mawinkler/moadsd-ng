@@ -25,7 +25,7 @@
 - name: Query password
   become: true
   become_user: ubuntu
-  k8s_facts:
+  k8s_info:
     api_version: v1
     kind: secrets
     name: deepsecurity-smartcheck-auth
