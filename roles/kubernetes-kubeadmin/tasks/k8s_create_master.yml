@@ -162,7 +162,7 @@
     - name: Query Kubernetes secrets
       become: true
       become_user: ubuntu
-      k8s_facts:
+      k8s_info:
         api_version: v1
         kind: secret
         namespace: kube-system
