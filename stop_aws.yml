@@ -70,6 +70,7 @@
   vars:
     operation: terminate_instance
     instance_name: "{{ jumphost_instance_name }}"
+  when: terminate_jumphost == True
 
 - name: Terminate AWS network
   include_role:

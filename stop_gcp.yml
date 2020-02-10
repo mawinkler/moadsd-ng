@@ -83,7 +83,8 @@
   vars:
     operation: terminate_instance
     instance_name: "{{ jumphost_instance_name }}"
-
+  when: terminate_jumphost == True
+  
 - name: Check if nat config still exists
   delegate_to: 127.0.0.1
   command: gcloud compute routers nats describe nat-config --router={{ moadsd_ng_prefix }}-router --region {{ gcp_region }}

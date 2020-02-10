@@ -10,7 +10,7 @@
   vars:
     scopes:
       - https://www.googleapis.com/auth/compute
-    terminate_jumphost: False
+    terminate_jumphost: True
 
   tasks:
     - name: Include vars
