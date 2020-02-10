@@ -77,3 +77,4 @@
     name: environment-aws
   vars:
     operation: terminate_network
+  when: terminate_jumphost == True
