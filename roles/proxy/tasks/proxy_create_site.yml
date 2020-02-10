@@ -28,19 +28,28 @@
         src: nginx_https_proxy.j2
         dest: /etc/nginx/sites-enabled/https-{{ service_name }}.conf
 
+    - name: Check if certificate already exists
+      stat:
+        path: /etc/letsencrypt/live/{{ service_dns_name }}
+      register: stat_result
+
     - name: Request Certificate from Staging Certification Authority
       command: >-
         certbot --test-cert --noninteractive --agree-tos
         --email {{ admin_email }} {{ certbot_create_method }}
         -d {{ service_dns_name }}
-      when: trusted_certificates == False
+      when:
+        - trusted_certificates == False
+        - stat_result.stat.exists == False
 
     - name: Request Certificate from Production Certification Authority
       command: >-
         certbot --noninteractive --agree-tos
         --email {{ admin_email }} {{ certbot_create_method }}
         -d {{ service_dns_name }}
-      when: trusted_certificates == True
+      when:
+        - trusted_certificates == True
+        - stat_result.stat.exists == False
   when: target_type == "https"
 
 - name: Nginx restart
@@ -48,3 +57,13 @@
     name: nginx
     daemon_reload: yes
     state: restarted
+
+#-w /var/www/letsencrypt
+# - name: Add Certbot Cronjob for Cert renewal
+#   cron:
+#     name: letsencrypt_renewal_{{ service_dns_name }}
+#     special_time: weekly
+#     job: certbot --renew certonly -n --webroot -m {{ admin_email }} --agree-tos -d {{ service_dns_name }} && service nginx reload
+#     minute: "{{ certbot_auto_renew_minute }}"
+#     hour: "{{ certbot_auto_renew_hour }}"
+#     user: "{{ certbot_auto_renew_user }}"
