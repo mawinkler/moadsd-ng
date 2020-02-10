@@ -59,7 +59,7 @@
         "insecure-registries": ["{{ groups['moadsd_ng_k8smaster_instance'][0] }}:{{ smartcheck_registry }}", "{{ groups['moadsd_ng_k8smaster_instance'][0] }}:{{ registry_nodeport }}", "{{ kubernetes_master_instance_name }}:{{ smartcheck_registry }}", "{{ kubernetes_master_instance_name }}:{{ registry_nodeport }}"]
       }
 
-- name: Add the user jenkins with a specific uid and a primary group of 'jenkins'
+- name: Add user jenkins with a specific uid and a primary group of admin
   user:
     name: jenkins
     comment: Jenkins Slave
