@@ -418,12 +418,12 @@
         - site_deploy_registry == True
         - site_deploy_kubernetes == True
 
-    - name: Create k8s certificate pod
-      include_role:
-        name: kubernetes-kubeadmin
-      vars:
-        operation: k8s_create_certificate_pod
-      when: site_deploy_kubernetes == True
+    # - name: Create k8s certificate pod
+    #   include_role:
+    #     name: kubernetes-kubeadmin
+    #   vars:
+    #     operation: k8s_create_certificate_pod
+    #   when: site_deploy_kubernetes == True
 
 # #####################################################################
 # Deploy Deep Security Smart Check
