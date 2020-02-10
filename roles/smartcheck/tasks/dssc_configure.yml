@@ -156,6 +156,86 @@
       }
     status_code: 201
 
+- name: Create Content Override for test_pkcs1_15.py
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
+    method: POST
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body: |
+      {
+        "filename": "usr/lib/python2.7/dist-packages/Crypto/SelfTest/Cipher/test_pkcs1_15.py",
+        "rule": "private_keys_pem",
+        "registry": "*",
+        "repository": "*",
+        "tag": "*",
+        "expires": "2029-10-01T00:00:00Z",
+        "comment": "Allowing test_pkcs1_15.py private key for 10 years.."
+      }
+    status_code: 201
+
+- name: Create Content Override for test_pkcs1_15.pyc
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
+    method: POST
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body: |
+      {
+        "filename": "usr/lib/python2.7/dist-packages/Crypto/SelfTest/Cipher/test_pkcs1_15.pyc",
+        "rule": "private_keys_pem",
+        "registry": "*",
+        "repository": "*",
+        "tag": "*",
+        "expires": "2029-10-01T00:00:00Z",
+        "comment": "Allowing test_pkcs1_15.pyc private key for 10 years.."
+      }
+    status_code: 201
+
+- name: Create Content Override for test_importKey.py
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
+    method: POST
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body: |
+      {
+        "filename": "usr/lib/python2.7/dist-packages/Crypto/SelfTest/PublicKey/test_importKey.py",
+        "rule": "private_keys_pem",
+        "registry": "*",
+        "repository": "*",
+        "tag": "*",
+        "expires": "2029-10-01T00:00:00Z",
+        "comment": "Allowing test_importKey.py private key for 10 years.."
+      }
+    status_code: 201
+
+- name: Create Content Override for test_importKey.pyc
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
+    method: POST
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body: |
+      {
+        "filename": "usr/lib/python2.7/dist-packages/Crypto/SelfTest/PublicKey/test_importKey.pyc",
+        "rule": "private_keys_pem",
+        "registry": "*",
+        "repository": "*",
+        "tag": "*",
+        "expires": "2029-10-01T00:00:00Z",
+        "comment": "Allowing test_importKey.pyc private key for 10 years.."
+      }
+    status_code: 201
+
 # - name: Create Registry
 #   uri:
 #     url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/registries?scan=true
