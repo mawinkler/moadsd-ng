@@ -1,4 +1,7 @@
 ---
+# #####################################################################
+# Configure Smart Check
+# #####################################################################
 # Depending on the environment, inventory_hostname might be a dns name or an ip
 # We now need effectively the ip on which ansible or we might reach the
 # k8s master.

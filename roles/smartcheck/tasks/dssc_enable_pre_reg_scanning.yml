@@ -43,11 +43,11 @@
   become_user: ubuntu
   command: kubectl patch service -n {{ dssc_namespace }} proxy --type='json' --patch='[{"op":"replace", "path":"/spec/ports/2/nodePort", "value":{{ smartcheck_registry }}}]'
 
-- name: Store Deep Security Smart Check Registry credentials
+- name: Create link document for Deep Security Smart Check
   become: true
   become_user: ubuntu
   copy:
-    dest: /home/ubuntu/dsscreg.txt
+    dest: /home/ubuntu/smartcheck-registry.txt
     mode: 0640
     content: |
       URL: https://{{ inventory_hostname }}:{{ smartcheck_registry }}
@@ -58,6 +58,6 @@
   become: true
   become_user: ubuntu
   fetch:
-    src: /home/ubuntu/dsscreg.txt
+    src: /home/ubuntu/smartcheck-registry.txt
     dest: ./site_{{ type }}/
     flat: yes
