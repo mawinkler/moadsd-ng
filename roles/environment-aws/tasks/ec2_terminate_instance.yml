@@ -7,6 +7,38 @@
     msg:
       - "Terminating instance {{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
 
+- name: Query instance id
+  ec2_instance_info:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Name": "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+      instance-state-name: [ "running", "stopped" ]
+  register: ec2
+
+- name: Instance id to terminate
+  debug:
+    msg: "{{ ec2.instances[0].instance_id }}"
+  when: ec2.instances | length > 0
+
+- name: Query regional static ip addresses for instance
+  ec2_eip_info:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region: "{{ aws_region }}"
+    filters:
+      instance-id: "{{ ec2.instances[0].instance_id }}"
+  register: regional_eip_addresses
+  when: ec2.instances | length > 0
+
+- name: EIP to release
+  debug:
+    msg: "{{ regional_eip_addresses.addresses[0].public_ip }}"
+  when:
+    - ec2.instances | length > 0
+    - regional_eip_addresses.addresses | length > 0
+
 - name: Terminate a server instance
   ec2_instance:
     aws_access_key: "{{ aws_access_key }}"
@@ -14,23 +46,21 @@
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+      instance-state-name: running
     state: absent
-  register: ec2
 
-- name: debug
-  debug:
-    msg: "{{ ec2 }}"
-
-- name: Release a linux server public address
+- name: Release disassociated public addresses in region
   ec2_eip:
     aws_access_key: "{{ aws_access_key }}"
     aws_secret_key: "{{ aws_secret_key }}"
-    # name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-address"
     region: "{{ aws_region }}"
-    device_id: "{{ ec2.instances[0].instance_id }}"
+    # device_id: "{{ item.allocation_id }}"
+    public_ip: "{{ item.public_ip }}"
+    release_on_disassociation: yes
     state: absent
-  when: ec2.instances | length > 0
-# is defined
+  loop: "{{ regional_eip_addresses.addresses }}"
+  when:
+    - regional_eip_addresses is not skipped
 
 - name: Terminate EC2 Security Group
   ec2_group:

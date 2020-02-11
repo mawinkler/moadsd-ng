@@ -45,7 +45,7 @@
     release_eip: yes
     region: "{{ aws_region }}"
   loop: "{{ nat_gateway_result.result }}"
-  # when: nat_gateway_result|bool == True
+  when: nat_gateway_result is not skipped
 
 - name: Terminate EC2 VPC Internet Gateway
   ec2_vpc_igw:
@@ -54,7 +54,7 @@
     vpc_id: "{{ ec2_vpc_net_result.vpcs[0].id }}"
     region: "{{ aws_region }}"
     state: absent
-  # when: ec2_vpc_net_result|bool == True
+  when: ec2_vpc_net_result.vpcs | length > 0
 
 - name: Terminate EC2 VPC Private Subnet
   ec2_vpc_subnet:
@@ -64,7 +64,7 @@
     region: "{{ aws_region }}"
     state: absent
     cidr: "{{ aws_private_subnet_cidr_block }}"
-  # when: ec2_vpc_net_result|bool == True
+  when: private_subnet_result.subnets | length > 0
 
 - name: Terminate EC2 VPC Public Subnet
   ec2_vpc_subnet:
@@ -74,7 +74,7 @@
     region: "{{ aws_region }}"
     state: absent
     cidr: "{{ aws_public_subnet_cidr_block }}"
-  # when: ec2_vpc_net_result|bool == True
+  when: public_subnet_result.subnets | length > 0
 
 - name: Terminate EC2 VPC Public Subnet Route Table
   ec2_vpc_route_table:
@@ -86,7 +86,7 @@
     tags:
       Name: "{{ moadsd_ng_prefix }}-public-rt"
   register: public_route_table
-  # when: ec2_vpc_net_result|bool == True
+  when: ec2_vpc_net_result.vpcs | length > 0
 
 - name: Terminate EC2 VPC Private Subnet Route Table
   ec2_vpc_route_table:
@@ -98,7 +98,7 @@
     tags:
       Name: "{{ moadsd_ng_prefix }}-private-rt"
   register: public_route_table
-  # when: ec2_vpc_net_result|bool == True
+  when: ec2_vpc_net_result.vpcs | length > 0
 
 - name: Terminate VPC
   local_action:
