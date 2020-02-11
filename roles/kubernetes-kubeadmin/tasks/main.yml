@@ -1,12 +1,7 @@
+# #####################################################################
+# Create and Manage a Kubernetes cluster with kubeadmin
+# #####################################################################
 ---
-# #####################################################################
-# Create, Manage and Terminate a Kubernetes cluster with kubeadmin
-# #####################################################################
-- name: "Listing parameters"
-  debug:
-    msg:
-      - "operation                    : {{ operation }}"
-
 - name: Create Master
   include: k8s_create_master.yml
   when: operation == 'create_master'

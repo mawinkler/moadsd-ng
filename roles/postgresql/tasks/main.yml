@@ -1,12 +1,7 @@
+# #####################################################################
+# Create and Manage PostgreSQL
+# #####################################################################
 ---
-# #####################################################################
-# Create, Manafe and Terminate PostgreSQL
-# #####################################################################
-- name: "Listing parameters"
-  debug:
-    msg:
-      - "operation                    : {{ operation }}"
-
 - name: Create instance
   include: psql_create_instance.yml
   when: operation == 'create_instance'

@@ -1,12 +1,7 @@
+# #####################################################################
+# Create, Manage and Terminate Deep Security Smart Check
+# #####################################################################
 ---
-# #####################################################################
-# Create, Manafe and Terminate Deep Security Smart Check
-# #####################################################################
-- name: "Listing parameters"
-  debug:
-    msg:
-      - "operation                    : {{ operation }}"
-
 - name: Create instance
   include: dssc_create_instance.yml
   when: operation == 'create_instance'

@@ -1,12 +1,7 @@
+# #####################################################################
+# Create and Manage Deep Security
+# #####################################################################
 ---
-# #####################################################################
-# Create, Manafe and Terminate Deep Security
-# #####################################################################
-- name: "Listing parameters"
-  debug:
-    msg:
-      - "operation                    : {{ operation }}"
-
 - name: Create instance
   include: dsm_create_instance.yml
   when: operation == 'create_instance'

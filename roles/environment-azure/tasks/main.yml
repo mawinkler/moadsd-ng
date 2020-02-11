@@ -1,12 +1,7 @@
 # #####################################################################
-# Create, Manafe and Terminate Azure environment
+# Create, Manage and Terminate Azure environment
 # #####################################################################
 ---
-- name: "Listing parameters"
-  debug:
-    msg:
-      - "operation                    : {{ operation }}"
-
 - name: Create network and firewall rules
   include: azure_create_network.yml
   when: operation == 'create_network'

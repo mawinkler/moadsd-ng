@@ -1,12 +1,7 @@
+# #####################################################################
+# Create, Manage and Terminate the Cluster Registry
+# #####################################################################
 ---
-# #####################################################################
-# Create, Manage and Terminate Jenkins
-# #####################################################################
-- name: "Listing parameters"
-  debug:
-    msg:
-      - "operation                    : {{ operation }}"
-
 - name: Create instance
   include: registry_create_instance.yml
   when: operation == 'create_instance'

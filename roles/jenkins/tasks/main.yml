@@ -1,12 +1,7 @@
+# #####################################################################
+# Create and Manage Jenkins
+# #####################################################################
 ---
-# #####################################################################
-# Create, Manage and Terminate Jenkins
-# #####################################################################
-- name: "Listing parameters"
-  debug:
-    msg:
-      - "operation                    : {{ operation }}"
-
 - name: Create instance
   include: jenkins_create_instance.yml
   when: operation == 'create_instance'
