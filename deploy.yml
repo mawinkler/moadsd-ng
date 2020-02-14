@@ -163,7 +163,7 @@
         node_port: "{{ openshift_nodeport }}"
         target_type: https
       when:
-        - site_deploy_kubernetes == True
+        - site_deploy_openshift == True
         - site_deploy_jumphost == True
 
     - name: Create Proxy Configuration and Certificate for the Registry
