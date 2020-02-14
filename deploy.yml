@@ -83,7 +83,7 @@
   become: true
 
   vars:
-    trusted_certificates: True
+    trusted_certificates: False
 
   tasks:
     - name: Include vars
