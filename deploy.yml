@@ -8,37 +8,44 @@
 # #####################################################################
 - hosts: tag_role_jumphost
   tasks:
-    - name: Get ipaddr of jumphost
+    - name: Get ipaddr of Jumphost
       set_fact:
         remote_ip: "{{ inventory_hostname | ipaddr}}"
 
-    - name: Get ipaddr of jumphost
+    - name: Get ipaddr of Jumphost
       set_fact:
         remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
       when: not remote_ip
 
-    - name: Store external ip address of jumphost
+    - name: Store external ip address of Jumphost
       add_host:
         name: "{{ remote_ip }}"
         groups: "moadsd_ng_jumphost_instance_public"
 
 - hosts: tag_role_k8smaster
   tasks:
-    - name: Get internal ip address of kubernetes master
+    - name: Get internal ip address of Kubernetes Master
       add_host:
         name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
         groups: "moadsd_ng_k8smaster_instance"
 
+- hosts: tag_role_openshift
+  tasks:
+    - name: Get internal ip address of Openshift
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_openshift_instance"
+
 - hosts: tag_role_dsm
   tasks:
-    - name: Get internal ip address of deep security
+    - name: Get internal ip address of Deep Security
       add_host:
         name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
         groups: "moadsd_ng_dsm_instance"
 
 - hosts: tag_role_dsm_db
   tasks:
-    - name: Get internal ip address of postgresql
+    - name: Get internal ip address of PostgreSQL
       add_host:
         name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
         groups: "moadsd_ng_postgresql_instance"
@@ -76,7 +83,7 @@
   become: true
 
   vars:
-    trusted_certificates: False
+    trusted_certificates: True
 
   tasks:
     - name: Include vars
@@ -140,6 +147,20 @@
         jumphost_external_ip: "{{ inventory_hostname }}"
         k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
         node_port: "{{ kubernetes_dashboard_nodeport }}"
+        target_type: https
+      when:
+        - site_deploy_kubernetes == True
+        - site_deploy_jumphost == True
+
+    - name: Create Proxy Configuration and Certificate for the Openshift
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: openshift
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        k8smaster_ip: "{{ groups['moadsd_ng_openshift_instance'][0] }}"
+        node_port: "{{ openshift_nodeport }}"
         target_type: https
       when:
         - site_deploy_kubernetes == True
