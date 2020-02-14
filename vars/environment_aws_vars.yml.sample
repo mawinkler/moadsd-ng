@@ -3,7 +3,7 @@
 # Site Deploy Components
 # #####################################################################
 site_deploy_kubernetes: yes
-# site_deploy_openshift: no
+site_deploy_openshift: no
 site_deploy_deepsecurity: no
 site_deploy_smartcheck: yes
 site_deploy_jenkins: yes
@@ -135,6 +135,10 @@ deepsecurity_source_image: ami-00e37cffd3bb3ac8d
 deepsecurity_machine_type: t2.large
 deepsecurity_startup_script: "{{ startup_script_linux }}"
 deepsecurity_tags: dsm
+# dsm_agent_download_hostname: "{{ groups['moadsd_ng_dsm_instance'][0] }}"
+# dsm_agent_download_port: 4119
+# dsm_agent_activation_hostname: "{{ groups['moadsd_ng_dsm_instance'][0] }}"
+# dsm_agent_activation_port: 4120
 
 deepsecurity_database_name: dsmdb
 deepsecurity_database_user: dsm
