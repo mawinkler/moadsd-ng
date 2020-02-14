@@ -6,10 +6,10 @@
   debug:
     msg: "Creating instance {{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
 
-- name: Ensure the project network is created
+- name: Ensure the Project Network is created
   include: gcp_create_network.yml
 
-- name: Create a firewall opening ports for anywhere
+- name: Create a Firewall opening Ports for anywhere
   gcp_compute_firewall:
     name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-anywhere-firewall"
     network:

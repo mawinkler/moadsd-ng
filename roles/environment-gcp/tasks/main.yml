@@ -10,6 +10,10 @@
   include: gcp_create_linux_instance.yml
   when: operation == 'create_linux_instance'
 
+- name: Create Linux VMX Instance
+  include: gcp_create_linux_vmx_instance.yml
+  when: operation == 'create_linux_vmx_instance'
+
 - name: Create windows instance
   include: gcp_create_windows_instance.yml
   when: operation == 'create_windows_instance'
