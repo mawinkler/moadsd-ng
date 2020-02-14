@@ -42,6 +42,7 @@
   become: true
   become_user: ubuntu
   command: kubectl patch service -n {{ dssc_namespace }} proxy --type='json' --patch='[{"op":"replace", "path":"/spec/ports/2/nodePort", "value":{{ smartcheck_registry }}}]'
+  ignore_errors: yes
 
 - name: Create link document for Deep Security Smart Check
   become: true
