@@ -1,0 +1,166 @@
+---
+# #####################################################################
+# Create a linux VMX instance in GCP environment
+# #####################################################################
+- name: Current play
+  debug:
+    msg: "Creating VMX Instance {{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+
+- name: Ensure the Project Network is created
+  include: gcp_create_network.yml
+
+- name: Create a Firewall opening Ports for anywhere
+  gcp_compute_firewall:
+    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-anywhere-firewall"
+    network:
+      selfLink: "global/networks/{{ network.name }}"
+    allowed:
+      - ip_protocol: tcp
+        ports: "{{ instance_ports_anywhere }}"
+      - ip_protocol: udp
+        ports: "{{ instance_ports_anywhere }}"
+      - ip_protocol: icmp
+    target_tags:
+      - "{{ instance_tags }}"
+    source_ranges: ['0.0.0.0/0']
+    project: "{{ gcp_project_id }}"
+    priority: 1000
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+    scopes: "{{ scopes }}"
+    state: present
+  register: firewall
+
+- name: Create a Firewall opening Ports for internal Network
+  gcp_compute_firewall:
+    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-firewall"
+    network:
+      selfLink: "global/networks/{{ network.name }}"
+    allowed:
+      - ip_protocol: tcp
+        ports: "{{ instance_ports_network }}"
+      - ip_protocol: udp
+        ports: "{{ instance_ports_network }}"
+      - ip_protocol: icmp
+    target_tags:
+      - "{{ instance_tags }}"
+    source_tags:
+      - "{{ gcp_project_id }}"
+    project: "{{ gcp_project_id }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+    scopes: "{{ scopes }}"
+    state: present
+  register: firewall
+
+- name: Create a Disk for Linux Server
+  gcp_compute_disk:
+    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-disk"
+    size_gb: "{{ instance_size_gb }}"
+    source_image: "{{ instance_source_image }}"
+    zone: "{{ gcp_zone }}"
+    project: "{{ gcp_project_id }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+    scopes: "{{ scopes }}"
+    state: present
+  register: disk
+
+- name: Create a VMX Image
+  gcp_compute_image:
+    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-vmximage"
+    source_disk: "{{ disk }}"
+    licenses: projects/vm-options/global/licenses/enable-vmx
+    project: "{{ gcp_project_id }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+    state: present
+  register: image
+
+- name: Create a Linux Server Public Address
+  gcp_compute_address:
+    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-address"
+    region: "{{ gcp_region }}"
+    project: "{{ gcp_project_id }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+    scopes: "{{ scopes }}"
+    state: present
+  register: address
+  when:
+    - instance_public_address == True
+
+- name: debug
+  debug:
+    msg: "{{ image }}"
+
+- name: Create a Linux VMX Server Instance
+  gcp_compute_instance:
+    state: present
+    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+    machine_type: "{{ instance_machine_type }}"
+    min_cpu_platform: "Intel Skylake"
+    disks:
+      - auto_delete: true
+        initialize_params:
+          disk_size_gb: 50
+          source_image: "projects/{{ gcp_project_id }}/global/images/{{ moadsd_ng_prefix }}-{{ instance_name }}-vmximage"
+        boot: true
+    metadata:
+      startup-script: "{{ instance_startup_script }}"
+    network_interfaces:
+      - network:
+          selfLink: "global/networks/{{ network.name }}"
+    zone: "{{ gcp_zone }}"
+    project: "{{ gcp_project_id }}"
+    tags:
+      items:
+        - linux
+        - "{{ gcp_project_id }}"
+        - "{{ instance_tags }}"
+        - "project-{{ moadsd_ng_prefix }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+    scopes: "{{ scopes }}"
+  register: instance
+  when:
+    - instance_public_address == False
+
+- name: Create a Linux VMX Server Instance with Public Address
+  gcp_compute_instance:
+    state: present
+    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+    machine_type: "{{ instance_machine_type }}"
+    initialize_params:
+      disk_size_gb: 50GB
+      source_image: "{{ image }}"
+    min_cpu_platform: "Intel Skylake"
+    disks:
+      - auto_delete: true
+        initialize_params:
+          disk_size_gb: 50
+          source_image: "projects/{{ gcp_project_id }}/global/images/{{ moadsd_ng_prefix }}-{{ instance_name }}-vmximage"
+        boot: true
+    metadata:
+      startup-script: "{{ instance_startup_script }}"
+    network_interfaces:
+      - network:
+          selfLink: "global/networks/{{ network.name }}"
+        access_configs:
+          - name: 'External NAT'
+            nat_ip: "{{ address }}"
+            type: 'ONE_TO_ONE_NAT'
+    zone: "{{ gcp_zone }}"
+    project: "{{ gcp_project_id }}"
+    tags:
+      items:
+        - linux
+        - "{{ gcp_project_id }}"
+        - "{{ instance_tags }}"
+        - "project-{{ moadsd_ng_prefix }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+    scopes: "{{ scopes }}"
+  register: instance
+  when:
+    - instance_public_address == True
