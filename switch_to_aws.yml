@@ -33,6 +33,7 @@
       loop:
         - "./group_vars/tag_role_{{ kubernetes_master_tags | regex_replace('-', '_') }}.yml"
         - "./group_vars/tag_role_{{ kubernetes_worker_tags | regex_replace('-', '_') }}.yml"
+        - "./group_vars/tag_role_{{ openshift_tags | regex_replace('-', '_') }}.yml"
         - "./group_vars/tag_role_{{ postgresql_tags | regex_replace('-', '_') }}.yml"
         - "./group_vars/tag_role_{{ linuxep_tags | regex_replace('-', '_') }}.yml"
         - "./group_vars/tag_role_{{ gitlab_tags | regex_replace('-', '_') }}.yml"

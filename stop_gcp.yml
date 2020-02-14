@@ -33,6 +33,16 @@
     # poll: 0
   with_sequence: count="{{ kubernetes_worker_count }}"
 
+- name: Terminate instance of Openshift
+  include_role:
+    name: environment-gcp
+  vars:
+    operation: terminate_instance
+    instance_name: "{{ openshift_instance_name }}"
+    # register: terminate_instance_kubernetes_master
+    # async: 7200
+    # poll: 0
+
 # - name: Wait for instance termination to complete
 #   async_status: jid={{ item.ansible_job_id }}
 #   register: ec2_jobs
@@ -84,7 +94,7 @@
     operation: terminate_instance
     instance_name: "{{ jumphost_instance_name }}"
   when: terminate_jumphost == True
-  
+
 - name: Check if nat config still exists
   delegate_to: 127.0.0.1
   command: gcloud compute routers nats describe nat-config --router={{ moadsd_ng_prefix }}-router --region {{ gcp_region }}
