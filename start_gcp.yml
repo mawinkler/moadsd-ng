@@ -24,6 +24,7 @@
   register: gcloud_router_installed
   changed_when: false
   #"'ERROR' is in gcloud_router_installed"
+  no_log: yes
   ignore_errors: yes
 
 - name: Create router
@@ -37,6 +38,7 @@
   register: gcloud_nat_config_installed
   changed_when: false
   #"'ERROR' is in gcloud_nat_config_installed"
+  no_log: yes
   ignore_errors: yes
 
 - name: Create nat config
@@ -86,6 +88,7 @@
   loop:
     - "./group_vars/tag_{{ kubernetes_master_tags | regex_replace('-', '_') }}.yml"
     - "./group_vars/tag_{{ kubernetes_worker_tags | regex_replace('-', '_') }}.yml"
+    - "./group_vars/tag_{{ openshift_tags | regex_replace('-', '_') }}.yml"
     - "./group_vars/tag_{{ postgresql_tags | regex_replace('-', '_') }}.yml"
     - "./group_vars/tag_{{ linuxep_tags | regex_replace('-', '_') }}.yml"
     - "./group_vars/tag_{{ gitlab_tags | regex_replace('-', '_') }}.yml"
@@ -147,20 +150,6 @@
     instance_public_address: False
     instance_ports_anywhere:
       - '22'
-#      - '80'
-#      - '443'
-#      - "{{ kubernetes_dashboard_nodeport |string }}"
-#      - "{{ rook_ceph_dashboard_nodeport |string }}"
-#      - "{{ smartcheck_nodeport |string }}"
-#      - "{{ smartcheck_registry |string }}"
-#      - "{{ certserv_nodeport |string }}"
-#      - "{{ jenkins_nodeport |string }}"
-#      - "{{ gitlab_nodeport_http |string }}"
-#      - "{{ gitlab_nodeport_https |string }}"
-#      - "{{ gitlab_nodeport_ssh |string }}"
-#      - "{{ linkerd_dashboard_nodeport | string }}"
-#      - "{{ registry_nodeport | string }}"
-#      - "{{ custom_nodeport | string }}"
     instance_ports_network:
       - '1-65535'
   when: site_deploy_kubernetes == True
@@ -183,6 +172,24 @@
       - '1-65535'
   with_sequence: count="{{ kubernetes_worker_count }}"
   when: site_deploy_kubernetes == True
+
+- name: Create instance for Openshift
+  include_role:
+    name: environment-gcp
+  vars:
+    operation: create_linux_vmx_instance
+    instance_name: "{{ openshift_instance_name }}"
+    instance_source_image: "{{ openshift_source_image }}"
+    instance_size_gb: "{{ openshift_size_gb }}"
+    instance_machine_type: "{{ openshift_machine_type }}"
+    instance_startup_script: "{{ openshift_startup_script }}"
+    instance_tags: "{{ openshift_tags }}"
+    instance_public_address: False
+    instance_ports_anywhere:
+      - '22'
+    instance_ports_network:
+      - '1-65535'
+  when: site_deploy_openshift == True
 
 - name: Create instance for GitLab
   include_role:
