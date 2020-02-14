@@ -3,6 +3,7 @@
 # Site Deploy Components
 # #####################################################################
 site_deploy_kubernetes: yes
+# site_deploy_openshift: no
 site_deploy_deepsecurity: no
 site_deploy_smartcheck: yes
 site_deploy_jenkins: yes
@@ -103,6 +104,17 @@ kubernetes_worker_tags: k8sworker
 kubernetes_dashboard_nodeport: 30000
 rook_ceph_dashboard_nodeport: 30001
 linkerd_dashboard_nodeport: 30002
+
+# #####################################################################
+# Openshift Settings
+# #####################################################################
+# openshift_instance_name: openshift
+# openshift_size_gb: 32
+# openshift_source_image: ami-0ac05733838eabc06
+# openshift_machine_type: t2.large
+# openshift_startup_script: "{{ startup_script_linux }}"
+# openshift_tags: openshift
+# openshift_dashboard_nodeport: 30018
 
 # #####################################################################
 # Deep Security Settings
