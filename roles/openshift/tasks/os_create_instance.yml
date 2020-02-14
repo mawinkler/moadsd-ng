@@ -1,0 +1,32 @@
+---
+# #####################################################################
+# Create an OpenShift instance
+# #####################################################################
+
+# grep -cw vmx /proc/cpuinfo   ---> 4
+# sudo apt update
+# sudo apt install y qemu-kvm libvirt-daemon libvirt-daemon-system
+# sudo usermod -a -G libvirt $(whoami)
+# newgrp libvirt
+#
+# sudo curl -L https://github.com/dhiltgen/docker-machine-kvm/releases/download/v0.10.0/docker-machine-driver-kvm-ubuntu16.04 -o /usr/local/bin/docker-machine-driver-kvm
+# sudo chmod +x /usr/local/bin/docker-machine-driver-kvm
+#
+# systemctl is-active libvirtd
+# active
+#
+# sudo virsh net-list --all
+#
+#  Name                 State      Autostart     Persistent
+# ----------------------------------------------------------
+#  default              active     yes           yes
+#
+# wget https://github.com/minishift/minishift/releases/download/v1.34.2/minishift-1.34.2-linux-amd64.tgz
+# tar xfvz minishift-1.34.2-linux-amd64.tgz
+# sudo cp minishift-1.34.2-linux-amd64/minishift /usr/local/bin/
+#
+# minishift start
+
+- name: Debug
+  debug:
+    msg: "Not yet implemented"
