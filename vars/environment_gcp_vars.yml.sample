@@ -13,6 +13,10 @@ site_deploy_endpoints: no
 site_deploy_linkerd: no
 site_deploy_registry: yes
 
+kubernetes_worker_count: 3
+linuxep_instance_count: 0
+windowsep_instance_count: 1
+
 # #####################################################################
 # Google Cloud Settings
 # E.g.
@@ -63,7 +67,6 @@ jumphost_tld: nip.io
 # #####################################################################
 # crio or docker
 kubernetes_container_runtime: docker
-kubernetes_worker_count: 3
 
 # Cluster Networking Configration:
 # pod_network_cidr: "10.244.0.0/16"   cluster_networking: flannel_flannel
@@ -120,6 +123,10 @@ deepsecurity_source_image: projects/rhel-cloud/global/images/family/rhel-7
 deepsecurity_machine_type: n1-standard-4
 deepsecurity_startup_script: "{{ startup_script_linux }}"
 deepsecurity_tags: role-dsm
+# dsm_agent_download_hostname: "{{ groups['moadsd_ng_dsm_instance'][0] }}"
+# dsm_agent_download_port: 4119
+# dsm_agent_activation_hostname: "{{ groups['moadsd_ng_dsm_instance'][0] }}"
+# dsm_agent_activation_port: 4120
 
 deepsecurity_database_name: dsmdb
 deepsecurity_database_user: dsm
@@ -180,7 +187,6 @@ gitlab_tags: role-gitlab
 # Linux Endpoint Settings
 # #####################################################################
 linuxep_instance_name: linuxep
-linuxep_instance_count: 0
 linuxep_size_gb: 32
 linuxep_source_image: projects/rhel-cloud/global/images/family/rhel-7
 linuxep_machine_type: n1-standard-1
@@ -191,7 +197,6 @@ linuxep_tags: role-linuxep
 # Windows Endpoint Settings
 # #####################################################################
 windowsep_instance_name: windowsep
-windowsep_instance_count: 1
 windowsep_size_gb: 50
 windowsep_source_image: projects/windows-cloud/global/images/family/windows-2012-r2
 windowsep_machine_type: n1-standard-1

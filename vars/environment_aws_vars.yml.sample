@@ -13,6 +13,10 @@ site_deploy_endpoints: no
 site_deploy_linkerd: no
 site_deploy_registry: yes
 
+kubernetes_worker_count: 3
+linuxep_instance_count: 0
+windowsep_instance_count: 1
+
 # #####################################################################
 # AWS Cloud Settings
 # E.g.
@@ -78,7 +82,6 @@ jumphost_tld: nip.io
 # #####################################################################
 # crio or docker
 kubernetes_container_runtime: docker
-kubernetes_worker_count: 3
 
 # Cluster Networking Configration:
 # pod_network_cidr: "10.244.0.0/16"   cluster_networking: flannel_flannel
@@ -199,7 +202,6 @@ gitlab_tags: gitlab
 # Linux Endpoint Settings
 # #####################################################################
 linuxep_instance_name: linuxep
-linuxep_instance_count: 0
 linuxep_size_gb: 32
 linuxep_source_image: ami-00e37cffd3bb3ac8d
 linuxep_machine_type: t2.medium
@@ -210,7 +212,6 @@ linuxep_tags: linuxep
 # Windows Endpoint Settings
 # #####################################################################
 windowsep_instance_name: windowsep
-windowsep_instance_count: 1
 windowsep_size_gb: 50
 windowsep_source_image: ami-0cbf1b1038bbb408d
 windowsep_machine_type: t2.medium
