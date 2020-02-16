@@ -6,6 +6,7 @@
   apt_repository:
     repo: ppa:certbot/certbot
     state: present
+  when: ansible_pkg_mgr == "apt"
 
 - name: Install Packages
   apt:
@@ -17,6 +18,35 @@
       - nginx
       - software-properties-common
       - python-certbot-nginx
+  when: ansible_pkg_mgr == "apt"
+
+- name: Install Packages
+  yum:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - yum-utils
+  when: ansible_pkg_mgr == "yum" or ansible_pkg_mgr == "zypper"
+
+- name: Yum Config Manager AWS
+  command: yum-config-manager --enable rhui-{{ region }}-rhel-server-extras rhui-{{ region }}-rhel-server-optional
+  when:
+    - ansible_pkg_mgr == "yum" or ansible_pkg_mgr == "zypper"
+    - type == "aws"
+
+- name: Install Packages
+  yum:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - certbot
+      - python2-certbot-nginx
+      - nginx
+  when: ansible_pkg_mgr == "yum" or ansible_pkg_mgr == "zypper"
 
 - name: Remove default nginx config
   file:
