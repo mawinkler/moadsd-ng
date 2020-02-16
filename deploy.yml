@@ -160,7 +160,7 @@
         service_name: openshift
         jumphost_external_ip: "{{ inventory_hostname }}"
         k8smaster_ip: "{{ groups['moadsd_ng_openshift_instance'][0] }}"
-        node_port: "{{ openshift_nodeport }}"
+        node_port: "{{ openshift_dashboard }}"
         target_type: https
       when:
         - site_deploy_openshift == True
@@ -178,6 +178,7 @@
         target_type: https
       when:
         - site_deploy_registry == True
+        - site_deploy_kubernetes == True
         - site_deploy_jumphost == True
 
     - name: Create Proxy Configuration and Certificate for Smart Check
@@ -192,6 +193,7 @@
         target_type: https
       when:
         - site_deploy_smartcheck == True
+        - site_deploy_kubernetes == True
         - site_deploy_jumphost == True
 
     - name: Create Proxy Configuration and Certificate for Jenkins
@@ -206,6 +208,7 @@
         target_type: http
       when:
         - site_deploy_jenkins == True
+        - site_deploy_kubernetes == True
         - site_deploy_jumphost == True
 
     - name: Create Proxy Configuration and Certificate for GitLab
@@ -220,6 +223,7 @@
         target_type: https
       when:
         - site_deploy_gitlab == True
+        - site_deploy_kubernetes == True
         - site_deploy_jumphost == True
 
     - name: Create Proxy Configuration and Certificate for Linkerd
@@ -234,6 +238,7 @@
         target_type: http
       when:
         - site_deploy_linkerd == True
+        - site_deploy_kubernetes == True
         - site_deploy_jumphost == True
 
     - name: Create Proxy Configuration and Certificate for Demoapp
@@ -247,6 +252,7 @@
         node_port: "{{ custom_nodeport }}"
         target_type: http
       when:
+        - site_deploy_kubernetes == True
         - site_deploy_jumphost == True
 
 # #####################################################################
