@@ -90,10 +90,6 @@
   when:
     - instance_public_address == True
 
-- name: debug
-  debug:
-    msg: "{{ image }}"
-
 - name: Create a Linux VMX Server Instance
   gcp_compute_instance:
     state: present
@@ -131,9 +127,6 @@
     state: present
     name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
     machine_type: "{{ instance_machine_type }}"
-    initialize_params:
-      disk_size_gb: 50GB
-      source_image: "{{ image }}"
     min_cpu_platform: "Intel Skylake"
     disks:
       - auto_delete: true
