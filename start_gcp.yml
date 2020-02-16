@@ -184,9 +184,11 @@
     instance_machine_type: "{{ openshift_machine_type }}"
     instance_startup_script: "{{ openshift_startup_script }}"
     instance_tags: "{{ openshift_tags }}"
-    instance_public_address: False
+    instance_public_address: True
     instance_ports_anywhere:
       - '22'
+      - '80'
+      - '443'
     instance_ports_network:
       - '1-65535'
   when: site_deploy_openshift == True
