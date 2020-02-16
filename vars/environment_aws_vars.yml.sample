@@ -117,7 +117,7 @@ openshift_source_image: ami-0ac05733838eabc06
 openshift_machine_type: t2.large
 openshift_startup_script: "{{ startup_script_linux }}"
 openshift_tags: openshift
-openshift_dashboard_nodeport: 30018
+openshift_dashboard: 6443
 
 # #####################################################################
 # Deep Security Settings
