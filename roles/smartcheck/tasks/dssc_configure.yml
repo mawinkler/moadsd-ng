@@ -25,6 +25,13 @@
 #   ignore_errors: yes
 
 # Initial password change
+- name: Test if Initial Password Change is done
+  become: true
+  become_user: ubuntu
+  stat:
+    path: /home/ubuntu/smartcheck_pwc_done
+  register: pwc_done_result
+
 - name: Query password
   become: true
   become_user: ubuntu
@@ -34,6 +41,7 @@
     name: deepsecurity-smartcheck-auth
     namespace: smartcheck
   register: dsscsecrets
+  when: pwc_done_result.stat.exists == False
 
 - name: Authenticate to Smart Check (waiting for Smart Check to be in running state)
   uri:
@@ -54,6 +62,7 @@
   until: login.status == 201
   retries: 60
   delay: 10
+  when: pwc_done_result.stat.exists == False
 
 - name: Change initial administrator password
   uri:
@@ -69,6 +78,16 @@
         "newPassword": "{{ smartcheck_password }}"
       }
     status_code: 200
+  when: pwc_done_result.stat.exists == False
+
+- name: Create initial Password Changed Done File
+  become: true
+  become_user: ubuntu
+  copy:
+    content: ""
+    dest: /home/ubuntu/smartcheck_pwc_done
+    mode: 640
+  when: pwc_done_result.stat.exists == False
 
 - name: Pause
   pause:
@@ -83,7 +102,7 @@
     body: |
       {
         "user": {
-          "userid": "{{ dsscsecrets.resources[0].data.userName | b64decode }}",
+          "userid": "{{ smartcheck_username }}",
           "password": "{{ smartcheck_password }}"
         }
       }
@@ -107,7 +126,7 @@
     content: |
       URL: https://{{ inventory_hostname }}:{{ smartcheck_nodeport }}
       URL: {{ service_dns_name }}
-      Username: {{ dsscsecrets.resources[0].data.userName | b64decode }}
+      Username: {{ smartcheck_username }}
       Password: {{ smartcheck_password }}
 
 - name: Fetch smartcheck.txt
