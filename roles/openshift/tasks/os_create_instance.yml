@@ -44,6 +44,7 @@
 # sudo apt-get install docker-ce
 # sudo usermod -aG docker $(whoami)
 #
+# sudo curl -L https://github.com/dhiltgen/docker-machine-kvm/releases/download/v0.7.0/docker-machine-driver-kvm -o /usr/local/bin/docker-machine-driver-kvm
 # sudo curl -L https://github.com/dhiltgen/docker-machine-kvm/releases/download/v0.10.0/docker-machine-driver-kvm-ubuntu16.04 -o /usr/local/bin/docker-machine-driver-kvm
 # sudo chmod +x /usr/local/bin/docker-machine-driver-kvm
 ## sudo curl -LO https://storage.googleapis.com/minikube/releases/latest/docker-machine-driver-kvm2 -o /usr/local/bin/docker-machine-driver-kvm2
@@ -62,6 +63,8 @@
 # tar xfvz minishift-1.34.2-linux-amd64.tgz
 # sudo cp minishift-1.34.2-linux-amd64/minishift /usr/local/bin/
 #
+# minishift config set memory 8192
+# minishift config set cpus 4
 # minishift start
 
 # Minikube:
@@ -76,6 +79,28 @@
 # minikube config set vm-driver kvm2
 # sudo virsh list
 # kubectl cluster-info
+
+
+
+# CodeReady Containers:
+# RHEL 7.5
+# sudo su
+# yum install -y NetworkManager
+# exit
+# curl -O https://mirror.openshift.com/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz
+# tar xfv crc-linux-amd64.tar.xz
+# sudo cp crc-linux-1.5.0-amd64/crc /usr/local/bin/
+# export PATH="/usr/local/bin:$PATH"
+# echo 'export PATH="/usr/local/bin:$PATH"' > ~/.bashrc
+# # Have the pull secret
+# # https://cloud.redhat.com/openshift/install/crc/installer-provisioned
+# crc setup
+# crc oc-env
+# export PATH="/home/ansible/.crc/bin:$PATH"
+# eval $(crc oc-env)
+# oc login -u developer -p developer https://api.crc.testing:6443
+# ä that does work
+# # but required a loal proxy on the instance to access the console remotely :(
 
 - name: Debug
   debug:
