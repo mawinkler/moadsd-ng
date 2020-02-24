@@ -85,6 +85,8 @@
         operation: deploy
         # dsm_agent_download_hostname: app.deepsecurity.trendmicro.com
         # dsm_agent_download_port: 443
+        # tenant_id:
+        # token:
         dsm_agent_download_hostname: "{{ groups['moadsd_ng_dsm_instance'][0] }}"
         dsm_agent_download_port: 4119
         dsm_agent_activation_hostname: "{{ groups['moadsd_ng_dsm_instance'][0] }}"
