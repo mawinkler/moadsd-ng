@@ -46,6 +46,10 @@
             value: {{ inventory_hostname }}:{{ smartcheck_nodeport }}
           - name: K8S_REGISTRY
             value: {{ inventory_hostname }}:{{ registry_nodeport }}
+          - name: APPSEC_KEY
+            value: {{ application_security_key }}
+          - name: APPSEC_SECRET
+            value: {{ application_security_secret }}
         resources:
           limits:
             cpu: {{ agent_limits_cpu }}
