@@ -73,7 +73,7 @@
 - name: Create Manual Deployment Templates for Deep Security Smart Check
   become: true
   become_user: ubuntu
-  shell: helm template --namespace {{ dssc_namespace }} --values overrides-smartcheck.yml {{ dssc_name }} /tmp/smartcheck-helm-master/. > deepsecurity-smartcheck.yaml
+  shell: helm template --namespace {{ dssc_namespace }} --values overrides-smartcheck.yml {{ dssc_name }} /tmp/smartcheck-helm-master/. > smartcheck.yaml
   args:
     chdir: $HOME
     creates: deepsecurity-smartcheck.yml
@@ -82,7 +82,7 @@
   debug:
     msg:
       - kubectl create namespace {{ dssc_namespace }}
-      - kubectl apply --namespace {{ dssc_namespace }} -f deepsecurity-smartcheck.yaml >> dssc.log
+      - kubectl apply --namespace {{ dssc_namespace }} -f smartcheck.yaml >> smartcheck.log
 
 # - name: Pause for 30 mins
 #   pause:
@@ -101,14 +101,14 @@
   shell: helm install --namespace {{ dssc_namespace }} --values overrides-smartcheck.yml {{ dssc_name }} {{ dssc_chart }} >> smartcheck.log
   args:
     chdir: $HOME
-    creates: dssc.log
+    creates: smartcheck.log
 
 - name: Deep Security Smart Check patch port
   become: true
   become_user: ubuntu
   command: kubectl patch service -n {{ dssc_namespace }} proxy --type='json' --patch='[{"op":"replace", "path":"/spec/ports/0/nodePort", "value":{{ smartcheck_nodeport }}}]'
   ignore_errors: yes
-  
+
 - name: Fetch smartcheck.log
   become: true
   become_user: ubuntu
@@ -116,3 +116,20 @@
     src: /home/ubuntu/smartcheck.log
     dest: ./site_{{ type }}/
     flat: yes
+
+- name: Count Smart Check pods
+  become: true
+  become_user: ubuntu
+  shell: kubectl -n smartcheck get pods | grep -c "\-"
+  register: count_result
+
+- name: Check if all started Smart Check pods are in running state
+  become: true
+  become_user: ubuntu
+  shell: if [ $(kubectl -n smartcheck get pods | grep -c ".*Running") -eq {{ count_result.stdout }} ] ; then exit 0 ; else exit 1 ; fi
+  register: grep_result
+  until: grep_result.rc == 0
+  retries: 60
+  delay: 10
+  ignore_errors: yes
+  when: site_deploy_kubernetes == True

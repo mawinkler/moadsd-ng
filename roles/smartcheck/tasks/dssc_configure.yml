@@ -87,10 +87,6 @@
         dest: /home/ubuntu/smartcheck_pwc_done
         mode: 640
 
-    - name: Pause
-      pause:
-        seconds: 20
-
     - name: Reauthenticate to Smart Check
       uri:
         url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/sessions

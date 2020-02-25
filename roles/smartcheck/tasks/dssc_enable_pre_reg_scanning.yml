@@ -29,7 +29,7 @@
 - name: Enabling pre-registry scanning
   become: true
   become_user: ubuntu
-  shell: helm upgrade --namespace {{ dssc_namespace }} --values /home/ubuntu/overrides-pre-registry.yml {{ dssc_name }} {{ dssc_chart }} --reuse-values >> dssc.log
+  shell: helm upgrade --namespace {{ dssc_namespace }} --values /home/ubuntu/overrides-pre-registry.yml {{ dssc_name }} {{ dssc_chart }} --reuse-values >> smartcheck.log
   args:
     chdir: $HOME
 
