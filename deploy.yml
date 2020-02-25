@@ -255,6 +255,48 @@
         - site_deploy_kubernetes == True
         - site_deploy_jumphost == True
 
+    - name: Create Proxy Configuration and Certificate for Demoapp
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: demoapp1
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+        node_port: "{{ custom_nodeport1 }}"
+        target_type: http
+      when:
+        - site_deploy_kubernetes == True
+        - site_deploy_jumphost == True
+
+    - name: Create Proxy Configuration and Certificate for Demoapp
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: demoapp2
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+        node_port: "{{ custom_nodeport2 }}"
+        target_type: http
+      when:
+        - site_deploy_kubernetes == True
+        - site_deploy_jumphost == True
+
+    - name: Create Proxy Configuration and Certificate for Demoapp
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: demoapp3
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+        node_port: "{{ custom_nodeport3 }}"
+        target_type: http
+      when:
+        - site_deploy_kubernetes == True
+        - site_deploy_jumphost == True
+
 # #####################################################################
 # Deploy PostgreSQL database for Deep Security
 # #####################################################################
