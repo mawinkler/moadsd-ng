@@ -72,7 +72,7 @@ jumphost_instance_name: jumphost
 jumphost_instance_count: 1
 jumphost_size_gb: 32
 jumphost_source_image: ami-0ac05733838eabc06
-jumphost_machine_type: t2.medium
+jumphost_machine_type: t3.medium
 jumphost_startup_script: "{{ startup_script_linux }}"
 jumphost_tags: jumphost
 jumphost_tld: nip.io
@@ -93,14 +93,14 @@ cluster_networking: flannel_flannel
 kubernetes_master_instance_name: k8smaster
 kubernetes_master_size_gb: 32
 kubernetes_master_source_image: ami-0ac05733838eabc06
-kubernetes_master_machine_type: t2.large
+kubernetes_master_machine_type: t3.large
 kubernetes_master_startup_script: "{{ startup_script_linux }}"
 kubernetes_master_tags: k8smaster
 
 kubernetes_worker_instance_name: k8sworker
 kubernetes_worker_size_gb: 32
 kubernetes_worker_source_image: ami-0ac05733838eabc06
-kubernetes_worker_machine_type: t2.large
+kubernetes_worker_machine_type: t3.large
 kubernetes_worker_startup_script: "{{ startup_script_linux }}"
 kubernetes_worker_tags: k8sworker
 
@@ -178,6 +178,9 @@ registry_nodeport: 30017
 # Custom Port for self-created services in K8s
 # #####################################################################
 custom_nodeport: 30100
+custom_nodeport1: 30101
+custom_nodeport2: 30102
+custom_nodeport3: 30103
 
 # #####################################################################
 # Gitlab Settings

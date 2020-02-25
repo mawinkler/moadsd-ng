@@ -163,6 +163,9 @@ registry_nodeport: 30017
 # Custom Port for self-created services in K8s
 # #####################################################################
 custom_nodeport: 30100
+custom_nodeport1: 30101
+custom_nodeport2: 30102
+custom_nodeport3: 30103
 
 # #####################################################################
 # Gitlab Settings
