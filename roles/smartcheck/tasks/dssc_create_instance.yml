@@ -84,10 +84,6 @@
       - kubectl create namespace {{ dssc_namespace }}
       - kubectl apply --namespace {{ dssc_namespace }} -f smartcheck.yaml >> smartcheck.log
 
-# - name: Pause for 30 mins
-#   pause:
-#     minutes: 30
-
 - name: Create Deep Security Smart Check Namespace
   become: true
   become_user: ubuntu
