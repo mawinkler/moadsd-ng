@@ -384,6 +384,9 @@
     deploy_pod_network: yes
     deploy_helm: yes
     deploy_rook_ceph: yes
+    # Set the following to False if the cluster is already up and running and
+    # you want to speed up the playbook...
+    kubernetes_create_cluster: True
 
   tasks:
     - name: Include vars
@@ -397,6 +400,7 @@
       when:
         - site_deploy_kubernetes == True
         - kubernetes_container_runtime == 'crio'
+        - kubernetes_create_cluster == True
 
     - name: Deploy Kubernetes master with Docker
       include_role:
@@ -406,6 +410,7 @@
       when:
         - site_deploy_kubernetes == True
         - kubernetes_container_runtime == 'docker'
+        - kubernetes_create_cluster == True
 
 - name: Deploy Kubernetes workers
   hosts: tag_role_k8sworker
@@ -416,6 +421,9 @@
     node_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
     cgroupdriver: systemd
     deploy_kubernetes: yes
+    # Set the following to False if the cluster is already up and running and
+    # you want to speed up the playbook...
+    kubernetes_create_cluster: True
 
   tasks:
     - name: Include vars
@@ -438,6 +446,7 @@
       when:
         - site_deploy_kubernetes == True
         - kubernetes_container_runtime == 'crio'
+        - kubernetes_create_cluster == True
 
     - name: Deploy Kubernetes worker with Docker
       include_role:
@@ -452,8 +461,9 @@
       when:
         - site_deploy_kubernetes == True
         - kubernetes_container_runtime == 'docker'
+        - kubernetes_create_cluster == True
 
-- name: Wait for Rook-Ceph to initialize and create ssl certificate pod and cluster registry
+- name: Wait for Rook-Ceph to Initialize and Create Cluster Registry
   hosts: tag_role_k8smaster
   become: true
   become_user: ubuntu
@@ -462,7 +472,7 @@
     - name: Include vars
       include: site_vars.yml
 
-    - name: Check if count of started OSD pods equals worker count
+    - name: Check if Count of Started OSD Pods equals Worker Count
       shell: if [ $(kubectl -n rook-ceph get pods | grep -c "\-[0-9]\-.*Running") -eq {{ kubernetes_worker_count }} ] ; then exit 0 ; else exit 1 ; fi
       register: grep_result
       until: grep_result.rc == 0
@@ -471,7 +481,7 @@
       ignore_errors: yes
       when: site_deploy_kubernetes == True
 
-    - name: Create k8s certificate
+    - name: Create k8s Certificate
       include_role:
         name: kubernetes-kubeadmin
       vars:
