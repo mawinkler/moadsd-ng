@@ -2,6 +2,10 @@
 # #####################################################################
 # Create a Jenkins instance
 # #####################################################################
+- name: Generate DNS name
+  set_fact:
+    service_dns_name: "http://jenkins-{{ groups['moadsd_ng_jumphost_instance_public'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+
 - name: Create Jenkins overrides file
   copy:
     dest: /home/ubuntu/overrides-jenkins.yml
@@ -17,6 +21,7 @@
           limits:
             cpu: {{ limits_cpu }}
             memory: {{ limits_memory }}
+        jenkinsUrl: {{ service_dns_name }}
         serviceType: {{ service_type }}
         nodePort: {{ service_port }}
         installPlugins:
@@ -86,10 +91,6 @@
     src: /home/ubuntu/jenkins.log
     dest: ./site_{{ type }}/
     flat: yes
-
-- name: Generate DNS name
-  set_fact:
-    service_dns_name: "http://jenkins-{{ groups['moadsd_ng_jumphost_instance_public'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
 - name: Store Jenkins credentials
   become: true
