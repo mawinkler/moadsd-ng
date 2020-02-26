@@ -17,7 +17,7 @@
       git:
         repo: "{{ rook_git }}"
         dest: /home/ubuntu/rook
-        version: v1.0.4
+        version: "{{ rook_version }}"
         force: yes
 
     - name: Rook-ceph install common
@@ -65,6 +65,13 @@
       shell: kubectl apply -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/storageclass.yaml --dry-run=true -o yaml | kubectl apply -f -
       args:
         chdir: $HOME
+
+    # - name: Rook-ceph install storage class
+    #   become: true
+    #   become_user: ubuntu
+    #   shell: kubectl apply -f /home/ubuntu/rook/cluster/examples/kubernetes/ceph/flex/storageclass.yaml --dry-run=true -o yaml | kubectl apply -f -
+    #   args:
+    #     chdir: $HOME
 
     - name: Rook-ceph mark storage class as default
       become: true

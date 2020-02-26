@@ -57,7 +57,7 @@
   git:
     repo: https://github.com/cri-o/cri-o
     dest: /root/src/github.com/cri-o
-    version: release-1.14
+    version: "{{ crio_version }}"
 
 - name: Cri-o build
   shell: |

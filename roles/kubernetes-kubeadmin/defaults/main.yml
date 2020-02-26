@@ -1,4 +1,14 @@
+kubernetes_version: 1.14.9-00
+# kubernetes_version: 1.16.7-00
+
+crio_version: release-1.14
+# crio_version: release-1.16
+
+docker_version: 5:18.09.8~3-0~ubuntu-xenial
+
 helm_url: https://get.helm.sh/
 helm_archive: helm-v3.0.1-linux-amd64.tar.gz
 
 rook_git: https://github.com/rook/rook.git
+rook_version: v1.0.4
+# rook_version: v1.2.4

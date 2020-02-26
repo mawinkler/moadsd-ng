@@ -40,8 +40,8 @@
     update_cache: yes
   vars:
     packages:
-      - docker-ce=5:18.09.8~3-0~ubuntu-xenial
-      - docker-ce-cli=5:18.09.8~3-0~ubuntu-xenial
+      - docker-ce={{ docker_version }}
+      - docker-ce-cli={{ docker_version }}
       - containerd.io
 
 - name: Docker create daemon configuration file

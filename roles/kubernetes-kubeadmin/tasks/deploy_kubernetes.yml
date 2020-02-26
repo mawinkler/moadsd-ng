@@ -96,9 +96,9 @@
     update_cache: yes
   vars:
     packages:
-      - kubelet=1.14.9-00
-      - kubeadm=1.14.9-00
-      - kubectl=1.14.9-00
+      - kubelet={{ kubernetes_version }}
+      - kubeadm={{ kubernetes_version }}
+      - kubectl={{ kubernetes_version }}
       - kubernetes-cni
       - python-pip
       - python3-pip
