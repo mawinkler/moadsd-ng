@@ -473,7 +473,7 @@
       include: site_vars.yml
 
     - name: Check if Count of Started OSD Pods equals Worker Count
-      shell: if [ $(kubectl -n rook-ceph get pods | grep -c "\-[0-9]\-.*Running") -eq {{ kubernetes_worker_count }} ] ; then exit 0 ; else exit 1 ; fi
+      shell: if [ $(kubectl -n rook-ceph get pods | grep -c "osd\-[0-9]\-.*Running") -eq {{ kubernetes_worker_count }} ] ; then exit 0 ; else exit 1 ; fi
       register: grep_result
       until: grep_result.rc == 0
       retries: 60
