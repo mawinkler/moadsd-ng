@@ -21,7 +21,7 @@
 - name: Linkerd Deploy
   become: true
   become_user: ubuntu
-  shell: $HOME/.linkerd2/bin/linkerd install | kubectl apply -f -
+  shell: $HOME/.linkerd2/bin/linkerd install --ignore-cluster | kubectl apply -f -
   args:
     chdir: $HOME
 
