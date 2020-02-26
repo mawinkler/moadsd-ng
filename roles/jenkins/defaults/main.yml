@@ -10,7 +10,7 @@ rbac_create: true
 
 jenkins_image: jenkins/jenkins
 jenkins_chart: stable/jenkins
-jenkins_tag: 2.201
-jenkins_chart_version: 1.7.8
+jenkins_tag: lts
+jenkins_chart_version: 1.9.19
 jenkins_namespace: jenkins
 jenkins_name: jenkins
