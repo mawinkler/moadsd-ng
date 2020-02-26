@@ -196,17 +196,36 @@
     #
     # Kubernetes Dashboard
     #
-    - name: Kubernetes download dashboard definition
+    - name: Kubernetes download Dashboard Definition
       get_url:
         url: https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
         dest: /home/ubuntu
 
-    - name: Kubernetes install dashboard
+    - name: Kubernetes install Dashboard
       become: true
       become_user: ubuntu
       k8s:
         state: present
         src: /home/ubuntu/kubernetes-dashboard.yaml
+
+    - name: Create Dashboard ClusterRoleBinding
+      become: true
+      become_user: ubuntu
+      k8s:
+        state: present
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRoleBinding
+          metadata:
+            name: kubernetes-dashboard
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: cluster-admin
+          subjects:
+            - kind: ServiceAccount
+              name: kubernetes-dashboard
+              namespace: kube-system
 
     - name: Kubernetes delete exposed dashboard port if existing
       become: true
