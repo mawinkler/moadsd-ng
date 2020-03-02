@@ -219,7 +219,7 @@
         service_name: jenkins
         jumphost_external_ip: "{{ inventory_hostname }}"
         k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
-        node_port: "{{ gitlab_noodeport_https }}"
+        node_port: "{{ gitlab_nodeport_https }}"
         target_type: https
       when:
         - site_deploy_gitlab == True
@@ -255,7 +255,7 @@
         - site_deploy_kubernetes == True
         - site_deploy_jumphost == True
 
-    - name: Create Proxy Configuration and Certificate for Demoapp
+    - name: Create Proxy Configuration and Certificate for Demoapp1
       include_role:
         name: proxy
       vars:
@@ -269,7 +269,7 @@
         - site_deploy_kubernetes == True
         - site_deploy_jumphost == True
 
-    - name: Create Proxy Configuration and Certificate for Demoapp
+    - name: Create Proxy Configuration and Certificate for Demoapp2
       include_role:
         name: proxy
       vars:
@@ -283,7 +283,7 @@
         - site_deploy_kubernetes == True
         - site_deploy_jumphost == True
 
-    - name: Create Proxy Configuration and Certificate for Demoapp
+    - name: Create Proxy Configuration and Certificate for Demoapp3
       include_role:
         name: proxy
       vars:
@@ -429,10 +429,6 @@
     - name: Include vars
       include: site_vars.yml
 
-    - name: debug
-      debug:
-        msg: "{{ ansible_ssh_common_args }}"
-
     - name: Deploy Kubernetes worker with Cri-O
       include_role:
         name: kubernetes-kubeadmin
@@ -497,6 +493,7 @@
         - site_deploy_registry == True
         - site_deploy_kubernetes == True
 
+    # Not required anymore
     # - name: Create k8s certificate pod
     #   include_role:
     #     name: kubernetes-kubeadmin
@@ -555,6 +552,17 @@
       vars:
         operation: create_instance
       when: site_deploy_jenkins == True
+
+    # The following task creates a Jenkins JNLP Slave Docker Image
+    # Currently the only problem is that k8s makes problems pulling the image
+    # from the internal registry. For now, Jenkins is configured to pull the
+    # image from my Docker Hub account
+    # - name: Deploy Jenkins JNLP Slave Docker Image
+    #   include_role:
+    #     name: jenkins
+    #   vars:
+    #     operation: create_slave
+    #   when: site_deploy_jenkins == True
 
 # #####################################################################
 # Deploy GitLab
@@ -630,39 +638,6 @@
       when:
         - site_deploy_openshift == True
         - site_deploy_jumphost == True
-
-    # - name: Create Proxy Configuration and Certificate for the Openshift
-    #   include_role:
-    #     name: proxy
-    #   vars:
-    #     operation: create_site
-    #     service_name: openshift
-    #     jumphost_external_ip: "{{ inventory_hostname }}"
-    #     k8smaster_ip: localhost
-    #     node_port: "{{ 443 }}"
-    #     target_type: https
-    #   when:
-    #     - site_deploy_openshift == True
-    #     - site_deploy_jumphost == True
-
-# #####################################################################
-# Patch Docker to allow insecure registries and docker.sock for all
-# local users. Only when k8s runtime is docker.
-# #####################################################################
-- hosts: tag_role_k8smaster, tag_role_k8sworker
-  tasks:
-    - name: Include vars
-      include: site_vars.yml
-
-    - name: Change Docker Socket Permissions
-      become: true
-      file:
-        path: /var/run/docker.sock
-        mode: '666'
-
-    - name: Docker restart
-      become: true
-      command: systemctl reload docker
 
 # #####################################################################
 # Print some environment information
