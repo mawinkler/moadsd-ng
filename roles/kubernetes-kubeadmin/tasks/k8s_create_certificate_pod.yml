@@ -1,6 +1,6 @@
 ---
 # #####################################################################
-# Create SSL certificate for k8s master
+# Create Certificate Server Pod
 # #####################################################################
 
 # Depending on the environment, inventory_hostname might be a dns name or an ip
@@ -15,14 +15,14 @@
     remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
   when: not remote_ip
 
-- name: Create subdirectory site/moadsd-ng-certserv
+- name: Create Subdirectory moadsd-ng-certserv
   become: true
   become_user: ubuntu
   file:
     path: "/home/ubuntu/moadsd-ng-certserv"
     state: directory
 
-- name: Copy certificate to build context moadsd-ng-certserv
+- name: Copy Certificate to Build Context Certificate Server
   become: true
   copy:
     src: ./site_{{ type }}/{{ remote_ip }}.crt
@@ -30,7 +30,7 @@
     owner: ubuntu
     group: docker
 
-- name: Create Dockerfile for certificate pod
+- name: Create Dockerfile for Certificate Server
   become: true
   become_user: ubuntu
   copy:
@@ -40,18 +40,17 @@
       FROM nginx:alpine
       COPY {{ remote_ip }}.crt /usr/share/nginx/html/{{ remote_ip }}.crt
 
-- name: Build docker image for certificate pod
+- name: Build Certificate Server Image
   become: true
   become_user: ubuntu
   shell: docker build -t moadsd-ng-certserv moadsd-ng-certserv/.
   args:
     chdir: $HOME
 
-  # shell: docker tag moadsd-ng-certserv {{ dockerhub_username }}/moadsd-ng-certserv:latest
-- name: Tag docker image for certificate pod
+- name: Tag Certificate Server Image
   become: true
   become_user: ubuntu
-  shell: docker tag moadsd-ng-certserv {{ remote_ip }}:{{ registry_nodeport }}/cert/moadsd-ng-certserv:latest
+  shell: docker tag moadsd-ng-certserv {{ remote_ip }}:{{ registry_nodeport }}/moadsd-ng-certserv:latest
   args:
     chdir: $HOME
 
@@ -67,21 +66,21 @@
   delay: 10
   ignore_errors: yes
 
-- name: Push docker image for certificate pod
+- name: Push Certificate Server Image
   become: true
   become_user: ubuntu
-  shell: docker push {{ remote_ip }}:{{ registry_nodeport }}/cert/moadsd-ng-certserv:latest
+  shell: docker push {{ remote_ip }}:{{ registry_nodeport }}/moadsd-ng-certserv:latest
   args:
     chdir: $HOME
 
-- name: Create image pull secret
+- name: Create Image Pull Secret
   become: true
   become_user: ubuntu
   shell: kubectl create secret docker-registry cluster-registry --docker-server=https://{{ remote_ip }}:{{ registry_nodeport }}/v2/ --docker-username={{ cluster_registry_username }} --docker-password={{ cluster_registry_password }} --docker-email=k8s@moadsd-ng.io --dry-run=true -o yaml | kubectl apply -f -
   args:
     chdir: $HOME
 
-- name: Create deployment for certificate pod
+- name: Create Deployment for Certificate Server
   become: true
   become_user: ubuntu
   copy:
@@ -119,7 +118,7 @@
           spec:
             containers:
             - name: moadsd-ng-certserv
-              image: {{ remote_ip }}:{{ registry_nodeport }}/cert/moadsd-ng-certserv:latest
+              image: {{ remote_ip }}:{{ registry_nodeport }}/moadsd-ng-certserv:latest
               imagePullPolicy: Always
               ports:
               - containerPort: 80
