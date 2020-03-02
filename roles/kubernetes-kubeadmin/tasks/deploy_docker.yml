@@ -59,20 +59,12 @@
         "insecure-registries": ["{{ groups['moadsd_ng_k8smaster_instance'][0] }}:{{ smartcheck_registry }}", "{{ groups['moadsd_ng_k8smaster_instance'][0] }}:{{ registry_nodeport }}", "{{ kubernetes_master_instance_name }}:{{ smartcheck_registry }}", "{{ kubernetes_master_instance_name }}:{{ registry_nodeport }}"]
       }
 
-- name: Add user jenkins with a specific uid and a primary group of admin
-  user:
-    name: jenkins
-    comment: Jenkins Slave
-    uid: 10000
-    group: admin
-    groups: docker
-  when:
-    - site_deploy_jenkins == True
-
 - name: Docker add ubuntu user to group
   user:
     name: ubuntu
-    group: docker
+    groups:
+      - docker
+      - ubuntu
 
 - name: Containerd configure
   shell: |
