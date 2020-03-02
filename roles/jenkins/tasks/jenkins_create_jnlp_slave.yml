@@ -1,0 +1,86 @@
+---
+# #####################################################################
+# Create Jenkins JNLP Slave Docker Image
+# #####################################################################
+- name: Get ipaddr of k8smaster
+  set_fact:
+    remote_ip: "{{ inventory_hostname | ipaddr}}"
+
+- name: Get ipaddr of k8smaster
+  set_fact:
+    remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+  when: not remote_ip
+
+- name: Create Subdirectory jenkins-jnlp-slave-docker
+  become: true
+  become_user: ubuntu
+  file:
+    path: "/home/ubuntu/jenkins-jnlp-slave-docker"
+    state: directory
+
+- name: Create Dockerfile for Jenkins JNLP Slave Docker Image
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/jenkins-jnlp-slave-docker/Dockerfile
+    mode: 0640
+    content: |
+      FROM jenkinsci/jnlp-slave
+
+      USER root
+
+      RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+      RUN apt-get update && \
+        apt-get install -y \
+        apt-transport-https \
+        ca-certificates \
+        curl \
+        software-properties-common \
+        git \
+        sudo \
+        libunwind8 \
+        gettext
+
+      RUN add-apt-repository \
+       "deb [arch=amd64] https://download.docker.com/linux/debian \
+       $(lsb_release -cs) \
+       stable"
+
+      RUN apt-get update && \
+        apt-get install -y docker-ce
+
+      RUN usermod -aG docker jenkins
+      USER jenkins
+
+- name: Build Jenkins JNLP Slave Docker Image
+  become: true
+  become_user: ubuntu
+  shell: docker build -t jenkins-jnlp-slave-docker jenkins-jnlp-slave-docker/.
+  args:
+    chdir: $HOME
+
+- name: Tag Jenkins JNLP Slave Docker Image
+  become: true
+  become_user: ubuntu
+  shell: docker tag jenkins-jnlp-slave-docker {{ remote_ip }}:{{ registry_nodeport }}/jenkins-jnlp-slave-docker:latest
+  args:
+    chdir: $HOME
+
+- name: Login to Cluster Registry
+  become: true
+  become_user: ubuntu
+  shell: docker login -u {{ cluster_registry_username }} -p {{ cluster_registry_password }} {{ remote_ip }}:{{ registry_nodeport }}
+  args:
+    chdir: $HOME
+  register: login_result
+  until: login_result.rc == 0
+  retries: 60
+  delay: 10
+  ignore_errors: yes
+
+- name: Push Jenkins JNLP Slave Docker Image
+  become: true
+  become_user: ubuntu
+  shell: docker push {{ remote_ip }}:{{ registry_nodeport }}/jenkins-jnlp-slave-docker:latest
+  args:
+    chdir: $HOME
