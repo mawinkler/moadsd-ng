@@ -29,6 +29,13 @@
         name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
         groups: "moadsd_ng_k8smaster_instance"
 
+- hosts: tag_role_k8sworker
+  tasks:
+    - name: Get internal ip addresses of Kubernetes Workers
+      add_host:
+        name: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+        groups: "moadsd_ng_k8sworker_instance"
+
 - hosts: tag_role_openshift
   tasks:
     - name: Get internal ip address of Openshift
@@ -103,7 +110,7 @@
         operation: create_site
         service_name: deepsecurity
         jumphost_external_ip: "{{ inventory_hostname }}"
-        k8smaster_ip: "{{ groups['moadsd_ng_dsm_instance'][0] }}"
+        proxy_destination: "{{ groups['moadsd_ng_dsm_instance'][0] }}"
         node_port: "{{ addressandportsscreen_managerport }}"
         target_type: https
       when:
@@ -117,7 +124,7 @@
     #     operation: create_site
     #     service_name: heartbeat
     #     jumphost_external_ip: "{{ inventory_hostname }}"
-    #     k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+    #     proxy_destination: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
     #     node_port: "{{ addressandportsscreen_heartbeatport }}"
     #     target_type: https
     #   when:
@@ -131,7 +138,7 @@
     #     operation: create_site
     #     service_name: agent
     #     jumphost_external_ip: "{{ inventory_hostname }}"
-    #     k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+    #     proxy_destination: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
     #     node_port: "{{ addressandportsscreen_agentport }}"
     #     target_type: https
     #   when:
@@ -145,7 +152,7 @@
         operation: create_site
         service_name: dashboard
         jumphost_external_ip: "{{ inventory_hostname }}"
-        k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
         node_port: "{{ kubernetes_dashboard_nodeport }}"
         target_type: https
       when:
@@ -159,7 +166,7 @@
     #     operation: create_site
     #     service_name: openshift
     #     jumphost_external_ip: "{{ inventory_hostname }}"
-    #     k8smaster_ip: "{{ groups['moadsd_ng_openshift_instance'][0] }}"
+    #     proxy_destination: "{{ groups['moadsd_ng_openshift_instance'][0] }}"
     #     node_port: "{{ openshift_dashboard }}"
     #     target_type: https
     #   when:
@@ -173,7 +180,7 @@
         operation: create_site
         service_name: registry
         jumphost_external_ip: "{{ inventory_hostname }}"
-        k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
         node_port: "{{ registry_nodeport }}"
         target_type: https
       when:
@@ -188,7 +195,7 @@
         operation: create_site
         service_name: smartcheck
         jumphost_external_ip: "{{ inventory_hostname }}"
-        k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
         node_port: "{{ smartcheck_nodeport }}"
         target_type: https
       when:
@@ -203,7 +210,7 @@
         operation: create_site
         service_name: jenkins
         jumphost_external_ip: "{{ inventory_hostname }}"
-        k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
         node_port: "{{ jenkins_nodeport }}"
         target_type: http
       when:
@@ -211,14 +218,28 @@
         - site_deploy_kubernetes == True
         - site_deploy_jumphost == True
 
+    - name: Generate DNS Name for GitLab
+      set_fact:
+        service_dns_name_gitlab: "gitlab.{{ groups['moadsd_ng_k8sworker_instance'][0] }}.{{ jumphost_tld }}"
+      when:
+        - site_deploy_gitlab == True
+        - site_deploy_kubernetes == True
+
+    # - name: Generate DNS Name for GitLab Registry
+    #   set_fact:
+    #     service_dns_name_gitlab: "https://registry.{{ groups['moadsd_ng_k8sworker_instance'][0] }}.{{ jumphost_tld }}"
+    #   when:
+    #     - site_deploy_gitlab == True
+    #     - site_deploy_kubernetes == True
+
     - name: Create Proxy Configuration and Certificate for GitLab
       include_role:
         name: proxy
       vars:
         operation: create_site
-        service_name: jenkins
+        service_name: gitlab
         jumphost_external_ip: "{{ inventory_hostname }}"
-        k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ service_dns_name_gitlab }}"
         node_port: "{{ gitlab_nodeport_https }}"
         target_type: https
       when:
@@ -233,7 +254,7 @@
         operation: create_site
         service_name: linkerd
         jumphost_external_ip: "{{ inventory_hostname }}"
-        k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
         node_port: "{{ linkerd_dashboard_nodeport }}"
         target_type: http
       when:
@@ -248,7 +269,7 @@
         operation: create_site
         service_name: demoapp
         jumphost_external_ip: "{{ inventory_hostname }}"
-        k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
         node_port: "{{ custom_nodeport }}"
         target_type: http
       when:
@@ -262,7 +283,7 @@
         operation: create_site
         service_name: demoapp1
         jumphost_external_ip: "{{ inventory_hostname }}"
-        k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
         node_port: "{{ custom_nodeport1 }}"
         target_type: http
       when:
@@ -276,7 +297,7 @@
         operation: create_site
         service_name: demoapp2
         jumphost_external_ip: "{{ inventory_hostname }}"
-        k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
         node_port: "{{ custom_nodeport2 }}"
         target_type: http
       when:
@@ -290,7 +311,7 @@
         operation: create_site
         service_name: demoapp3
         jumphost_external_ip: "{{ inventory_hostname }}"
-        k8smaster_ip: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ groups['moadsd_ng_k8smaster_instance'][0] }}"
         node_port: "{{ custom_nodeport3 }}"
         target_type: http
       when:
@@ -386,7 +407,6 @@
     deploy_rook_ceph: yes
     # Set the following to False if the cluster is already up and running and
     # you want to speed up the playbook...
-    kubernetes_create_cluster: True
 
   tasks:
     - name: Include vars
@@ -400,7 +420,6 @@
       when:
         - site_deploy_kubernetes == True
         - kubernetes_container_runtime == 'crio'
-        - kubernetes_create_cluster == True
 
     - name: Deploy Kubernetes master with Docker
       include_role:
@@ -410,7 +429,6 @@
       when:
         - site_deploy_kubernetes == True
         - kubernetes_container_runtime == 'docker'
-        - kubernetes_create_cluster == True
 
 - name: Deploy Kubernetes workers
   hosts: tag_role_k8sworker
@@ -423,7 +441,6 @@
     deploy_kubernetes: yes
     # Set the following to False if the cluster is already up and running and
     # you want to speed up the playbook...
-    kubernetes_create_cluster: True
 
   tasks:
     - name: Include vars
@@ -491,6 +508,22 @@
         operation: create_instance
       when:
         - site_deploy_registry == True
+        - site_deploy_kubernetes == True
+
+    - name: Deploy LoadBalancer
+      include_role:
+        name: loadbalancer
+      vars:
+        operation: create_instance
+      when:
+        - site_deploy_kubernetes == True
+
+    - name: Configure LoadBalancer
+      include_role:
+        name: loadbalancer
+      vars:
+        operation: configure
+      when:
         - site_deploy_kubernetes == True
 
     # Not required anymore
@@ -649,6 +682,11 @@
       register: details_jenkins
       ignore_errors: yes
 
+    - name: GitLab Details
+      command: cat "site_{{ type }}/gitlab.txt"
+      register: details_gitlab
+      ignore_errors: yes
+
     - name: Smart Check Details
       command: cat "site_{{ type }}/smartcheck.txt"
       register: details_smartcheck
@@ -681,6 +719,10 @@
     - name: Jenkins Details
       debug:
         msg: "{{ details_jenkins.stdout_lines }}"
+
+    - name: GitLab Details
+      debug:
+        msg: "{{ details_gitlab.stdout_lines }}"
 
     - name: Smart Check Details
       debug:
