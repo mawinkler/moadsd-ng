@@ -12,11 +12,11 @@ server {
   ssl_ciphers         HIGH:!aNULL:!MD5;
 
   client_max_body_size 0;
-  
+
   location / {
     proxy_ssl_verify off;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "Upgrade";
-    proxy_pass https://{{ k8smaster_ip }}:{{ node_port }}/;
+    proxy_pass https://{{ proxy_destination }}:{{ node_port }}/;
   }
 }

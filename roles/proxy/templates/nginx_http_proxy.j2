@@ -9,6 +9,6 @@ server {
   location / {
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "Upgrade";
-    proxy_pass http://{{ k8smaster_ip }}:{{ node_port }}/;
+    proxy_pass http://{{ proxy_destination }}:{{ node_port }}/;
   }
 }
