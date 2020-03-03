@@ -459,7 +459,6 @@
       when:
         - site_deploy_kubernetes == True
         - kubernetes_container_runtime == 'crio'
-        - kubernetes_create_cluster == True
 
     - name: Deploy Kubernetes worker with Docker
       include_role:
@@ -474,7 +473,6 @@
       when:
         - site_deploy_kubernetes == True
         - kubernetes_container_runtime == 'docker'
-        - kubernetes_create_cluster == True
 
 - name: Wait for Rook-Ceph to Initialize and Create Cluster Registry
   hosts: tag_role_k8smaster
