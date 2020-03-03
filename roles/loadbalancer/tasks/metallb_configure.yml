@@ -1,0 +1,51 @@
+---
+# #####################################################################
+# Configure MetalLB Loadbalancer
+# #####################################################################
+- name: Generate IP range
+  set_fact:
+    ip_range: "{{ inventory_hostname | regex_replace('(\\d*)\\.(\\d*)\\.(\\d*).*', '\\1.\\2.\\3.0-\\1.\\2.\\3.254') }}"
+
+# - name: Configure MetalLB Loadbalancer
+#   become: true
+#   become_user: ubuntu
+#   k8s:
+#     state: present
+#     definition:
+#       apiVersion: v1
+#       kind: ConfigMap
+#       metadata:
+#         namespace: metallb-system
+#         name: config
+#       data:
+#         config: |
+#           address-pools:
+#           - name: default
+#             protocol: layer2
+#             addresses:
+#             - {{ ip_range }}
+
+- name: Create MetalLB Loadbalancer Configuration
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/metallb-config.yml
+    mode: 0640
+    content: |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        namespace: metallb-system
+        name: config
+      data:
+        config: |
+          address-pools:
+          - name: default
+            protocol: layer2
+            addresses:
+            - {{ ip_range }}
+
+- name: Apply MetalLB Loadbalancer Configuration
+  become: true
+  become_user: ubuntu
+  shell: kubectl apply -f /home/ubuntu/metallb-config.yml --dry-run=true -o yaml | kubectl apply -f -

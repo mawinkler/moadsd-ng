@@ -1,0 +1,10 @@
+---
+# #####################################################################
+# Deploy MetalLB Loadbalancer
+# #####################################################################
+- name: Deploy MetalLB Loadbalancer
+  become: true
+  become_user: ubuntu
+  shell: kubectl apply -f https://raw.githubusercontent.com/google/metallb/{{ metallb_version }}/manifests/metallb.yaml --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME
