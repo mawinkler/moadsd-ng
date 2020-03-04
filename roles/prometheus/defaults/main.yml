@@ -1,0 +1,6 @@
+service_type: NodePort
+persistence_storageClassName: rook-ceph-block
+
+prometheus_chart: stable/prometheus
+prometheus_namespace: prometheus
+prometheus_name: prometheus

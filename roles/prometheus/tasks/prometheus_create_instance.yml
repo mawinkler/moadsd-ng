@@ -1,0 +1,45 @@
+---
+# #####################################################################
+# Deploy Prometheus
+# #####################################################################
+- name: Generate DNS Name for Prometheus
+  set_fact:
+    service_dns_name: "https://prometheus-{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_jumphost_instance'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+
+# servicePort: 80
+- name: Create Prometheus Overrides File
+  copy:
+    dest: /home/ubuntu/overrides-prometheus.yml
+    mode: 0640
+    owner: ubuntu
+    content: |
+      server:
+        persistentVolume:
+          enabled: true
+        service:
+          type: {{ service_type }}
+          nodePort: {{ prometheus_nodeport }}
+        retention: "15d"
+
+- name: Create Prometheus Namespace
+  become: true
+  become_user: ubuntu
+  shell: kubectl create namespace {{ prometheus_namespace }} --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME
+
+- name: Install Prometheus
+  become: true
+  become_user: ubuntu
+  shell: helm install --namespace {{ prometheus_namespace }} --values overrides-prometheus.yml {{ prometheus_name }} {{ prometheus_chart }} >> prometheus.log
+  args:
+    chdir: $HOME
+    creates: prometheus.log
+
+- name: Fetch prometheus.log
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/prometheus.log
+    dest: ./site_{{ type }}/
+    flat: yes
