@@ -698,6 +698,11 @@
 # #####################################################################
 - hosts: localhost
   tasks:
+    - name: Grafana Details
+      command: cat "site_{{ type }}/grafana.txt"
+      register: details_grafana
+      ignore_errors: yes
+
     - name: Jenkins Details
       command: cat "site_{{ type }}/jenkins.txt"
       register: details_jenkins
@@ -736,6 +741,10 @@
     - name: Cluster Registry Details
       debug:
         msg: "{{ details_registry.stdout_lines }}"
+
+    - name: Grafana Details
+      debug:
+        msg: "{{ details_grafana.stdout_lines }}"
 
     - name: Jenkins Details
       debug:

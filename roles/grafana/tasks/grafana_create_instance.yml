@@ -67,7 +67,7 @@
     content: |
       echo URL: http://{{ inventory_hostname }}:{{ grafana_nodeport }}
       URL: {{ service_dns_name }}
-      echo Username: root
+      echo Username: {{ grafana_username }}
       echo Password: {{ admin_password.stdout }}
 
 - name: Fetch grafana.txt
