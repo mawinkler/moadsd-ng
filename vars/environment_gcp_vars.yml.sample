@@ -11,6 +11,8 @@ site_deploy_gitlab: no
 site_deploy_gitlab_docker: no
 site_deploy_endpoints: no
 site_deploy_linkerd: no
+site_deploy_prometheus: yes
+site_deploy_grafana: yes
 
 kubernetes_worker_count: 3
 linuxep_instance_count: 0
@@ -157,6 +159,16 @@ jenkins_nodeport: 30013
 # Docker Registry Settings
 # #####################################################################
 registry_nodeport: 30017
+
+# #####################################################################
+# Grafana Settings
+# #####################################################################
+grafana_nodeport: 30018
+
+# #####################################################################
+# Prometheus Settings
+# #####################################################################
+prometheus_nodeport: 30019
 
 # #####################################################################
 # Custom Port for self-created services in K8s
