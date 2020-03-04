@@ -99,7 +99,7 @@
 
 - name: Generate DNS name
   set_fact:
-    service_dns_name: "https://deepsecurity-{{ groups['moadsd_ng_jumphost_instance_public'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+    service_dns_name: "https://deepsecurity-{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_jumphost_instance'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
 - name: Create link document for Deep Security
   copy:

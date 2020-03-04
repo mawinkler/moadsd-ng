@@ -4,17 +4,8 @@
 # #####################################################################
 - name: Generate DNS Name for GitLab
   set_fact:
-    service_dns_name: "https://gitlab-{{ groups['moadsd_ng_jumphost_instance_public'][0] }}.{{ jumphost_tld }}"
+    service_dns_name: "https://gitlab-{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_jumphost_instance'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
-# Persistence defaults:
-# gitlab.gitaly.persistence.storageClass: rook-ceph-block
-# gitlab.gitaly.persistence.size: 50Gi
-# postgresql:.persistence.storageClass: rook-ceph-block
-# postgresql:.persistence.size: 8Gi
-# minio.persistence.storageClass: rook-ceph-block
-# minio.persistence.size: 10Gi
-# redis.persistence.storageClass: rook-ceph-block
-# redis.persistence.size: 5Gi
 - name: Create GitLab Overrides File
   copy:
     dest: /home/ubuntu/overrides-gitlab-metallb.yml
@@ -26,8 +17,8 @@
         ingress:
           configureCertmanager: false
         hosts:
-          domain: {{ groups['moadsd_ng_k8sworker_instance'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}
-          externalIP: {{ groups['moadsd_ng_k8sworker_instance'][0] }}
+          domain: {{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8sworker1_instance'][0] }}.{{ jumphost_tld }}
+          externalIP: {{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8sworker1_instance'][0] }}
       certmanager:
         install: false
       gitlab-runner:
@@ -106,10 +97,6 @@
     dest: ./site_{{ type }}/
     flat: yes
 
-- name: Generate DNS name
-  set_fact:
-    service_dns_name: "https://gitlab-{{ groups['moadsd_ng_jumphost_instance_public'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
-
 - name: Query root Password
   become: true
   become_user: ubuntu
@@ -126,7 +113,7 @@
       echo URL: http://{{ inventory_hostname }}:{{ gitlab_nodeport_https }}
       URL: {{ service_dns_name }}
       echo Username: root
-      echo Password: {{ root_password }}
+      echo Password: {{ root_password.stdout }}
 
 - name: Fetch gitlab.txt
   become: true

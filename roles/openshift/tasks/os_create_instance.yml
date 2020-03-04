@@ -89,18 +89,72 @@
 # exit
 # curl -O https://mirror.openshift.com/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz
 # tar xfv crc-linux-amd64.tar.xz
-# sudo cp crc-linux-1.5.0-amd64/crc /usr/local/bin/
+# sudo cp crc-linux-1.6.0-amd64/crc /usr/local/bin/
 # export PATH="/usr/local/bin:$PATH"
 # echo 'export PATH="/usr/local/bin:$PATH"' > ~/.bashrc
 # # Have the pull secret
 # # https://cloud.redhat.com/openshift/install/crc/installer-provisioned
 # crc setup
+# crc start
 # crc oc-env
 # export PATH="/home/ansible/.crc/bin:$PATH"
 # eval $(crc oc-env)
 # oc login -u developer -p developer https://api.crc.testing:6443
 # ä that does work
 # # but required a loal proxy on the instance to access the console remotely :(
+
+# Next Proxy
+$ less /etc/nginx/passthrough.conf
+## tcp LB  and SSL passthrough for backend ##
+stream {
+    upstream openshift {
+        ## server api.crc.testing:443 max_fails=3 fail_timeout=10s;
+        server console-openshift-console.apps-crc.testing:443;
+        ##  max_fails=3 fail_timeout=10s;
+    }
+
+log_format basic '$remote_addr [$time_local] '
+                 '$protocol $status $bytes_sent $bytes_received '
+                 '$session_time "$upstream_addr" '
+                 '"$upstream_bytes_sent" "$upstream_bytes_received" "$upstream_connect_time"';
+
+    access_log /var/log/nginx/openshift_access.log basic;
+    error_log  /var/log/nginx/openshift_error.log;
+
+    server {
+        listen 443;
+        proxy_pass openshift;
+        proxy_next_upstream on;
+    }
+}
+
+$ less /etx/nginx/nginx.configuration
+#user  nobody;
+worker_processes  1;
+load_module '/usr/lib64/nginx/modules/ngx_stream_module.so';
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+#error_log  logs/error.log  info;
+
+#pid        logs/nginx.pid;
+
+
+events {
+    worker_connections  1024;
+}
+
+include /etc/nginx/passthrough.conf;
+
+http {
+    include       mime.types;
+    ...
+
+
+# yum -y install yum-utils
+# # yum-config-manager --enable rhui-REGION-rhel-server-extras rhui-REGION-rhel-server-optional
+# yum-config-manager --enable rhui-REGION-rhel-server-extras rhui-eu-central-1-rhel-server-optional
+# yum install -y certbot python2-certbot-nginx
 
 - name: Debug
   debug:
