@@ -25,7 +25,6 @@
         edition: ce
         ingress:
           configureCertmanager: false
-          class: nginx
         hosts:
           domain: {{ groups['moadsd_ng_k8sworker_instance'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}
           externalIP: {{ groups['moadsd_ng_k8sworker_instance'][0] }}
@@ -33,23 +32,6 @@
         install: false
       gitlab-runner:
         install: true
-      gitlab:
-        gitaly:
-          persistence:
-            storageClass: {{ persistence_storageClassName }}
-            size: 20Gi
-      postgresql:
-        persistence:
-          storageClass: {{ persistence_storageClassName }}
-          size: 4Gi
-      minio:
-        persistence:
-          storageClass: {{ persistence_storageClassName }}
-          size: 5Gi
-      redis:
-        persistence:
-          storageClass: {{ persistence_storageClassName }}
-          size: 3Gi
 
 - name: Install GitLab Repo
   become: true
