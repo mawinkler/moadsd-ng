@@ -163,6 +163,21 @@
         - site_deploy_kubernetes == True
         - site_deploy_jumphost == True
 
+    - name: Create Proxy Configuration and Certificate for the Registry
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: grafana
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
+        node_port: "{{ grafana_nodeport }}"
+        target_type: http
+      when:
+        - site_deploy_kubernetes == True
+        - site_deploy_grafana == True
+        - site_deploy_jumphost == True
+
     - name: Create Proxy Configuration and Certificate for Smart Check
       include_role:
         name: proxy
@@ -499,6 +514,42 @@
     #   vars:
     #     operation: k8s_create_certificate_pod
     #   when: site_deploy_kubernetes == True
+
+# #####################################################################
+# Deploy Prometheus
+# #####################################################################
+- name: Deploy Prometheus
+  hosts: tag_role_k8smaster
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Deploy Prometheus
+      include_role:
+        name: prometheus
+      vars:
+        operation: create_instance
+      when: site_deploy_prometheus == True
+
+# #####################################################################
+# Deploy Grafana
+# #####################################################################
+- name: Deploy Grafana
+  hosts: tag_role_k8smaster
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Deploy Grafana
+      include_role:
+        name: grafana
+      vars:
+        operation: create_instance
+      when: site_deploy_grafana == True
 
 # #####################################################################
 # Deploy Deep Security Smart Check
