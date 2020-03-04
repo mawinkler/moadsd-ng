@@ -11,7 +11,7 @@
 
 - name: Get ipaddr of k8smaster
   set_fact:
-    remote_ip: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
+    remote_ip: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
   when: not remote_ip
 
 # - name: Check if Smart Check is up and running
@@ -109,7 +109,7 @@
 
     - name: Generate DNS name
       set_fact:
-        service_dns_name: "https://smartcheck-{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_jumphost_instance'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+        service_dns_name: "https://smartcheck-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
     - name: Create link document for Deep Security Smart Check
       become: true

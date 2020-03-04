@@ -4,7 +4,7 @@
 # #####################################################################
 - name: Generate DNS Name for Grafana
   set_fact:
-    service_dns_name: "http://grafana-{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_jumphost_instance'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+    service_dns_name: "http://grafana-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
 - name: Create Grafana Overrides File
   copy:
@@ -25,7 +25,7 @@
           datasources:
           - name: Prometheus
             type: prometheus
-            url: http://{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}:{{ prometheus_nodeport }}
+            url: http://{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}:{{ prometheus_nodeport }}
             access: proxy
             isDefault: true
 

@@ -56,7 +56,7 @@
           "max-size": "100m"
         },
         "storage-driver": "overlay2",
-        "insecure-registries": ["{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}:{{ smartcheck_registry }}", "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}:{{ registry_nodeport }}", "{{ kubernetes_master_instance_name }}:{{ smartcheck_registry }}", "{{ kubernetes_master_instance_name }}:{{ registry_nodeport }}"]
+        "insecure-registries": ["{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}:{{ smartcheck_registry }}", "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}:{{ registry_nodeport }}", "{{ kubernetes_master_instance_name }}:{{ smartcheck_registry }}", "{{ kubernetes_master_instance_name }}:{{ registry_nodeport }}"]
       }
 
 - name: Docker add ubuntu user to group
