@@ -35,28 +35,28 @@
     - name: Listing Jumphost Environment
       debug:
         msg:
-          - "Jumphost                     : {{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_jumphost_instance'][0] }}"
+          - "Jumphost                     : {{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] }}"
       when: site_deploy_jumphost == True
 
     - name: Listing Kubernetes Environment
       debug:
         msg:
-          - "Kubernetes Master            : {{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
-          - "Kubernetes Worker 1          : {{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8sworker1_instance'][0] }}"
-      when: "'tag_Name_moadsd_ng_k8smaster_instance' is in groups"
+          - "Kubernetes Master            : {{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
+          - "Kubernetes Worker 1          : {{ hostvars[inventory_hostname]['groups']['tag_role_k8sworker'][0] }}"
+      when: "'tag_role_k8smaster' is in groups"
 
     - name: Listing OpenShift Environment
       debug:
         msg:
-          - "OpenShift Master             : {{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_openshift_instance'][0] }}"
-      when: "'tag_Name_moadsd_ng_openshift_instance' is in groups"
+          - "OpenShift Master             : {{ hostvars[inventory_hostname]['groups']['tag_role_openshift'][0] }}"
+      when: "'tag_role_openshift' is in groups"
 
     - name: Listing Deep Security Environment
       debug:
         msg:
-          - "Deep Security                : {{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_dsm_instance'][0] }}"
-          - "PostgreSQL                   : {{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_postgresql_instance'][0] }}"
-      when: "'tag_Name_moadsd_ng_dsm_instance' is in groups"
+          - "Deep Security                : {{ hostvars[inventory_hostname]['groups']['tag_role_dsm'][0] }}"
+          - "PostgreSQL                   : {{ hostvars[inventory_hostname]['groups']['tag_role_dsmdb'][0] }}"
+      when: "'tag_role_dsm' is in groups"
 
 # #####################################################################
 # Create http & https Proxy with Trusted Certificates
@@ -86,7 +86,7 @@
         operation: create_site
         service_name: deepsecurity
         jumphost_external_ip: "{{ inventory_hostname }}"
-        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_dsm_instance'][0] }}"
+        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsm'][0] }}"
         node_port: "{{ addressandportsscreen_managerport }}"
         target_type: https
       when:
@@ -100,7 +100,7 @@
     #     operation: create_site
     #     service_name: heartbeat
     #     jumphost_external_ip: "{{ inventory_hostname }}"
-    #     proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
+    #     proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
     #     node_port: "{{ addressandportsscreen_heartbeatport }}"
     #     target_type: https
     #   when:
@@ -114,7 +114,7 @@
     #     operation: create_site
     #     service_name: agent
     #     jumphost_external_ip: "{{ inventory_hostname }}"
-    #     proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
+    #     proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
     #     node_port: "{{ addressandportsscreen_agentport }}"
     #     target_type: https
     #   when:
@@ -128,7 +128,7 @@
         operation: create_site
         service_name: dashboard
         jumphost_external_ip: "{{ inventory_hostname }}"
-        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
         node_port: "{{ kubernetes_dashboard_nodeport }}"
         target_type: https
       when:
@@ -142,7 +142,7 @@
     #     operation: create_site
     #     service_name: openshift
     #     jumphost_external_ip: "{{ inventory_hostname }}"
-    #     proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_openshift_instance'][0] }}"
+    #     proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_role_openshift'][0] }}"
     #     node_port: "{{ openshift_dashboard }}"
     #     target_type: https
     #   when:
@@ -156,7 +156,7 @@
         operation: create_site
         service_name: registry
         jumphost_external_ip: "{{ inventory_hostname }}"
-        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
         node_port: "{{ registry_nodeport }}"
         target_type: https
       when:
@@ -170,7 +170,7 @@
         operation: create_site
         service_name: grafana
         jumphost_external_ip: "{{ inventory_hostname }}"
-        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
         node_port: "{{ grafana_nodeport }}"
         target_type: http
       when:
@@ -185,7 +185,7 @@
         operation: create_site
         service_name: smartcheck
         jumphost_external_ip: "{{ inventory_hostname }}"
-        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
         node_port: "{{ smartcheck_nodeport }}"
         target_type: https
       when:
@@ -200,7 +200,7 @@
         operation: create_site
         service_name: jenkins
         jumphost_external_ip: "{{ inventory_hostname }}"
-        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
         node_port: "{{ jenkins_nodeport }}"
         target_type: http
       when:
@@ -210,14 +210,14 @@
 
     - name: Generate DNS Name for GitLab
       set_fact:
-        service_dns_name_gitlab: "gitlab.{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8sworker1_instance'][0] }}.{{ jumphost_tld }}"
+        service_dns_name_gitlab: "gitlab.{{ hostvars[inventory_hostname]['groups']['tag_role_k8sworker'][0] }}.{{ jumphost_tld }}"
       when:
         - site_deploy_gitlab == True
         - site_deploy_kubernetes == True
 
     # - name: Generate DNS Name for GitLab Registry
     #   set_fact:
-    #     service_dns_name_gitlab: "https://registry.{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8sworker1_instance'][0] }}.{{ jumphost_tld }}"
+    #     service_dns_name_gitlab: "https://registry.{{ hostvars[inventory_hostname]['groups']['tag_role_k8sworker'][0] }}.{{ jumphost_tld }}"
     #   when:
     #     - site_deploy_gitlab == True
     #     - site_deploy_kubernetes == True
@@ -244,7 +244,7 @@
         operation: create_site
         service_name: linkerd
         jumphost_external_ip: "{{ inventory_hostname }}"
-        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
         node_port: "{{ linkerd_dashboard_nodeport }}"
         target_type: http
       when:
@@ -259,7 +259,7 @@
         operation: create_site
         service_name: demoapp
         jumphost_external_ip: "{{ inventory_hostname }}"
-        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
         node_port: "{{ custom_nodeport }}"
         target_type: http
       when:
@@ -273,7 +273,7 @@
         operation: create_site
         service_name: demoapp1
         jumphost_external_ip: "{{ inventory_hostname }}"
-        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
         node_port: "{{ custom_nodeport1 }}"
         target_type: http
       when:
@@ -287,7 +287,7 @@
         operation: create_site
         service_name: demoapp2
         jumphost_external_ip: "{{ inventory_hostname }}"
-        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
         node_port: "{{ custom_nodeport2 }}"
         target_type: http
       when:
@@ -301,7 +301,7 @@
         operation: create_site
         service_name: demoapp3
         jumphost_external_ip: "{{ inventory_hostname }}"
-        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
+        proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
         node_port: "{{ custom_nodeport3 }}"
         target_type: http
       when:
@@ -325,7 +325,7 @@
         name: postgresql
       vars:
         operation: create_instance
-        database_client: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_postgresql_instance'][0] }}"
+        database_client: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsmdb'][0] }}"
       when: site_deploy_deepsecurity == True
 
     - name: Create Database for Deep Security in PostgreSQL
@@ -356,9 +356,9 @@
         name: deepsecurity
       vars:
         operation: create_instance
-        addressandportsscreen_manageraddress: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_dsm_instance'][0] }}"
+        addressandportsscreen_manageraddress: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsm'][0] }}"
         licensescreen_license: '{{ deepsecurity_license }}'
-        databasescreen_hostname: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_postgresql_instance'][0] }}"
+        databasescreen_hostname: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsmdb'][0] }}"
         databasescreen_databasename: "{{ deepsecurity_database_name }}"
         databasescreen_username: "{{ deepsecurity_database_user }}"
         databasescreen_password: "{{ deepsecurity_database_password }}"
@@ -379,9 +379,9 @@
   # /var/run/dockershim.sock      unix:///var/run/dockershim.sock
   vars:
     operation: create_master
-    node_ip: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
-    apiserver_advertise_address: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
-    apiserver_cert_extra_sans: "{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
+    node_ip: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
+    apiserver_advertise_address: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
+    apiserver_cert_extra_sans: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
     kubeadm_container_runtime_socket: /var/run/dockershim.sock
     cgroupdriver: systemd
     deploy_golang: no
