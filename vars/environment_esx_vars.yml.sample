@@ -7,7 +7,6 @@ site_deploy_smartcheck: yes
 site_deploy_jenkins: yes
 site_deploy_gitlab: no
 site_deploy_linkerd: yes
-site_deploy_registry: yes
 
 # #####################################################################
 # Site Deploy Components - Leave these to no
