@@ -1,0 +1,87 @@
+---
+# #####################################################################
+# Deploy Grafana
+# #####################################################################
+
+# #####################################################################
+# Query some private ips
+# #####################################################################
+- hosts: tag_role_jumphost
+  tasks:
+    - name: Get ipaddr of Jumphost
+      set_fact:
+        remote_ip: "{{ inventory_hostname | ipaddr}}"
+
+    - name: Get ipaddr of Jumphost
+      set_fact:
+        remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+      when: not remote_ip
+
+    - name: Store external ip address of Jumphost
+      add_host:
+        name: "{{ remote_ip }}"
+        groups: "moadsd_ng_jumphost_instance_public"
+
+    - name: Store all Groups in Memory
+      set_fact:
+        moadsd_ng_groups: "{{ hostvars[inventory_hostname]['groups'] }}"
+
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Listing Jumphost Environment
+      debug:
+        msg:
+          - "Jumphost                     : {{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_jumphost_instance'][0] }}"
+      when: site_deploy_jumphost == True
+
+    - name: Listing Kubernetes Environment
+      debug:
+        msg:
+          - "Kubernetes Master            : {{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}"
+          - "Kubernetes Worker 1          : {{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8sworker1_instance'][0] }}"
+      when: "'tag_Name_moadsd_ng_k8smaster_instance' is in groups"
+
+    - name: Listing OpenShift Environment
+      debug:
+        msg:
+          - "OpenShift Master             : {{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_openshift_instance'][0] }}"
+      when: "'tag_Name_moadsd_ng_openshift_instance' is in groups"
+
+    - name: Listing Deep Security Environment
+      debug:
+        msg:
+          - "Deep Security                : {{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_dsm_instance'][0] }}"
+          - "PostgreSQL                   : {{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_postgresql_instance'][0] }}"
+      when: "'tag_Name_moadsd_ng_dsm_instance' is in groups"
+
+# #####################################################################
+# Deploy Grafana
+# #####################################################################
+- name: Deploy Grafana
+  hosts: tag_role_k8smaster
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Delete grafana.*
+      become: true
+      become_user: ubuntu
+      file:
+        state: absent
+        path: "{{ item }}"
+      loop:
+        - ~/grafana.txt
+        - ~/grafana.log
+
+    - name: Deploy Grafana
+      include_role:
+        name: grafana
+      vars:
+        operation: create_instance
+      when: site_deploy_grafana == True
