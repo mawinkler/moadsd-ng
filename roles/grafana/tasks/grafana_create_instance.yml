@@ -1,0 +1,79 @@
+---
+# #####################################################################
+# Deploy Grafana
+# #####################################################################
+- name: Generate DNS Name for Grafana
+  set_fact:
+    service_dns_name: "http://grafana-{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_jumphost_instance'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+
+- name: Create Grafana Overrides File
+  copy:
+    dest: /home/ubuntu/overrides-grafana.yml
+    mode: 0640
+    owner: ubuntu
+    content: |
+      service:
+        type: {{ service_type }}
+        nodePort: {{ grafana_nodeport }}
+      persistence:
+        enabled: true
+      adminUser: {{ grafana_username }}
+      adminPassword: {{ grafana_password }}
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+          - name: Prometheus
+            type: prometheus
+            url: http://{{ hostvars[inventory_hostname]['groups']['tag_Name_moadsd_ng_k8smaster_instance'][0] }}:{{ prometheus_nodeport }}
+            access: proxy
+            isDefault: true
+
+- name: Create Grafana Namespace
+  become: true
+  become_user: ubuntu
+  shell: kubectl create namespace {{ grafana_namespace }} --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME
+
+- name: Install Grafana
+  become: true
+  become_user: ubuntu
+  shell: helm install --namespace {{ grafana_namespace }} --values overrides-grafana.yml {{ grafana_name }} {{ grafana_chart }} >> grafana.log
+  args:
+    chdir: $HOME
+    creates: grafana.log
+
+- name: Fetch grafana.log
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/grafana.log
+    dest: ./site_{{ type }}/
+    flat: yes
+
+- name: Query admin Password
+  become: true
+  become_user: ubuntu
+  shell: kubectl get --namespace {{ grafana_namespace }} secret grafana -ojsonpath='{.data.admin-password}' | base64 --decode
+  register: admin_password
+
+- name: Create link document for Grafana
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/grafana.txt
+    mode: 0640
+    content: |
+      echo URL: http://{{ inventory_hostname }}:{{ grafana_nodeport }}
+      URL: {{ service_dns_name }}
+      echo Username: root
+      echo Password: {{ admin_password.stdout }}
+
+- name: Fetch grafana.txt
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/grafana.txt
+    dest: ./site_{{ type }}/
+    flat: yes

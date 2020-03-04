@@ -1,0 +1,6 @@
+service_type: NodePort
+persistence_storageClassName: rook-ceph-block
+
+grafana_chart: stable/grafana
+grafana_namespace: grafana
+grafana_name: grafana
