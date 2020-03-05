@@ -4,3 +4,7 @@ persistence_storageClassName: rook-ceph-block
 gitlab_chart: gitlab/gitlab
 gitlab_namespace: gitlab
 gitlab_name: gitlab
+
+gitlab_runner_chart: gitlab/gitlab-runner
+gitlab_runner_namespace: gitlab-runner
+gitlab_runner_name: gitlab-runner

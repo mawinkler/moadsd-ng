@@ -1,0 +1,185 @@
+---
+# #####################################################################
+# Create GitLab Runners
+# #####################################################################
+- name: Generate DNS Name for GitLab
+  set_fact:
+    service_dns_name: "https://gitlab-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+
+- name: Create GitLab Overrides File
+  copy:
+    dest: /home/ubuntu/overrides-gitlab-runners.yml
+    mode: 0640
+    owner: ubuntu
+    content: |
+      gitlabUrl: {{ service_dns_name }}
+      runnerRegistrationToken: {{ gitlab_runner_registration_token }}
+      ## Set the certsSecretName in order to pass custom certificates for GitLab Runner to use
+      ## Provide resource name for a Kubernetes Secret Object in the same namespace,
+      ## this is used to populate the /etc/gitlab-runner/certs directory
+      ## ref: https://docs.gitlab.com/runner/configuration/tls-self-signed.html#supported-options-for-self-signed-certificates
+      ##
+      #certsSecretName:
+      concurrent: 10
+      checkInterval: 30
+      rbac:
+        create: true
+        clusterWideAccess: true
+      runners:
+        image: ubuntu:18.04
+        privileged: true
+        ## Namespace to run Kubernetes jobs in (defaults to 'default')
+        ##
+        # namespace:
+        builds:
+          cpuLimit: 200m
+          memoryLimit: 256Mi
+        services:
+          cpuLimit: 200m
+          memoryLimit: 256Mi
+        helpers:
+          cpuLimit: 200m
+          memoryLimit: 256Mi
+
+- name: Install GitLab Repo
+  become: true
+  become_user: ubuntu
+  shell: helm repo add gitlab https://charts.gitlab.io/
+
+- name: Update GitLab Repo
+  become: true
+  become_user: ubuntu
+  shell: helm repo update
+
+- name: Create GitLab Runners Namespace
+  become: true
+  become_user: ubuntu
+  shell: kubectl create namespace {{ gitlab_runner_namespace }} --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME
+
+- name: Install GitLab Runners
+  become: true
+  become_user: ubuntu
+  shell: helm install --namespace {{ gitlab_runner_namespace }} --values overrides-gitlab-runners.yml {{ gitlab_runner_name }} {{ gitlab_runner_chart }} >> gitlab-runners.log
+  args:
+    chdir: $HOME
+    creates: gitlab-runners.log
+
+- name: Fetch gitlab-runners.log
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/gitlab-runners.log
+    dest: ./site_{{ type }}/
+    flat: yes
+
+# - name: Query root Password
+#   become: true
+#   become_user: ubuntu
+#   shell: kubectl get --namespace {{ gitlab_namespace }} secret gitlab-gitlab-initial-root-password -ojsonpath='{.data.password}' | base64 --decode
+#   register: root_password
+#
+# - name: Create link document for GitLab
+#   become: true
+#   become_user: ubuntu
+#   copy:
+#     dest: /home/ubuntu/gitlab.txt
+#     mode: 0640
+#     content: |
+#       echo URL: http://{{ inventory_hostname }}:{{ gitlab_nodeport_https }}
+#       URL: {{ service_dns_name }}
+#       echo Username: root
+#       echo Password: {{ root_password.stdout }}
+#
+# - name: Fetch gitlab.txt
+#   become: true
+#   become_user: ubuntu
+#   fetch:
+#     src: /home/ubuntu/gitlab.txt
+#     dest: ./site_{{ type }}/
+#     flat: yes
+
+
+
+# ## The GitLab Server URL (with protocol) that want to register the runner against
+# ## ref: https://docs.gitlab.com/runner/commands/README.html#gitlab-runner-register
+# ##
+# gitlabUrl: https://gitlab.example.com/
+#
+# ## The registration token for adding new Runners to the GitLab server. This must
+# ## be retrieved from your GitLab instance.
+# ## ref: https://docs.gitlab.com/ee/ci/runners/
+# ##
+# runnerRegistrationToken: ""
+#
+# ## Set the certsSecretName in order to pass custom certificates for GitLab Runner to use
+# ## Provide resource name for a Kubernetes Secret Object in the same namespace,
+# ## this is used to populate the /etc/gitlab-runner/certs directory
+# ## ref: https://docs.gitlab.com/runner/configuration/tls-self-signed.html#supported-options-for-self-signed-certificates
+# ##
+# #certsSecretName:
+#
+# ## Configure the maximum number of concurrent jobs
+# ## ref: https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-global-section
+# ##
+# concurrent: 10
+#
+# ## Defines in seconds how often to check GitLab for a new builds
+# ## ref: https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-global-section
+# ##
+# checkInterval: 30
+#
+# ## For RBAC support:
+# rbac:
+#   create: false
+#
+#   ## Run the gitlab-bastion container with the ability to deploy/manage containers of jobs
+#   ## cluster-wide or only within namespace
+#   clusterWideAccess: false
+#
+#   ## If RBAC is disabled in this Helm chart, use the following Kubernetes Service Account name.
+#   ##
+#   # serviceAccountName: default
+#
+# ## Configuration for the Pods that the runner launches for each new job
+# ##
+# runners:
+#   ## Default container image to use for builds when none is specified
+#   ##
+#   image: ubuntu:18.04
+#
+#   ## Run all containers with the privileged flag enabled
+#   ## This will allow the docker:stable-dind image to run if you need to run Docker
+#   ## commands. Please read the docs before turning this on:
+#   ## ref: https://docs.gitlab.com/runner/executors/kubernetes.html#using-docker-dind
+#   ##
+#   privileged: false
+#
+#   ## Namespace to run Kubernetes jobs in (defaults to 'default')
+#   ##
+#   # namespace:
+#
+#   ## Build Container specific configuration
+#   ##
+#   builds:
+#     # cpuLimit: 200m
+#     # memoryLimit: 256Mi
+#     cpuRequests: 100m
+#     memoryRequests: 128Mi
+#
+#   ## Service Container specific configuration
+#   ##
+#   services:
+#     # cpuLimit: 200m
+#     # memoryLimit: 256Mi
+#     cpuRequests: 100m
+#     memoryRequests: 128Mi
+#
+#   ## Helper Container specific configuration
+#   ##
+#   helpers:
+#     # cpuLimit: 200m
+#     # memoryLimit: 256Mi
+#     cpuRequests: 100m
+#     memoryRequests: 128Mi

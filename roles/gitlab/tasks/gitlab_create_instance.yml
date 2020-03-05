@@ -22,7 +22,7 @@
       certmanager:
         install: false
       gitlab-runner:
-        install: true
+        install: false
 
 - name: Install GitLab Repo
   become: true
