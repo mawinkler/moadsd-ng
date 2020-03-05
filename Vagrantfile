@@ -19,7 +19,7 @@ Vagrant.configure("2") do |config|
     config.vm.define "k8smaster" do |master|
         master.vm.box = IMAGE_NAME
         master.vm.network "public_network"
-        master.vm.hostname = "k8smaster"
+        master.vm.hostname = "vk8smaster"
         master.vm.provision "shell", inline: $script
     end
 
@@ -27,7 +27,7 @@ Vagrant.configure("2") do |config|
         config.vm.define "k8sworker#{i}" do |worker|
             worker.vm.box = IMAGE_NAME
             worker.vm.network "public_network"
-            worker.vm.hostname = "k8sworker#{i}"
+            worker.vm.hostname = "vk8sworker#{i}"
             worker.vm.provision "shell", inline: $script
         end
     end
