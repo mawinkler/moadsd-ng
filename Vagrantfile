@@ -4,7 +4,7 @@ N = 3
 $script = <<-'SCRIPT'
 encpass=$(openssl passwd -crypt PASSWORD)
 useradd -m -s /bin/bash -p $encpass k8s
-echo "trendmicro ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/custom-users
+echo "k8s ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/custom-users
 sudo apt-get install -y python python-simplejson
 SCRIPT
 
