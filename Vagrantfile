@@ -1,7 +1,10 @@
-IMAGE_NAME = "generic/ubuntu1804"
+# vagrant plugin install vagrant-disksize
+IMAGE_NAME = "ubuntu/bionic64"
 N = 3
 
 $script = <<-'SCRIPT'
+sed -i 's/PasswordAuthentication no/#PasswordAuthentication no/g' /etc/ssh/sshd_config
+systemctl restart sshd
 encpass=$(openssl passwd -crypt PASSWORD)
 useradd -m -s /bin/bash -p $encpass k8s
 echo "k8s ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/custom-users
@@ -10,7 +13,7 @@ SCRIPT
 
 Vagrant.configure("2") do |config|
     config.ssh.insert_key = false
-
+    config.disksize.size = '50GB'
     config.vm.provider "virtualbox" do |v|
         v.memory = 8192
         v.cpus = 2
