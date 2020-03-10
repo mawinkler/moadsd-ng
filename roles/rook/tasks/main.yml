@@ -1,0 +1,11 @@
+# #####################################################################
+# Create and Manage Rook-Ceph
+# #####################################################################
+---
+- name: Deploy Rook-Ceph
+  include: deploy.yml
+  when: operation == 'deploy'
+
+# - name: Deploy Rook-Ceph
+#   include: deploy_storage_class.yml
+#   when: operation == 'deploy_storage_class'

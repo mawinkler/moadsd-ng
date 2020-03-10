@@ -1,0 +1,10 @@
+rook_ceph_chart: rook-release/rook-ceph
+rook_ceph_chart_version: v1.2.2
+rook_ceph_namespace: rook-ceph
+rook_ceph_name: rook-ceph
+rook_ceph_image_tag: v1.2.2
+
+ceph_image: ceph/ceph:v14.2.7
+
+rook_git: https://github.com/rook/rook.git
+rook_version: v1.2.2
