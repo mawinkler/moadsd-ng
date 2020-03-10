@@ -1,0 +1,2 @@
+helm_url: https://get.helm.sh/
+helm_archive: helm-v3.0.1-linux-amd64.tar.gz
