@@ -4,7 +4,7 @@
 # #####################################################################
 - name: Generate DNS Name for GitLab
   set_fact:
-    service_dns_name: "https://gitlab-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+    service_dns_name: "gitlab-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
 - name: Create GitLab Overrides File
   copy:
@@ -17,7 +17,7 @@
         ingress:
           configureCertmanager: false
         hosts:
-          domain: {{ hostvars[inventory_hostname]['groups']['tag_role_k8sworker'][0] }}.{{ jumphost_tld }}
+          domain: {{ service_dns_name }}
           externalIP: {{ hostvars[inventory_hostname]['groups']['tag_role_k8sworker'][0] }}
       certmanager:
         install: false
@@ -48,30 +48,6 @@
   args:
     chdir: $HOME
     creates: gitlab.log
-
-# - name: Create GitLab Rails Secret
-#   become: true
-#   become_user: ubuntu
-#   shell: |
-#     cat << EOF > /home/ubuntu/gitlab-rails-secret.yml
-#     production:
-#       secret_key_base: $(head -c 512 /dev/urandom | LC_CTYPE=C tr -cd 'a-zA-Z0-9' | head -c 128)
-#       otp_key_base: $(head -c 512 /dev/urandom | LC_CTYPE=C tr -cd 'a-zA-Z0-9' | head -c 128)
-#       db_key_base: $(head -c 512 /dev/urandom | LC_CTYPE=C tr -cd 'a-zA-Z0-9' | head -c 128)
-#       openid_connect_signing_key: |
-#       $(openssl genrsa 2048 | awk '{print "    " $0}')
-#     EOF
-#   args:
-#     chdir: $HOME
-#     creates: gitlab-rails-secret.yml
-
-# - name: Create GitLab Rails Secret
-#   become: true
-#   become_user: ubuntu
-#   shell: kubectl -n gitlab create secret generic {{ gitlab_name }}-rails-secret --from-file=/home/ubuntu/gitlab-rails-secret.yml > gitlab-rails-secret-created.txt
-#   args:
-#     chdir: $HOME
-#     creates: gitlab-rails-secret-created.txt
 
 # - name: GitLab patch http port
 #   become: true
