@@ -6,7 +6,6 @@
   set_fact:
     service_dns_name: "https://prometheus-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
-# servicePort: 80
 - name: Create Prometheus Overrides File
   copy:
     dest: /home/ubuntu/overrides-prometheus.yml
