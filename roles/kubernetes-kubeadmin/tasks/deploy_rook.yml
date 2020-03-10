@@ -2,6 +2,10 @@
 # #####################################################################
 # Deploy Rook
 # #####################################################################
+- name: DEPRECATION WARNING
+  debug:
+    msg: moving to separate role
+    
 - name: Rook-ceph deploy
   block:
     - name: Rook create directory

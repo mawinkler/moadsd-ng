@@ -2,6 +2,10 @@
 # #####################################################################
 # Deploy Helm
 # #####################################################################
+- name: DEPRECATION WARNING
+  debug:
+    msg: moving to separate role
+
 - name: Helm download sources
   get_url:
     url: "{{ helm_url }}{{ helm_archive }}"

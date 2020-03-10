@@ -334,10 +334,10 @@
   include: deploy_pod_network.yml
   when: deploy_pod_network == True
 
-- name: Deploy Helm
-  include: deploy_helm.yml
-  when: deploy_helm == True
+# - name: Deploy Helm
+#   include: deploy_helm.yml
+#   when: deploy_helm == True
 
-- name: Deploy Rook
-  include: deploy_rook.yml
-  when: deploy_rook_ceph == True
+# - name: Deploy Rook
+#   include: deploy_rook.yml
+#   when: deploy_rook_ceph == True
