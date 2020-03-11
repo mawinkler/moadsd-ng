@@ -1,7 +1,10 @@
 [tag_role_k8smaster]
-vk8smaster ansible_ssh_host=192.168.1.160
+192.168.1.160
 
 [tag_role_k8sworker]
-vk8sworker1 ansible_ssh_host=192.168.1.161
-vk8sworker2 ansible_ssh_host=192.168.1.162
-vk8sworker3 ansible_ssh_host=192.168.1.163
+192.168.1.161
+192.168.1.162
+192.168.1.163
+
+[tag_role_jumphost]
+192.168.1.160
