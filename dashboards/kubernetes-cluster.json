@@ -40,7 +40,7 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 3,
+        "w": 4,
         "x": 0,
         "y": 0
       },
@@ -124,8 +124,8 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 3,
-        "x": 3,
+        "w": 4,
+        "x": 4,
         "y": 0
       },
       "id": 2,
@@ -206,8 +206,8 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 3,
-        "x": 6,
+        "w": 4,
+        "x": 8,
         "y": 0
       },
       "id": 9,
@@ -259,90 +259,6 @@
       ],
       "thresholds": "0.05,0.15",
       "title": "Min Mem",
-      "type": "singlestat",
-      "valueFontSize": "80%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "avg"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": true,
-      "colors": [
-        "rgba(50, 172, 45, 0.97)",
-        "rgba(248, 112, 0, 0.89)",
-        "rgba(245, 54, 54, 0.9)"
-      ],
-      "datasource": "Prometheus",
-      "format": "s",
-      "gauge": {
-        "maxValue": 10,
-        "minValue": 0,
-        "show": true,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 3,
-        "x": 9,
-        "y": 0
-      },
-      "id": 15,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "options": {},
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(0, 192, 255)",
-        "show": true
-      },
-      "tableColumn": "",
-      "targets": [
-        {
-          "expr": "avg(irate(http_request_duration_seconds_count{status=\"200\", method=\"GET\"}[10m]))",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": "",
-          "metric": "node_memory_MemTotal",
-          "refId": "A",
-          "step": 40
-        }
-      ],
-      "thresholds": "2,5",
-      "title": "Request Time",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1222,12 +1138,12 @@
         "alignAsTable": true,
         "avg": false,
         "current": false,
-        "max": false,
-        "min": false,
+        "max": true,
+        "min": true,
         "rightSide": true,
-        "show": true,
+        "show": false,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": true,
       "linewidth": 1,
@@ -1246,21 +1162,16 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "topk(5, sum(rate(container_cpu_usage_seconds_total{image!=\"\",name=~\"^k8s_.*\",container_name!=\"POD\"}[2m])) by (pod_name, container_name))",
-          "format": "time_series",
-          "interval": "",
-          "intervalFactor": 2,
+          "expr": "sum(rate(container_cpu_usage_seconds_total{name!~\".*prometheus.*\", image!=\"\", container_name!=\"POD\"}[5m])) by (pod_name, container_name) / sum(container_spec_cpu_quota{name!~\".*prometheus.*\", image!=\"\", container_name!=\"POD\"}/container_spec_cpu_period{name!~\".*prometheus.*\", image!=\"\", container_name!=\"POD\"}) by (pod_name, container_name) * 100",
           "legendFormat": "{{ container_name }} in {{ pod_name }}",
-          "metric": "container_cpu_usage_seconds_total",
-          "refId": "A",
-          "step": 4
+          "refId": "B"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "TOP CPU Containers",
+      "title": "CPU Usage",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1276,7 +1187,7 @@
       },
       "yaxes": [
         {
-          "format": "short",
+          "format": "percent",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -1298,7 +1209,7 @@
       }
     }
   ],
-  "refresh": "30s",
+  "refresh": "10s",
   "schemaVersion": 22,
   "style": "dark",
   "tags": [
