@@ -4,7 +4,7 @@
 # #####################################################################
 - name: Generate DNS Name for GitLab
   set_fact:
-    service_dns_name: "gitlab-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+    service_dns_name: "https://gitlab-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
 - name: Create GitLab Overrides File
   copy:
@@ -17,7 +17,7 @@
         ingress:
           configureCertmanager: false
         hosts:
-          domain: {{ service_dns_name }}
+          domain: {{ hostvars[inventory_hostname]['groups']['tag_role_k8sworker'][0] }}.{{ jumphost_tld }}
           externalIP: {{ hostvars[inventory_hostname]['groups']['tag_role_k8sworker'][0] }}
       certmanager:
         install: false
@@ -86,10 +86,10 @@
     dest: /home/ubuntu/gitlab.txt
     mode: 0640
     content: |
-      echo URL: http://{{ inventory_hostname }}:{{ gitlab_nodeport_https }}
+      URL: http://{{ inventory_hostname }}:{{ gitlab_nodeport_https }}
       URL: {{ service_dns_name }}
-      echo Username: root
-      echo Password: {{ root_password.stdout }}
+      Username: root
+      Password: {{ root_password.stdout }}
 
 - name: Fetch gitlab.txt
   become: true
