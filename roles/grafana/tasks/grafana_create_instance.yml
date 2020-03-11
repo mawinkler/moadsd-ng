@@ -65,10 +65,10 @@
     dest: /home/ubuntu/grafana.txt
     mode: 0640
     content: |
-      echo URL: http://{{ inventory_hostname }}:{{ grafana_nodeport }}
+      URL: http://{{ inventory_hostname }}:{{ grafana_nodeport }}
       URL: {{ service_dns_name }}
-      echo Username: {{ grafana_username }}
-      echo Password: {{ admin_password.stdout }}
+      Username: {{ grafana_username }}
+      Password: {{ admin_password.stdout }}
 
 - name: Fetch grafana.txt
   become: true
