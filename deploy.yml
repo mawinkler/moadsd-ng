@@ -55,7 +55,7 @@
       debug:
         msg:
           - "Deep Security                : {{ hostvars[inventory_hostname]['groups']['tag_role_dsm'][0] }}"
-          - "PostgreSQL                   : {{ hostvars[inventory_hostname]['groups']['tag_role_dsmdb'][0] }}"
+          - "PostgreSQL                   : {{ hostvars[inventory_hostname]['groups']['tag_role_dsm_db'][0] }}"
       when: "'tag_role_dsm' is in groups"
 
 # #####################################################################
@@ -79,7 +79,7 @@
           include_role:
             name: proxy
           vars:
-            operation: create_instance
+            operation: deploy
           when: site_deploy_jumphost == True
 
         - name: Create Proxy Configuration and Certificate for the Dashboard
@@ -315,8 +315,8 @@
       include_role:
         name: postgresql
       vars:
-        operation: create_instance
-        database_client: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsmdb'][0] }}"
+        operation: deploy
+        database_client: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsm'][0] }}"
       when: site_deploy_deepsecurity == True
 
     - name: Create Database for Deep Security in PostgreSQL
@@ -346,10 +346,10 @@
       include_role:
         name: deepsecurity
       vars:
-        operation: create_instance
+        operation: deploy
         addressandportsscreen_manageraddress: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsm'][0] }}"
         licensescreen_license: '{{ deepsecurity_license }}'
-        databasescreen_hostname: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsmdb'][0] }}"
+        databasescreen_hostname: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsm_db'][0] }}"
         databasescreen_databasename: "{{ deepsecurity_database_name }}"
         databasescreen_username: "{{ deepsecurity_database_user }}"
         databasescreen_password: "{{ deepsecurity_database_password }}"
@@ -500,7 +500,7 @@
       include_role:
         name: registry
       vars:
-        operation: create_instance
+        operation: deploy
       when:
         - site_deploy_kubernetes == True
 
@@ -508,7 +508,7 @@
       include_role:
         name: loadbalancer
       vars:
-        operation: create_instance
+        operation: deploy
       when:
         - site_deploy_kubernetes == True
 
@@ -543,7 +543,7 @@
       include_role:
         name: prometheus
       vars:
-        operation: create_instance
+        operation: deploy
       when: site_deploy_prometheus == True
 
 # #####################################################################
@@ -561,13 +561,13 @@
       include_role:
         name: grafana
       vars:
-        operation: create_instance
+        operation: deploy
       when: site_deploy_grafana == True
 
 # #####################################################################
 # Deploy Deep Security Smart Check
 # #####################################################################
-- name: Deploy Deep Security Smart Check
+- name: Deploy Smart Check
   hosts: tag_role_k8smaster
   become: true
 
@@ -575,23 +575,23 @@
     - name: Include vars
       include: site_vars.yml
 
-    - name: Deploy Deep Security Smart Check
+    - name: Deploy Smart Check
       include_role:
         name: smartcheck
       vars:
-        operation: create_instance
+        operation: deploy
         activationCode: "{{ smartcheck_license }}"
         auth_masterPassword: trendmicro
       when: site_deploy_smartcheck == True
 
-    - name: Enable pre-registry scanning for Deep Security Smart Check
+    - name: Enable pre-registry scanning for Smart Check
       include_role:
         name: smartcheck
       vars:
         operation: enable_pre_reg_scanning
       when: site_deploy_smartcheck == True
 
-    - name: Configure Deep Security Smart Check
+    - name: Configure Smart Check
       include_role:
         name: smartcheck
       vars:
@@ -613,7 +613,7 @@
       include_role:
         name: jenkins
       vars:
-        operation: create_instance
+        operation: deploy
       when: site_deploy_jenkins == True
 
     # The following task creates a Jenkins JNLP Slave Docker Image
@@ -642,7 +642,7 @@
       include_role:
         name: gitlab
       vars:
-        operation: create_instance
+        operation: deploy
       when: site_deploy_gitlab == True
 
 # #####################################################################
@@ -660,7 +660,7 @@
       include_role:
         name: linkerd
       vars:
-        operation: create_instance
+        operation: deploy
       when: site_deploy_linkerd == True
 
 # #####################################################################
@@ -678,7 +678,7 @@
       include_role:
         name: proxy
       vars:
-        operation: create_instance
+        operation: deploy
       when:
         - site_deploy_openshift == True
         - site_deploy_jumphost == True
