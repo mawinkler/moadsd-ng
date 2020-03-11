@@ -2,6 +2,6 @@
 # Create and Manage Grafana
 # #####################################################################
 ---
-- name: Create instance
-  include: grafana_create_instance.yml
-  when: operation == 'create_instance'
+- name: Deploy
+  include: deploy.yml
+  when: operation == 'deploy'

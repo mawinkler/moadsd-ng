@@ -2,6 +2,6 @@
 # Create, Manage and Terminate the Cluster Registry
 # #####################################################################
 ---
-- name: Create instance
-  include: registry_create_instance.yml
-  when: operation == 'create_instance'
+- name: Deploy
+  include: deploy.yml
+  when: operation == 'deploy'

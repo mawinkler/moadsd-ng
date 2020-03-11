@@ -2,14 +2,10 @@
 # Create and Manage GitLab
 # #####################################################################
 ---
-- name: Create Instance
-  include: gitlab_create_instance.yml
-  when: operation == 'create_instance'
+- name: Deploy
+  include: deploy.yml
+  when: operation == 'deploy'
 
-- name: Create Runners
-  include: gitlab_create_runners.yml
-  when: operation == 'create_runners'
-
-- name: Create instance
-  include: gitlab_create_instance_docker.yml
-  when: operation == 'create_instance_docker'
+- name: Deploy Runners
+  include: deploy_runners.yml
+  when: operation == 'deploy_runners'

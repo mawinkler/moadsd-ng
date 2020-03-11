@@ -2,14 +2,14 @@
 # Create and Manage Jenkins
 # #####################################################################
 ---
-- name: Create Instance
-  include: jenkins_create_instance.yml
-  when: operation == 'create_instance'
+- name: Deploy
+  include: deploy.yml
+  when: operation == 'deploy'
 
 - name: Create Credentials
-  include: jenkins_create_credentials.yml
+  include: create_credentials.yml
   when: operation == 'create_credentials'
 
 - name: Create Jenkins JNLP Slave Docker Image
-  include: jenkins_create_jnlp_slave.yml
+  include: create_jnlp_slave.yml
   when: operation == 'create_slave'

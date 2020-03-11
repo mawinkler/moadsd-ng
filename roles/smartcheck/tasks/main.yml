@@ -2,14 +2,14 @@
 # Create, Manage and Terminate Deep Security Smart Check
 # #####################################################################
 ---
-- name: Create instance
-  include: dssc_create_instance.yml
-  when: operation == 'create_instance'
+- name: Deploy
+  include: deploy.yml
+  when: operation == 'deploy'
 
-- name: Enable pre-registry scanning
-  include: dssc_enable_pre_reg_scanning.yml
+- name: Enable pre-Registry Scanning
+  include: enable_pre_reg_scanning.yml
   when: operation == 'enable_pre_reg_scanning'
 
-- name: Configure Smart Check
-  include: dssc_configure.yml
+- name: Configure
+  include: configure.yml
   when: operation == 'configure'

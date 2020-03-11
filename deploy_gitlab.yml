@@ -83,5 +83,5 @@
       include_role:
         name: gitlab
       vars:
-        operation: create_instance
+        operation: deploy
       when: site_deploy_gitlab == True

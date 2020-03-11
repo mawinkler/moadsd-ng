@@ -2,6 +2,6 @@
 # Create and Manage Prometheus
 # #####################################################################
 ---
-- name: Create instance
-  include: prometheus_create_instance.yml
-  when: operation == 'create_instance'
+- name: Deploy
+  include: deploy.yml
+  when: operation == 'deploy'

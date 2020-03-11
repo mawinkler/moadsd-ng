@@ -83,7 +83,7 @@
       include_role:
         name: smartcheck
       vars:
-        operation: create_instance
+        operation: deploy
         activationCode: "{{ smartcheck_license }}"
         auth_masterPassword: trendmicro
       when: site_deploy_smartcheck == True

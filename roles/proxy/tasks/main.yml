@@ -2,10 +2,10 @@
 # Create and Manage the MOADSD-NG Proxy
 # #####################################################################
 ---
-- name: Create Proxy Instance
-  include: proxy_create_instance.yml
-  when: operation == 'create_instance'
+- name: Deploy
+  include: deploy.yml
+  when: operation == 'deploy'
 
 - name: Create Site Config
-  include: proxy_create_site.yml
+  include: create_site.yml
   when: operation == 'create_site'

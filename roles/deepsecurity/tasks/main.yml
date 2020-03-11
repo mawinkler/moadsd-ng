@@ -2,14 +2,14 @@
 # Create and Manage Deep Security
 # #####################################################################
 ---
-- name: Create instance
-  include: dsm_create_instance.yml
-  when: operation == 'create_instance'
+- name: Deploy
+  include: deploy.yml
+  when: operation == 'deploy'
 
 - name: Fetch System Configuration
-  include: dsm_fetch_system_configuration.yml
+  include: fetch_system_configuration.yml
   when: operation == 'fetch_system_configuration'
 
 - name: Copy System Configuration
-  include: dsm_copy_system_configuration.yml
+  include: copy_system_configuration.yml
   when: operation == 'copy_system_configuration'

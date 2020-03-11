@@ -83,5 +83,5 @@
       include_role:
         name: prometheus
       vars:
-        operation: create_instance
+        operation: deploy
       when: site_deploy_prometheus == True

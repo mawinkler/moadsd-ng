@@ -2,10 +2,10 @@
 # Create, Manage and Terminate MetalLB LoadBalancer
 # #####################################################################
 ---
-- name: Create instance
-  include: metallb_create_instance.yml
-  when: operation == 'create_instance'
+- name: Deploy
+  include: deploy.yml
+  when: operation == 'deploy'
 
-- name: Configure Smart Check
-  include: metallb_configure.yml
+- name: Configure
+  include: configure.yml
   when: operation == 'configure'

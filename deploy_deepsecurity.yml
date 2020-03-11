@@ -74,7 +74,7 @@
       include_role:
         name: postgresql
       vars:
-        operation: create_instance
+        operation: deploy
         database_client: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsmdb'][0] }}"
       when: site_deploy_deepsecurity == True
 
@@ -105,7 +105,7 @@
       include_role:
         name: deepsecurity
       vars:
-        operation: create_instance
+        operation: deploy
         addressandportsscreen_manageraddress: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsm'][0] }}"
         licensescreen_license: '{{ deepsecurity_license }}'
         databasescreen_hostname: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsmdb'][0] }}"

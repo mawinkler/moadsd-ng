@@ -2,6 +2,6 @@
 # Create and Manage Linkerd
 # #####################################################################
 ---
-- name: Create instance
-  include: linkerd_create_instance.yml
-  when: operation == 'create_instance'
+- name: Deploy
+  include: deploy.yml
+  when: operation == 'deploy'
