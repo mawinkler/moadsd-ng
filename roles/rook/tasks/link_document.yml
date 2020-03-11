@@ -1,0 +1,43 @@
+---
+# #####################################################################
+# Create Rook-Ceph Link Document
+# #####################################################################
+- name: Query Rook-Ceph DashBoard Password
+  become: true
+  become_user: ubuntu
+  k8s_info:
+    api_version: v1
+    kind: secrets
+    name: rook-ceph-dashboard-password
+    namespace: rook-ceph
+  register: dashboard_secrets
+
+- name: Generate DNS Name
+  set_fact:
+    service_dns_name: "https://ceph-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+
+- name: debug
+  debug:
+    msg: "{{ dashboard_secrets }}"
+
+- name: Create Link Document For Ceph Dashboard
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/ceph.txt
+    mode: 0640
+    content: |
+      URL: https://{{ inventory_hostname }}:{{ rook_ceph_dashboard_nodeport }}
+      URL: {{ service_dns_name }}
+      Username: admin
+      Password: {{ dashboard_secrets.resources[0].data.password | b64decode }}
+  ignore_errors: true
+
+- name: Fetch ceph.txt
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/ceph.txt
+    dest: ./site_{{ type }}/
+    flat: yes
+  ignore_errors: true
