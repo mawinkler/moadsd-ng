@@ -48,13 +48,6 @@
     operation: terminate_instance
     instance_name: "{{ deepsecurity_instance_name }}"
 
-- name: Terminate instance of GitLab on Docker
-  include_role:
-    name: environment-aws
-  vars:
-    operation: terminate_instance
-    instance_name: "{{ gitlab_instance_name }}"
-
 - name: Terminate linux endpoint instances
   include_role:
     name: environment-aws

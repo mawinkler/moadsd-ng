@@ -101,13 +101,6 @@ jenkins_nodeport: 30011
 # #####################################################################
 # Gitlab Settings
 # #####################################################################
-gitlab_instance_name: gitlab
-gitlab_hostname: moadsd-ng.hopto.org
 gitlab_nodeport_http: 30012
 gitlab_nodeport_https: 30013
 gitlab_nodeport_ssh: 30014
-gitlab_size_gb: 32
-gitlab_source_image: '18.04-LTS'
-gitlab_machine_type: Standard_D2s_v3
-gitlab_startup_script: "{{ startup_script }}"
-gitlab_tags: gitlab

@@ -646,29 +646,6 @@
       when: site_deploy_gitlab == True
 
 # #####################################################################
-# Deploy GitLab on Docker
-# #####################################################################
-- name: Deploy GitLab
-  hosts: tag_role_gitlab
-  become: true
-
-  tasks:
-    - name: Include vars
-      include: site_vars.yml
-
-    - name: DEPRECATION WARNING
-      debug:
-        msg: "GitLab on Docker is now deprecated and will be removed shortly"
-
-    - name: Deploy GitLab
-      include_role:
-        name: gitlab
-      vars:
-        operation: create_instance_docker
-        cgroupdriver: cgroupfs
-      when: site_deploy_gitlab_docker == True
-
-# #####################################################################
 # Deploy Linkerd
 # #####################################################################
 - name: Deploy Linkerd

@@ -14,16 +14,6 @@
     remote_ip: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
   when: not remote_ip
 
-# - name: Check if Smart Check is up and running
-#   become: true
-#   become_user: ubuntu
-#   shell: if [ $(kubectl -n smartcheck get deployments -o=jsonpath='{range .items[*]}{.status.conditions[?(@.type=="Available")].status}{"\n"}{end}' | grep -v True) -eq '' ] ; then exit 0 ; else exit 1 ; fi
-#   register: grep_result
-#   until: grep_result.rc == 0
-#   retries: 60
-#   delay: 10
-#   ignore_errors: yes
-
 # Initial password change
 - name: Test if Initial Password Change is done
   become: true
@@ -251,36 +241,6 @@
             "comment": "Allowing test_importKey.pyc private key for 10 years.."
           }
         status_code: 201
-
-    # - name: Create Registry
-    #   uri:
-    #     url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/registries?scan=true
-    #     method: POST
-    #     validate_certs: no
-    #     headers:
-    #       Authorization: "Bearer {{ login.json.token }}"
-    #     body_format: json
-    #     body: |
-    #       {
-    #         "name": "{{ gitlab_registry_name }}",
-    #         "description": "{{ gitlab_registry_description }}\n",
-    #         "host": "{{ gitlab_registry_host }}",
-    #         "credentials": {
-    #           "username": "{{ gitlab_registry_username }}",
-    #           "password": "{{ gitlab_registry_password }}",
-    #         },
-    #         "insecureSkipVerify": false,
-    #         "filter": {
-    #           "include": [
-    #             "*:latest"
-    #           ],
-    #           "exclude": [
-    #             "experimental/*"
-    #           ]
-    #         },
-    #         "schedule": true
-    #       }
-    #     status_code: 201
 
     - name: Create Registry to K8s Registry
       uri:

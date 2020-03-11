@@ -8,7 +8,6 @@ site_deploy_deepsecurity: no
 site_deploy_smartcheck: yes
 site_deploy_jenkins: yes
 site_deploy_gitlab: no
-site_deploy_gitlab_docker: no
 site_deploy_endpoints: no
 site_deploy_linkerd: no
 site_deploy_prometheus: yes
@@ -181,21 +180,9 @@ custom_nodeport3: 30103
 # #####################################################################
 # Gitlab Settings
 # #####################################################################
-gitlab_instance_name: gitlab
-gitlab_hostname: moadsd-ng.hopto.org
-# GitLab Kubernetes Settings
 gitlab_nodeport_http: 30014
 gitlab_nodeport_https: 30015
 gitlab_nodeport_ssh: 30016
-# GitLab Docker Settings
-gitlab_docker_letsencrypt: 80
-gitlab_docker_registry: 443
-gitlab_docker_https: 8443
-gitlab_size_gb: 32
-gitlab_source_image: projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts
-gitlab_machine_type: n1-standard-2
-gitlab_startup_script: "{{ startup_script_linux }}"
-gitlab_tags: role-gitlab
 
 # #####################################################################
 # Linux Endpoint Settings

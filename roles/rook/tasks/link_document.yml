@@ -16,10 +16,6 @@
   set_fact:
     service_dns_name: "https://ceph-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
-- name: debug
-  debug:
-    msg: "{{ dashboard_secrets }}"
-
 - name: Create Link Document For Ceph Dashboard
   become: true
   become_user: ubuntu
