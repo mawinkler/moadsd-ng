@@ -6,6 +6,10 @@
   include: deploy.yml
   when: operation == 'deploy'
 
+- name: Deploy Rook-Ceph
+  include: link_document.yml
+  when: operation == 'link_document'
+
 # - name: Deploy Rook-Ceph
 #   include: deploy_storage_class.yml
 #   when: operation == 'deploy_storage_class'
