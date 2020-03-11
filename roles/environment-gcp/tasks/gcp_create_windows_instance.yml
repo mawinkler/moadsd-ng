@@ -86,6 +86,7 @@
         state: present
         name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
         machine_type: "{{ instance_machine_type }}"
+        deletion_protection: no
         disks:
           - auto_delete: true
             boot: true
@@ -143,6 +144,7 @@
         state: present
         name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
         machine_type: "{{ instance_machine_type }}"
+        deletion_protection: no
         disks:
           - auto_delete: true
             boot: true
