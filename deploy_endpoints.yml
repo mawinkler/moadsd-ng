@@ -55,7 +55,7 @@
       debug:
         msg:
           - "Deep Security                : {{ hostvars[inventory_hostname]['groups']['tag_role_dsm'][0] }}"
-          - "PostgreSQL                   : {{ hostvars[inventory_hostname]['groups']['tag_role_dsmdb'][0] }}"
+          - "PostgreSQL                   : {{ hostvars[inventory_hostname]['groups']['tag_role_dsm_db'][0] }}"
       when: "'tag_role_dsm' is in groups"
 
 # #####################################################################
@@ -68,21 +68,32 @@
     - name: Include vars
       include: site_vars.yml
 
-    - name: Deploy DSA
+    - name: Deploy DSA with DSaaS
       include_role:
         name: deepsecurity-agent
       vars:
         operation: deploy
-        # dsm_agent_download_hostname: app.deepsecurity.trendmicro.com
-        # dsm_agent_download_port: 443
-        # tenant_id:
-        # token:
+        tenant_id: "{{ deepsecurity_tenant_id }}"
+        tenant_password: "{{ deepsecurity_administrator_password }}"
+        token: "{{ deepsecurity_token }}"
+        force_reactivation: False
+      when:
+        - site_deploy_endpoints == True
+        - deepsecurity_variant == 'dsaas'
+
+    - name: Deploy DSA with DSM on MOADSD-NG
+      include_role:
+        name: deepsecurity-agent
+      vars:
+        operation: deploy
         dsm_agent_download_hostname: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsm'][0] }}"
         dsm_agent_download_port: 4119
         dsm_agent_activation_hostname: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsm'][0] }}"
         dsm_agent_activation_port: 4120
         force_reactivation: False
-      when: site_deploy_endpoints == True
+      when:
+        - site_deploy_endpoints == True
+        - deepsecurity_variant == 'dsm'
 
 - name: Set Linux Server policy
   hosts: tag_role_linuxep
