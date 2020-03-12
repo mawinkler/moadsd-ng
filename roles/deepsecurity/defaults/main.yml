@@ -1,3 +1,6 @@
+deepsecurity_download_url: 'https://files.trendmicro.com/products/deepsecurity/en/12.5/'
+deepsecurity_installer: 'Manager-Linux-12.5.732.x64.sh'
+
 addressandportsscreen_manageraddress: ''
 addressandportsscreen_newnode: True
 upgradeverificationscreen_overwrite: False
