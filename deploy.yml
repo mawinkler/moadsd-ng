@@ -239,6 +239,7 @@
             target_type: https
           when:
             - site_deploy_deepsecurity == True
+            - deepsecurity_variant == 'dsm'
             - site_deploy_jumphost == True
 
         - name: Create Proxy Configuration and Certificate for Demoapp
@@ -329,7 +330,9 @@
         database_password: "{{ deepsecurity_database_password }}"
         database_role_attr_flags: "{{ deepsecurity_database_role_attr_flags }}"
         database_priv: "{{ deepsecurity_database_priv }}"
-      when: site_deploy_deepsecurity == True
+      when:
+        - site_deploy_deepsecurity == True
+        - deepsecurity_variant == 'dsm'
 
 # #####################################################################
 # Deploy Deep Security
@@ -357,7 +360,9 @@
         credentialsscreen_administrator_password: "{{ deepsecurity_administrator_password }}"
         dsm_download_url: "{{ deepsecurity_download_url }}"
         dsm_installer: "{{ deepsecurity_installer }}"
-      when: site_deploy_deepsecurity == True
+      when:
+        - site_deploy_deepsecurity == True
+        - deepsecurity_variant == 'dsm'
 
 # #####################################################################
 # Deploy Kubernetes cluster with kubeadm
