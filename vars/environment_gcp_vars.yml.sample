@@ -107,8 +107,8 @@ openshift_dashboard: 6443
 # #####################################################################
 # Deep Security Settings
 # #####################################################################
-deepsecurity_download_url: 'https://files.trendmicro.com/products/deepsecurity/en/12.5/'
-deepsecurity_installer: 'Manager-Linux-12.5.349.x64.sh'
+# dsaas or dsm
+deepsecurity_variant: dsaas
 
 postgresql_instance_name: postgresql
 postgresql_size_gb: 16
@@ -123,10 +123,6 @@ deepsecurity_source_image: projects/rhel-cloud/global/images/family/rhel-7
 deepsecurity_machine_type: n1-standard-4
 deepsecurity_startup_script: "{{ startup_script_linux }}"
 deepsecurity_tags: role-dsm
-# dsm_agent_download_hostname: "{{ groups['moadsd_ng_dsm_instance'][0] }}"
-# dsm_agent_download_port: 4119
-# dsm_agent_activation_hostname: "{{ groups['moadsd_ng_dsm_instance'][0] }}"
-# dsm_agent_activation_port: 4120
 
 deepsecurity_database_name: dsmdb
 deepsecurity_database_user: dsm
