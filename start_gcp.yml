@@ -111,7 +111,9 @@
     instance_ports_network:
       - '22'
       - "{{ databasescreen_port |string }}"
-  when: site_deploy_deepsecurity == True
+  when:
+    - site_deploy_deepsecurity == True
+    - deepsecurity_variant == 'dsm'
 
 - name: Create instance for Deep Security Manager
   include_role:
@@ -135,7 +137,9 @@
       - "{{ addressandportsscreen_managerport |string }}"
       - "{{ addressandportsscreen_heartbeatport |string }}"
       - "{{ addressandportsscreen_agentport |string }}"
-  when: site_deploy_deepsecurity == True
+  when:
+    - site_deploy_deepsecurity == True
+    - deepsecurity_variant == 'dsm'
 
 - name: Create instance for Kubernetes master
   include_role:
