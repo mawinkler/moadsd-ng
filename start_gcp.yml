@@ -131,6 +131,7 @@
       - "{{ addressandportsscreen_heartbeatport |string }}"
       - "{{ addressandportsscreen_agentport |string }}"
     instance_ports_network:
+      - '22'
       - "{{ addressandportsscreen_managerport |string }}"
       - "{{ addressandportsscreen_heartbeatport |string }}"
       - "{{ addressandportsscreen_agentport |string }}"
