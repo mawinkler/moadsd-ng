@@ -740,7 +740,7 @@
       register: details_deepsecurity
       when:
         - site_deploy_deepsecurity == True
-
+        - deepsecurity_variant == 'dsm'
 
     - name: Kubernetes Details
       debug:
@@ -792,3 +792,4 @@
           - "{{ details_deepsecurity.stdout_lines }}"
       when:
         - site_deploy_deepsecurity == True
+        - deepsecurity_variant == 'dsm'
