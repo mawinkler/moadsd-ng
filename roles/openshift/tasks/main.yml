@@ -1,0 +1,7 @@
+# #####################################################################
+# Create and Manage CodeReady Containers
+# #####################################################################
+---
+- name: Deploy CodeReady Containers
+  include: deploy.yml
+  when: operation == 'deploy'
