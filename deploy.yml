@@ -679,9 +679,18 @@
     - name: Include vars
       include: site_vars.yml
 
-    - name: Create Proxy instance
+    # - name: Create Proxy instance
+    #   include_role:
+    #     name: proxy
+    #   vars:
+    #     operation: deploy
+    #   when:
+    #     - site_deploy_openshift == True
+    #     - site_deploy_jumphost == True
+
+    - name: Deploy CodeReady Containers
       include_role:
-        name: proxy
+        name: openshift
       vars:
         operation: deploy
       when:
@@ -716,24 +725,28 @@
       register: details_grafana
       when:
         - site_deploy_grafana == True
+        - site_deploy_kubernetes == True
 
     - name: Jenkins Details
       command: cat "site_{{ type }}/jenkins.txt"
       register: details_jenkins
       when:
         - site_deploy_jenkins == True
+        - site_deploy_kubernetes == True
 
     - name: GitLab Details
       command: cat "site_{{ type }}/gitlab.txt"
       register: details_gitlab
       when:
         - site_deploy_gitlab == True
+        - site_deploy_kubernetes == True
 
     - name: Smart Check Details
       command: cat "site_{{ type }}/smartcheck.txt"
       register: details_smartcheck
       when:
         - site_deploy_smartcheck == True
+        - site_deploy_kubernetes == True
 
     - name: Deep Security Details
       command: cat "site_{{ type }}/deepsecurity.txt"
@@ -767,24 +780,28 @@
         msg: "{{ details_grafana.stdout_lines }}"
       when:
         - site_deploy_grafana == True
+        - site_deploy_kubernetes == True
 
     - name: Jenkins Details
       debug:
         msg: "{{ details_jenkins.stdout_lines }}"
       when:
         - site_deploy_jenkins == True
+        - site_deploy_kubernetes == True
 
     - name: GitLab Details
       debug:
         msg: "{{ details_gitlab.stdout_lines }}"
       when:
         - site_deploy_gitlab == True
+        - site_deploy_kubernetes == True
 
     - name: Smart Check Details
       debug:
         msg: "{{ details_smartcheck.stdout_lines }}"
       when:
         - site_deploy_smartcheck == True
+        - site_deploy_kubernetes == True
 
     - name: Deep Security Details
       debug:
