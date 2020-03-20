@@ -549,7 +549,9 @@
         name: prometheus
       vars:
         operation: deploy
-      when: site_deploy_prometheus == True
+      when:
+        - site_deploy_prometheus == True
+        - site_deploy_kubernetes == True
 
 # #####################################################################
 # Deploy Grafana
@@ -567,7 +569,9 @@
         name: grafana
       vars:
         operation: deploy
-      when: site_deploy_grafana == True
+      when:
+        - site_deploy_grafana == True
+        - site_deploy_kubernetes == True
 
 # #####################################################################
 # Deploy Deep Security Smart Check
@@ -587,21 +591,27 @@
         operation: deploy
         activationCode: "{{ smartcheck_license }}"
         auth_masterPassword: trendmicro
-      when: site_deploy_smartcheck == True
+      when:
+        - site_deploy_smartcheck == True
+        - site_deploy_kubernetes == True
 
     - name: Enable pre-registry scanning for Smart Check
       include_role:
         name: smartcheck
       vars:
         operation: enable_pre_reg_scanning
-      when: site_deploy_smartcheck == True
+      when:
+        - site_deploy_smartcheck == True
+        - site_deploy_kubernetes == True
 
     - name: Configure Smart Check
       include_role:
         name: smartcheck
       vars:
         operation: configure
-      when: site_deploy_smartcheck == True
+      when:
+        - site_deploy_smartcheck == True
+        - site_deploy_kubernetes == True
 
 # #####################################################################
 # Deploy Jenkins
@@ -619,7 +629,9 @@
         name: jenkins
       vars:
         operation: deploy
-      when: site_deploy_jenkins == True
+      when:
+        - site_deploy_jenkins == True
+        - site_deploy_kubernetes == True
 
     # The following task creates a Jenkins JNLP Slave Docker Image
     # Currently the only problem is that k8s makes problems pulling the image
@@ -630,7 +642,9 @@
     #     name: jenkins
     #   vars:
     #     operation: create_slave
-    #   when: site_deploy_jenkins == True
+    #   when:
+    #     - site_deploy_jenkins == True
+    #     - site_deploy_kubernetes == True
 
 # #####################################################################
 # Deploy GitLab
@@ -648,7 +662,9 @@
         name: gitlab
       vars:
         operation: deploy
-      when: site_deploy_gitlab == True
+      when:
+        - site_deploy_gitlab == True
+        - site_deploy_kubernetes == True
 
 # #####################################################################
 # Deploy Linkerd
@@ -666,7 +682,9 @@
         name: linkerd
       vars:
         operation: deploy
-      when: site_deploy_linkerd == True
+      when:
+        - site_deploy_linkerd == True
+        - site_deploy_kubernetes == True
 
 # #####################################################################
 # Deploy OpenShift
@@ -696,6 +714,30 @@
       when:
         - site_deploy_openshift == True
         - site_deploy_jumphost == True
+
+# #####################################################################
+# Deploy OPA
+# #####################################################################
+- name: Deploy OPA
+  hosts: tag_role_k8smaster
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: pause
+      pause:
+        minutes: 3
+
+    - name: Deploy OPA
+      include_role:
+        name: opa
+      vars:
+        operation: deploy
+      when:
+        - site_deploy_opa == True
+        - site_deploy_kubernetes == True
 
 # #####################################################################
 # Print some environment information
