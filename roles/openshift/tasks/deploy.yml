@@ -2,6 +2,90 @@
 # #####################################################################
 # Create an OpenShift instance
 # #####################################################################
+
+# grep -cw vmx /proc/cpuinfo   ---> 4
+# sudo apt update
+# sudo apt install -y qemu-kvm libvirt-daemon libvirt-daemon-system
+# sudo usermod -a -G libvirt $(whoami)
+# newgrp libvirt
+#
+# sudo curl -L https://github.com/dhiltgen/docker-machine-kvm/releases/download/v0.10.0/docker-machine-driver-kvm-ansible16.04 -o /usr/local/bin/docker-machine-driver-kvm
+# sudo curl -L https://github.com/kubernetes/minikube/releases/download/v1.7.2/docker-machine-driver-kvm2 -o /usr/local/bin/docker-machine-driver-kvm
+# sudo chmod +x /usr/local/bin/docker-machine-driver-kvm
+#
+# systemctl is-active libvirtd
+# active
+#
+# sudo virsh net-list --all
+#
+#  Name                 State      Autostart     Persistent
+# ----------------------------------------------------------
+#  default              active     yes           yes
+#
+# wget https://github.com/minishift/minishift/releases/download/v1.34.2/minishift-1.34.2-linux-amd64.tgz
+# tar xfvz minishift-1.34.2-linux-amd64.tgz
+# sudo cp minishift-1.34.2-linux-amd64/minishift /usr/local/bin/
+#
+# minishift start
+
+# Next test:
+# sudo apt update
+# sudo apt install -y qemu-kvm libvirt-bin virt-top libguestfs-tools virtinst bridge-utils
+# sudo modprobe vhost_net
+# sudo lsmod | grep vhost
+# echo "vhost_net" | sudo tee -a /etc/modules
+# sudo usermod -a -G libvirt $(whoami)
+# newgrp libvirt
+#
+# sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
+# curl -fsSL https://download.docker.com/linux/ansible/gpg | sudo apt-key add -
+# sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ansible $(lsb_release -cs) stable"
+# sudo apt-get update
+# sudo apt-get install docker-ce
+# sudo usermod -aG docker $(whoami)
+#
+# sudo curl -L https://github.com/dhiltgen/docker-machine-kvm/releases/download/v0.7.0/docker-machine-driver-kvm -o /usr/local/bin/docker-machine-driver-kvm
+# sudo curl -L https://github.com/dhiltgen/docker-machine-kvm/releases/download/v0.10.0/docker-machine-driver-kvm-ansible16.04 -o /usr/local/bin/docker-machine-driver-kvm
+# sudo chmod +x /usr/local/bin/docker-machine-driver-kvm
+## sudo curl -LO https://storage.googleapis.com/minikube/releases/latest/docker-machine-driver-kvm2 -o /usr/local/bin/docker-machine-driver-kvm2
+## sudo chmod +x /usr/local/bin/docker-machine-driver-kvm2
+#
+# systemctl is-active libvirtd
+# active
+#
+# sudo virsh net-list --all
+#
+#  Name                 State      Autostart     Persistent
+# ----------------------------------------------------------
+#  default              active     yes           yes
+#
+# wget https://github.com/minishift/minishift/releases/download/v1.34.2/minishift-1.34.2-linux-amd64.tgz
+# tar xfvz minishift-1.34.2-linux-amd64.tgz
+# sudo cp minishift-1.34.2-linux-amd64/minishift /usr/local/bin/
+#
+# minishift config set memory 8192
+# minishift config set cpus 4
+# minishift start
+
+# Minikube:
+# wget https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+# chmod +x minikube-linux-amd64
+# sudo mv minikube-linux-amd64 /usr/local/bin/minikube
+# minikube version
+# curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+# chmod +x kubectl
+# sudo mv kubectl  /usr/local/bin/
+# kubectl version -o json
+# minikube config set vm-driver kvm2
+# sudo virsh list
+# kubectl cluster-info
+
+
+
+# CodeReady Containers:
+# RHEL 7.5
+# sudo su
+# yum install -y NetworkManager
 - name: Install NetworkManager and Nginx
   become: true
   yum:
@@ -11,14 +95,16 @@
       - nginx
       - NetworkManager
 
+# curl -O https://mirror.openshift.com/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz
 - name: Download CodeReady Containers
   become: true
   become_user: ansible
   get_url:
-    url: https://mirror.openshift.com/pub/openshift-v4/clients/crc/{{ crc_version }}/crc-linux-amd64.tar.xz
+    url: https://mirror.openshift.com/pub/openshift-v4/clients/crc/1.7.0/crc-linux-amd64.tar.xz
     dest: /home/ansible/crc-linux-amd64.tar.xz
     mode: 0660
 
+# tar xfv crc-linux-amd64.tar.xz
 - name: CodeReady Containers Extract
   become: true
   become_user: ansible
@@ -26,24 +112,30 @@
     src: /home/ansible/crc-linux-amd64.tar.xz
     dest: /home/ansible
     remote_src: yes
+# exit
 
+# sudo cp crc-linux-1.7.0-amd64/crc /usr/local/bin/
 - name: Copy CRC to Path
   become: true
   copy:
-    src: /home/ansible/crc-linux-{{ crc_version }}-amd64/crc
+    src: /home/ansible/crc-linux-1.7.0-amd64/crc
     dest: /usr/local/bin/
     remote_src: yes
     mode: 0755
 
+# export PATH="/usr/local/bin:$PATH"
+# echo 'export PATH="/usr/local/bin:$PATH"' > ~/.bashrc
 - name: Add Path
   become: true
+  # become_user: ansible
   lineinfile:
     path: /etc/profile.d/sh.local
     insertafter: EOF
     line: 'export PATH="/home/ansible/.crc/bin:/usr/local/bin:$PATH"'
 
-# Have the pull secret
-# https://cloud.redhat.com/openshift/install/crc/installer-provisioned
+# # Have the pull secret
+# # https://cloud.redhat.com/openshift/install/crc/installer-provisioned
+# crc setup
 - name: Install CodeReady Containers
   become: true
   become_user: ansible
@@ -52,6 +144,7 @@
     chdir: $HOME
     creates: crc-setup.log
 
+# vi pull.secret
 - name: Create Pull Secret File
   become: true
   become_user: ansible
@@ -61,6 +154,7 @@
     content: |
       {{ openshift_pull_secret }}
 
+# crc start -f pull.secret
 - name: Start CodeReady Containers
   become: true
   become_user: ansible
@@ -100,8 +194,8 @@
 #         proxy_next_upstream on;
 #     }
 # }
-#
-# $ less /etx/nginx/nginx.configuration
+# #
+# # $ less /etx/nginx/nginx.configuration
 # #user  nobody;
 # worker_processes  1;
 # load_module '/usr/lib64/nginx/modules/ngx_stream_module.so';
