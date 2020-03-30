@@ -116,4 +116,4 @@
         credentialsscreen_administrator_password: "{{ deepsecurity_administrator_password }}"
         dsm_download_url: "{{ deepsecurity_download_url }}"
         dsm_installer: "{{ deepsecurity_installer }}"
-      when: site_deploy_deepsecurity == True
+      # when: site_deploy_deepsecurity == True
