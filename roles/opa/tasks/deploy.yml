@@ -10,7 +10,7 @@
   become: true
   become_user: ubuntu
   copy:
-    dest: /home/ubuntu/opa_server.conf
+    dest: /home/ubuntu/webhook-server-tls.conf
     mode: 0640
     content: |
       [req]
@@ -28,18 +28,18 @@
   become: true
   become_user: ubuntu
   shell: |
-    openssl genrsa -out ca.key 2048
-    openssl req -x509 -new -nodes -key ca.key -days 100000 -out ca.crt -subj "/CN=admission_ca"
-    openssl genrsa -out server.key 2048
-    openssl req -new -key server.key -out server.csr -subj "/CN=opa.opa.svc" -config opa_server.conf
-    openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 100000 -extensions v3_req -extfile opa_server.conf
+    openssl genrsa -out admission-ca.key 2048
+    openssl req -x509 -new -nodes -key admission-ca.key -days 100000 -out admission-ca.crt -subj "/CN=admission_ca"
+    openssl genrsa -out webhook-server-tls.key 2048
+    openssl req -new -key webhook-server-tls.key -out webhook-server-tls.csr -subj "/CN=opa.opa.svc" -config webhook-server-tls.conf
+    openssl x509 -req -in webhook-server-tls.csr -CA admission-ca.crt -CAkey admission-ca.key -CAcreateserial -out webhook-server-tls.crt -days 100000 -extensions v3_req -extfile webhook-server-tls.conf
   args:
     chdir: $HOME
 
 - name: Creating OPA Secret
   become: true
   become_user: ubuntu
-  shell: kubectl -n opa create secret tls opa-server --cert=server.crt --key=server.key
+  shell: kubectl -n opa create secret tls opa-server --cert=webhook-server-tls.crt --key=webhook-server-tls.key
   args:
     chdir: $HOME
 
@@ -207,13 +207,12 @@
 - name: Encode CA Certificate
   become: true
   become_user: ubuntu
-  shell: cat ca.crt | base64 | tr -d '\n'
+  shell: cat admission-ca.crt | base64 | tr -d '\n'
   args:
     chdir: $HOME
   register: cacrt
 
-# $(cat ca.crt | base64 | tr -d '\n')
-- name: Create Admission Controller Deployment Configuration
+- name: Create Validating Webhook Deployment Configuration
   become: true
   become_user: ubuntu
   copy:
@@ -263,14 +262,17 @@
     chdir: $HOME
   ignore_errors: true
 
-# - name: Apply Admission Controller Deployment Configuration
+# - name: Apply Validating Webhook Deployment Configuration
 #   become: true
 #   become_user: ubuntu
 #   shell: kubectl apply -f webhook-configuration.yaml --dry-run=true -o yaml | kubectl apply -f -
 #   args:
 #     chdir: $HOME
 
-- name: Define a policy and load it into OPA via Kubernetes
+#
+# Test Policies
+#
+- name: Define a Ingress Whitelisting Policy and Load it into OPA via Kubernetes
   become: true
   become_user: ubuntu
   copy:
@@ -316,6 +318,39 @@
           str == pattern
       }
 
+#
+# Test Policies
+#
+- name: Define a Registry Whitelist Policy and Load it into OPA via Kubernetes
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/registry-whitelist.rego
+    mode: 0640
+    content: |
+      package kubernetes.admission
+
+      deny[msg] {
+        input.request.kind.kind == "Pod"
+        image := input.request.object.spec.containers[_].image
+        not startswith(image, "docker.io/")
+        msg := sprintf("Image is not from our trusted registry: %v", [image])
+      }
+
+- name: Apply Registry Whitelist Policy
+  become: true
+  become_user: ubuntu
+  shell: kubectl -n opa create configmap registry-whitelist --from-file=registry-whitelist.rego
+  args:
+    chdir: $HOME
+
+
+
+
+
+#
+# Tests
+#
 - name: qa-namespace
   become: true
   become_user: ubuntu
@@ -364,7 +399,7 @@
                 serviceName: nginx
                 servicePort: 80
 
-- name: Define a policy and load it into OPA via Kubernetes
+- name: ingress-bad
   become: true
   become_user: ubuntu
   copy:
@@ -384,13 +419,6 @@
                 serviceName: nginx
                 servicePort: 80
 
-# - name: Apply Admission Controller Deployment Configuration
-#   become: true
-#   become_user: ubuntu
-#   shell: kubectl -n opa create configmap ingress-whitelist --from-file=ingress-whitelist.rego
-#   args:
-#     chdir: $HOME
-
 - name: How to
   debug:
     msg:
@@ -398,6 +426,7 @@
       - kubectl logs -l app=opa -c opa -f
       - kubectl -n opa logs -l app=opa -c opa -f
       - kubectl -n opa create configmap ingress-whitelist --from-file=ingress-whitelist.rego
+      - kubectl -n opa create configmap ingress-whitelist --from-file=registry-whitelist.rego
       - kubectl create -f qa-namespace.yaml
       - kubectl create -f production-namespace.yaml
       - kubectl create -f ingress-ok.yaml -n production
