@@ -37,30 +37,25 @@
     #
     # Initialize cluster
     #
-    - name: Kubeadm pull images
+    - name: Kubeadm Pull Images
       command: >
         kubeadm config images pull
         --cri-socket={{ kubeadm_container_runtime_socket }}
 
-    - name: Kubeadm init
+    - name: Kubeadm Init
       shell: kubeadm init --apiserver-advertise-address="{{ apiserver_advertise_address }}" --apiserver-cert-extra-sans="{{ apiserver_cert_extra_sans }}" --pod-network-cidr="{{ pod_network_cidr }}" --cri-socket="{{ kubeadm_container_runtime_socket }}" >> cluster_initialized.txt
       args:
         chdir: $HOME
         creates: cluster_initialized.txt
 
-#>> cluster_initialized.txt
-    # - name: Kubeadm init
-    #   command: >
-    #     kubeadm init
-    #     --apiserver-advertise-address={{ apiserver_advertise_address }}
-    #     --apiserver-cert-extra-sans={{ apiserver_cert_extra_sans }}
-    #     --pod-network-cidr={{ pod_network_cidr }}
-    #     --cri-socket={{ kubeadm_container_runtime_socket }}
-    #   args:
-    #     chdir: $HOME
-        # creates: cluster_initialized.txt
+    - name: Enable Admission Plugins
+      replace:
+        regexp: '    - --enable-admission-plugins=NodeRestriction'
+        replace: '    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota,PodSecurityPolicy'
+        name: /etc/kubernetes/manifests/kube-apiserver.yaml
+        backup: yes
 
-    - name: Kubernetes setup kubeconfig for ubuntu user make directory
+    - name: Kubernetes Setup Kubeconfig for Ubuntu User Make Directory
       file:
         path: /home/ubuntu/.kube
         state: directory
@@ -68,7 +63,7 @@
         group: ubuntu
         mode: '0755'
 
-    - name: Kubernetes setup kubeconfig for ubuntu user copy config
+    - name: Kubernetes Setup Kubeconfig for Ubuntu User Copy Config
       copy:
         src: /etc/kubernetes/admin.conf
         dest: /home/ubuntu/.kube/config
@@ -128,7 +123,7 @@
     #
     # Create admin user
     #
-    - name: Create admin-user service account
+    - name: Create Admin-user Service Account
       become: true
       become_user: ubuntu
       k8s:
@@ -140,7 +135,7 @@
             name: admin-user
             namespace: kube-system
 
-    - name: Create admin-user ClusterRoleBinding
+    - name: Create Admin-user ClusterRoleBinding
       become: true
       become_user: ubuntu
       k8s:
@@ -168,7 +163,7 @@
         namespace: kube-system
       register: k8ssecrets
 
-    - name: Search admin-user-token
+    - name: Search Admin-user-token
       set_fact:
         admintoken: "{% for resource in k8ssecrets.resources %}\
                        {% if 'admin-user-token' in resource.metadata.name %}\
@@ -179,7 +174,7 @@
     #
     # Label master
     #
-    - name: Kubernetes label master as mds node
+    - name: Kubernetes Label master as MDS Node
       become: true
       become_user: ubuntu
       k8s:
@@ -196,12 +191,12 @@
     #
     # Kubernetes Dashboard
     #
-    - name: Kubernetes download Dashboard Definition
+    - name: Kubernetes Download Dashboard Definition
       get_url:
         url: https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
         dest: /home/ubuntu
 
-    - name: Kubernetes install Dashboard
+    - name: Kubernetes Install Dashboard
       become: true
       become_user: ubuntu
       k8s:
@@ -227,26 +222,26 @@
               name: kubernetes-dashboard
               namespace: kube-system
 
-    - name: Kubernetes delete exposed dashboard port if existing
+    - name: Kubernetes Delete Exposed Dashboard Port if Existing
       become: true
       become_user: ubuntu
       command: kubectl delete --ignore-not-found=true -n kube-system service dashboard
 
-    - name: Kubernetes expose dashboard
+    - name: Kubernetes Expose Dashboard
       become: true
       become_user: ubuntu
       command: kubectl expose -n kube-system deployment kubernetes-dashboard --type=NodePort --name=dashboard
 
-    - name: Kubernetes patch dashboard port
+    - name: Kubernetes Patch Dashboard Port
       become: true
       become_user: ubuntu
       command: kubectl patch service -n kube-system dashboard --type='json' --patch='[{"op":"replace", "path":"/spec/ports/0/nodePort", "value":{{ kubernetes_dashboard_nodeport }}}]'
 
-    - name: Generate DNS name
+    - name: Generate DNS Name
       set_fact:
         service_dns_name: "https://dashboard-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
-    - name: Create link document for Kubernetes dashboard
+    - name: Create Link Document for Kubernetes Dashboard
       become: true
       become_user: ubuntu
       copy:
@@ -269,7 +264,7 @@
     #
     # kubeadm token create has a bug and currently does not understand --cri-socket
     # Therefore we need to create a config file for kubeadm
-    - name: Kubeadm create token create configuration file
+    - name: Kubeadm Create Token Create Configuration File
       copy:
         dest: /root/kubeadm_token_create_config.yaml
         mode: 0640
@@ -279,16 +274,16 @@
           nodeRegistration:
             criSocket: "{{ kubeadm_container_runtime_socket }}"
 
-    - name: Kubeadm generate join command
+    - name: Kubeadm Generate Join Command
       command: kubeadm token create --print-join-command --config=/root/kubeadm_token_create_config.yaml
       register: join_command
 
-    - name: Kubeadm copy join command to local file
+    - name: Kubeadm Copy Join Command to Local File
       become: true
       become_user: ansible
       local_action: copy content="{{ join_command.stdout_lines[0] }} --cri-socket={{ kubelet_container_runtime_socket }}" dest="./site_{{ type }}/join-command"
 
-    - name: Kubernetes bash command completion
+    - name: Kubernetes Bash Command Completion
       become: true
       become_user: ubuntu
       lineinfile:
@@ -296,14 +291,14 @@
         insertafter: EOF
         line: 'source <(kubectl completion bash)'
 
-    - name: Fun with kubectl aliases - generate aliases
+    - name: Fun with Kubectl Aliases - Generate Aliases
       script: generate_aliases.py
       args:
         executable: python3
       register: aliases
       delegate_to: localhost
 
-    - name: Fun with kubectl aliases - create aliases file
+    - name: Fun with Kubectl Aliases - Create Aliases File
       become: true
       become_user: ubuntu
       copy:
@@ -312,7 +307,7 @@
         owner: ubuntu
         content: "{{ aliases.stdout }}"
 
-    - name: Fun with kubectl aliases - append aliaes to .bashrc
+    - name: Fun with Kubectl Aliases - Append Aliaes to .bashrc
       become: yes
       become_user: ubuntu
       lineinfile:
@@ -333,11 +328,3 @@
 - name: Deploy pod network
   include: deploy_pod_network.yml
   when: deploy_pod_network == True
-
-# - name: Deploy Helm
-#   include: deploy_helm.yml
-#   when: deploy_helm == True
-
-# - name: Deploy Rook
-#   include: deploy_rook.yml
-#   when: deploy_rook_ceph == True
