@@ -78,7 +78,7 @@
         token: "{{ deepsecurity_token }}"
         force_reactivation: False
       when:
-        - site_deploy_endpoints == True
+        # - site_deploy_endpoints == True
         - deepsecurity_variant == 'dsaas'
 
     - name: Deploy DSA with DSM on MOADSD-NG
@@ -92,7 +92,7 @@
         dsm_agent_activation_port: 4120
         force_reactivation: False
       when:
-        - site_deploy_endpoints == True
+        # - site_deploy_endpoints == True
         - deepsecurity_variant == 'dsm'
 
 - name: Set Linux Server policy

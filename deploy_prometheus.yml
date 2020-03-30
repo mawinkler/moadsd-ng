@@ -84,4 +84,4 @@
         name: prometheus
       vars:
         operation: deploy
-      when: site_deploy_prometheus == True
+      # when: site_deploy_prometheus == True

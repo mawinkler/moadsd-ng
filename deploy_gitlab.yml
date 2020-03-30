@@ -84,4 +84,4 @@
         name: gitlab
       vars:
         operation: deploy
-      when: site_deploy_gitlab == True
+      # when: site_deploy_gitlab == True

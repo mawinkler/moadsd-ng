@@ -84,4 +84,4 @@
         name: grafana
       vars:
         operation: deploy
-      when: site_deploy_grafana == True
+      # when: site_deploy_grafana == True

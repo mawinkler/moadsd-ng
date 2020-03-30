@@ -84,4 +84,4 @@
         name: jenkins
       vars:
         operation: deploy
-      when: site_deploy_jenkins == True
+      # when: site_deploy_jenkins == True
