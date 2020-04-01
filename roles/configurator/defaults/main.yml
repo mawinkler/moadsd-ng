@@ -1,0 +1,137 @@
+# #####################################################################
+# Site Deploy Components
+# #####################################################################
+site_deploy_kubernetes: yes
+site_deploy_openshift: no
+site_deploy_deepsecurity: no
+site_deploy_smartcheck: yes
+site_deploy_jenkins: yes
+site_deploy_gitlab: no
+site_deploy_endpoints: no
+site_deploy_linkerd: yes
+site_deploy_prometheus: yes
+site_deploy_grafana: yes
+site_deploy_opa: no
+site_deploy_jumphost: yes
+
+moadsd_ng_prefix: moadsd-ng
+
+# #####################################################################
+# Google Cloud Settings
+# #####################################################################
+gcp_project_id: MANDATORY
+gcp_region: europe-west2
+gcp_zone: europe-west2-b
+gcp_service_account_file: /home/ansible/ansible.json
+
+# #####################################################################
+# Google images
+# #####################################################################
+image_ubuntu: projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts
+image_redhat: projects/rhel-cloud/global/images/family/rhel-8
+image_windows: projects/windows-cloud/global/images/family/windows-2012-r2
+
+# #####################################################################
+# AWS Cloud Settings
+# #####################################################################
+aws_zone: eu-central-1a
+aws_region: eu-central-1
+
+# #####################################################################
+# AWS Images
+# #####################################################################
+ami_ubuntu: ami-0ac05733838eabc06
+ami_redhat: ami-00e37cffd3bb3ac8d
+ami_windows: ami-0cbf1b1038bbb408d
+
+# #####################################################################
+# AWS Credentials
+# #####################################################################
+aws_access_key: MANDATORY
+aws_secret_key: MANDATORY
+
+# #####################################################################
+# Linux Jumphost Settings
+# #####################################################################
+jumphost_tld: nip.io
+
+# #####################################################################
+# Kubernetes Settings
+# #####################################################################
+kubernetes_container_runtime: docker
+kubernetes_worker_count: 3
+cluster_networking: flannel_flannel
+
+# #####################################################################
+# Deep Security Settings
+# #####################################################################
+deepsecurity_variant: dsaas
+
+# #####################################################################
+# Linux Endpoint Settings
+# #####################################################################
+linuxep_instance_count: 1
+
+# #####################################################################
+# Windows Endpoint Settings
+# #####################################################################
+windowsep_instance_count: 0
+
+# #####################################################################
+# Site Secrets
+# #####################################################################
+# Deep Security
+deepsecurity_license: MANDATORY
+deepsecurity_administrator_username: admin
+deepsecurity_administrator_password: TrendM1cr0
+deepsecurity_database_password: TrendM1cr0
+
+# Deep Security as a Service
+deepsecurity_tenant_id: MANDATORY
+deepsecurity_token: MANDATORY
+
+# Deep Security Smart Check
+smartcheck_license: MANDATORY
+smartcheck_username: admin
+smartcheck_password: TrendM1cr0
+smartcheck_registry_username: reguser
+smartcheck_registry_password: TrendM1cr0
+smartcheck_database_username: dssc
+smartcheck_database_password: TrendM1cr0
+
+# Cloud One Application Security
+application_security_key: OPTIONAL
+application_security_secret: OPTIONAL
+
+# CodeReady Containers
+openshift_pull_secret: MANDATORY
+
+# Jenkins
+jenkins_username: admin
+jenkins_password: TrendM1cr0
+jenkins_token: OPTIONAL
+jenkins_github_access_token: OPTIONAL
+
+# GitLab
+gitlab_runner_registration_token: OPTIONAL
+
+# Cluster Registry
+cluster_registry_username: reguser
+cluster_registry_password: TrendM1cr0
+
+# Grafana
+# Only required, if you are using Grafana
+grafana_username: admin
+grafana_password: TrendM1cr0
+
+# Ansible
+ansible_ssh_key: MANDATORY
+admin_email: MANDATORY
+
+# Docker Hub
+dockerhub_username: OPTIONAL
+dockerhub_password: OPTIONAL
+
+# Github
+github_username: OPTIONAL
+github_password: OPTIONAL

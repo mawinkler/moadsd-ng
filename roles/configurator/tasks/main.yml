@@ -1,0 +1,11 @@
+# #####################################################################
+# Create and Manage the MOADSD-NG Configuration
+# #####################################################################
+---
+- name: Configure for AWS
+  include: configure_aws.yml
+  when: operation == 'configure_aws'
+
+- name: Configure for GCP
+  include: configure_gcp.yml
+  when: operation == 'configure_gcp'

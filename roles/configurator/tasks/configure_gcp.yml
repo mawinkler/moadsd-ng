@@ -1,0 +1,49 @@
+# #####################################################################
+# Configurator for MOADSD-NG on GCP
+# #####################################################################
+- name: Include Configuration
+  include_vars: configuration.yml
+
+- name: include
+  include: configure_assertions.yml
+
+- name: Check for Mandatory GCP Settings
+  assert:
+    that:
+      - gcp_project_id != "MANDATORY"
+    fail_msg: "GCP Cloud Settings are Incomplete"
+
+#
+# GCP Configuration
+#
+- name: Create GCP Configuration
+  template:
+    src: environment_gcp_vars.j2
+    dest: ./vars/environment_gcp_vars2.yml
+
+- name: Create GCP Secret Configuration
+  template:
+    src: environment_gcp_secrets.j2
+    dest: ./vars/environment_gcp_secrets2.yml
+
+- name: Encrypt GCP Secret Configuration
+  shell: ansible-vault encrypt --vault-password-file ../.vault-pass.txt ./vars/environment_gcp_secrets2.yml
+
+#
+# SITE
+#
+- name: Read id_rsa.pub
+  command: cat "~/.ssh/id_rsa.pub"
+  register: public_key
+
+- name: Set Fact for Public Key
+  set_fact:
+    ansible_ssh_key: "{{ public_key.stdout }}"
+
+- name: Create Site Secret Configuration
+  template:
+    src: site_secrets.j2
+    dest: ./vars/site_secrets2.yml
+
+- name: Encrypt Site Secret Configuration
+  shell: ansible-vault encrypt --vault-password-file ../.vault-pass.txt ./vars/site_secrets2.yml
