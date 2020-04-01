@@ -9,6 +9,7 @@ site_deploy_gitlab: no
 site_deploy_linkerd: yes
 site_deploy_prometheus: yes
 site_deploy_grafana: yes
+site_deploy_opa: no
 
 # #####################################################################
 # Site Deploy Components - Leave these to no
