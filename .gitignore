@@ -15,3 +15,4 @@ vars/environment_gcp_secrets.yml
 vars/environment_gcp_vars.yml
 vars/site_secrets.yml
 get-docker.sh
+configuration.yml
