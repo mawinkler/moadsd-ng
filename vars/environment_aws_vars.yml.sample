@@ -12,6 +12,7 @@ site_deploy_endpoints: no
 site_deploy_linkerd: no
 site_deploy_prometheus: yes
 site_deploy_grafana: yes
+site_deploy_opa: no
 
 kubernetes_worker_count: 3
 linuxep_instance_count: 0
