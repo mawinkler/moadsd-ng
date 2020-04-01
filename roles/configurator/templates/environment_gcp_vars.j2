@@ -1,0 +1,196 @@
+---
+# #####################################################################
+# Site Deploy Components
+# #####################################################################
+site_deploy_kubernetes: {{ site_deploy_kubernetes }}
+site_deploy_openshift: {{ site_deploy_openshift }}
+site_deploy_deepsecurity: {{ site_deploy_deepsecurity }}
+site_deploy_smartcheck: {{ site_deploy_smartcheck }}
+site_deploy_jenkins: {{ site_deploy_jenkins }}
+site_deploy_gitlab: {{ site_deploy_gitlab }}
+site_deploy_endpoints: {{ site_deploy_endpoints }}
+site_deploy_linkerd: {{ site_deploy_linkerd }}
+site_deploy_prometheus: {{ site_deploy_prometheus }}
+site_deploy_grafana: {{ site_deploy_grafana }}
+site_deploy_opa: {{ site_deploy_opa }}
+
+# #####################################################################
+# Google Cloud Settings
+# #####################################################################
+gcp_project_id: {{ gcp_project_id }}
+gcp_auth_kind: serviceaccount
+gcp_region: {{ gcp_region }}
+gcp_zone: {{ gcp_zone }}
+startup_script_linux: |
+       {% raw %}#!/bin/sh
+       useradd -m -s /bin/bash ansible
+       mkdir -p /home/ansible/.ssh
+       chmod 700 /home/ansible/.ssh
+       chown ansible.ansible /home/ansible/.ssh
+       echo {{ ansible_ssh_key }} >> /home/ansible/.ssh/authorized_keys
+       chmod 600 /home/ansible/.ssh/authorized_keys
+       chown ansible.ansible /home/ansible/.ssh/authorized_keys
+       echo {{ ansible_ssh_key }} >> /home/ubuntu/.ssh/authorized_keys
+       echo "ansible ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/custom-users
+       apt update
+       apt install -y python3 python3-simplejson{% endraw %}
+
+startup_script_windows: |
+       {% raw %}Invoke-Expression -Command ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1')); Enable-WSManCredSSP -Role Server -Force
+       $regitem = "HKLM:\SYSTEM\CurrentControlSet\Control\Network\NewNetworkWindowOff"
+       New-Item -Path $regitem{% endraw %}
+
+scopes:
+  - https://www.googleapis.com/auth/compute
+moadsd_ng_prefix: {{ moadsd_ng_prefix }}
+
+# #####################################################################
+# Linux Jumphost Settings
+# #####################################################################
+site_deploy_jumphost: {{ site_deploy_jumphost }}
+jumphost_instance_name: jumphost
+jumphost_instance_count: 1
+jumphost_size_gb: 32
+jumphost_source_image: {{ image_ubuntu }}
+jumphost_machine_type: n1-standard-1
+jumphost_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
+jumphost_tags: role-jumphost
+jumphost_tld: {{ jumphost_tld }}
+
+# #####################################################################
+# Kubernetes Settings
+# #####################################################################
+# crio or docker
+kubernetes_container_runtime: {{ kubernetes_container_runtime }}
+kubernetes_worker_count: {{ kubernetes_worker_count }}
+
+# Cluster Networking Configuration: flannel_flannel or calico_calico
+pod_network_cidr: "10.244.0.0/16"
+cluster_networking: {{ cluster_networking }}
+
+kubernetes_master_instance_name: k8smaster
+kubernetes_master_size_gb: 32
+kubernetes_master_source_image: {{ image_ubuntu }}
+kubernetes_master_machine_type: n1-standard-4
+kubernetes_master_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
+kubernetes_master_tags: role-k8smaster
+
+kubernetes_worker_instance_name: k8sworker
+kubernetes_worker_size_gb: 32
+kubernetes_worker_source_image: {{ image_ubuntu }}
+kubernetes_worker_machine_type: n1-standard-4
+kubernetes_worker_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
+kubernetes_worker_tags: role-k8sworker
+
+kubernetes_dashboard_nodeport: 30000
+rook_ceph_dashboard_nodeport: 30001
+linkerd_dashboard_nodeport: 30002
+
+# #####################################################################
+# Openshift Settings
+# #####################################################################
+openshift_instance_name: openshift
+openshift_size_gb: 50
+openshift_source_image: {{ image_redhat }}
+openshift_machine_type: n1-standard-8
+openshift_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
+openshift_tags: role-openshift
+openshift_dashboard: 6443
+
+# #####################################################################
+# Deep Security Settings
+# #####################################################################
+# dsaas or dsm
+deepsecurity_variant: {{ deepsecurity_variant }}
+
+postgresql_instance_name: postgresql
+postgresql_size_gb: 16
+postgresql_source_image: {{ image_ubuntu }}
+postgresql_machine_type: n1-standard-2
+postgresql_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
+postgresql_tags: role-dsm-db
+
+deepsecurity_instance_name: dsm
+deepsecurity_size_gb: 32
+deepsecurity_source_image: {{ image_redhat }}
+deepsecurity_machine_type: n1-standard-4
+deepsecurity_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
+deepsecurity_tags: role-dsm
+
+deepsecurity_database_name: dsmdb
+deepsecurity_database_user: dsm
+deepsecurity_database_role_attr_flags: LOGIN,CREATEDB,CREATEROLE
+deepsecurity_database_priv: "CONNECT/ALL"
+
+databasescreen_port: 5432
+addressandportsscreen_managerport: 4119
+addressandportsscreen_heartbeatport: 4120
+addressandportsscreen_agentport: 4122
+
+# #####################################################################
+# Web Server for certificates
+# #####################################################################
+certserv_nodeport: 30012
+
+# #####################################################################
+# Deep Security Smart Check Settings
+# #####################################################################
+smartcheck_nodeport: 30010
+smartcheck_registry: 30011
+
+# #####################################################################
+# Jenkins Settings
+# #####################################################################
+jenkins_nodeport: 30013
+
+# #####################################################################
+# Docker Registry Settings
+# #####################################################################
+registry_nodeport: 30017
+
+# #####################################################################
+# Grafana Settings
+# #####################################################################
+grafana_nodeport: 30018
+
+# #####################################################################
+# Prometheus Settings
+# #####################################################################
+prometheus_nodeport: 30019
+
+# #####################################################################
+# Custom Port for self-created services in K8s
+# #####################################################################
+custom_nodeport: 30100
+custom_nodeport1: 30101
+custom_nodeport2: 30102
+custom_nodeport3: 30103
+
+# #####################################################################
+# Gitlab Settings
+# #####################################################################
+gitlab_nodeport_http: 30014
+gitlab_nodeport_https: 30015
+gitlab_nodeport_ssh: 30016
+
+# #####################################################################
+# Linux Endpoint Settings
+# #####################################################################
+linuxep_instance_name: linuxep
+linuxep_instance_count: {{ linuxep_instance_count }}
+linuxep_size_gb: 32
+linuxep_source_image: {{ image_redhat }}
+linuxep_machine_type: n1-standard-1
+linuxep_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
+linuxep_tags: role-linuxep
+
+# #####################################################################
+# Windows Endpoint Settings
+# #####################################################################
+windowsep_instance_name: windowsep
+windowsep_instance_count: {{ windowsep_instance_count }}
+windowsep_size_gb: 50
+windowsep_source_image: {{ image_windows }}
+windowsep_machine_type: n1-standard-1
+windowsep_startup_script: "{% raw %}{{ startup_script_windows }}{% endraw %}"
+windowsep_tags: role-windowsep
