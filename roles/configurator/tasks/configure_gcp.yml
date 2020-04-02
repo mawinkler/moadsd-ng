@@ -13,21 +13,37 @@
       - gcp_project_id != "MANDATORY"
     fail_msg: "GCP Cloud Settings are Incomplete"
 
+- name: Stat GCP Key File
+  stat:
+    path: "{{ gcp_service_account_file }}"
+  register: key_ansible_exists
+
+- name: Check for GCP Key File
+  assert:
+    that:
+      - key_ansible_exists.stat.exists
+    fail_msg: "GCP Key File is Missing"
+
 #
 # GCP Configuration
 #
 - name: Create GCP Configuration
   template:
     src: environment_gcp_vars.j2
-    dest: ./vars/environment_gcp_vars2.yml
+    dest: ./vars/environment_gcp_vars.yml
+
+- name: Create GCP Dynamic Inventory Configuration
+  template:
+    src: gcp_inventory.gcp.j2
+    dest: ./gcp_inventory.gcp.yml
 
 - name: Create GCP Secret Configuration
   template:
     src: environment_gcp_secrets.j2
-    dest: ./vars/environment_gcp_secrets2.yml
+    dest: ./vars/environment_gcp_secrets.yml
 
 - name: Encrypt GCP Secret Configuration
-  shell: ansible-vault encrypt --vault-password-file ../.vault-pass.txt ./vars/environment_gcp_secrets2.yml
+  shell: ansible-vault encrypt --vault-password-file ../.vault-pass.txt ./vars/environment_gcp_secrets.yml
 
 #
 # SITE
@@ -43,7 +59,7 @@
 - name: Create Site Secret Configuration
   template:
     src: site_secrets.j2
-    dest: ./vars/site_secrets2.yml
+    dest: ./vars/site_secrets.yml
 
 - name: Encrypt Site Secret Configuration
-  shell: ansible-vault encrypt --vault-password-file ../.vault-pass.txt ./vars/site_secrets2.yml
+  shell: ansible-vault encrypt --vault-password-file ../.vault-pass.txt ./vars/site_secrets.yml

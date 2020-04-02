@@ -1,5 +1,5 @@
 join-command
-gcp_inventory.gcp.yml
+
 site_gcp/
 site_esx/
 site_aws/
