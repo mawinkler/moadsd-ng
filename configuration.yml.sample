@@ -24,9 +24,5 @@ aws_secret_key: MANDATORY
 # Deep Security Smart Check
 smartcheck_license: MANDATORY
 
-# Cloud One Application Security
-application_security_key: MANDATORY
-application_security_secret: MANDATORY
-
 # Ansible
 admin_email: MANDATORY
