@@ -1,5 +1,7 @@
 join-command
-
+ec2.ini
+ec2.py
+gcp_inventory.gcp.yml
 site_gcp/
 site_esx/
 site_aws/
