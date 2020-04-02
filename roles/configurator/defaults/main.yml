@@ -36,6 +36,8 @@ image_windows: projects/windows-cloud/global/images/family/windows-2012-r2
 # #####################################################################
 aws_zone: eu-central-1a
 aws_region: eu-central-1
+aws_key_name: moadsd-ng
+aws_pem: /home/ansible/.ssh/moadsd-ng
 
 # #####################################################################
 # AWS Images
@@ -135,3 +137,6 @@ dockerhub_password: OPTIONAL
 # Github
 github_username: OPTIONAL
 github_password: OPTIONAL
+
+# Trusted Certificates
+trusted_certificates: False
