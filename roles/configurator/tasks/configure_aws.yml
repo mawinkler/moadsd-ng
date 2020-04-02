@@ -46,6 +46,17 @@
       - existence_ami_windows is not failed
     fail_msg: "Mandatory AMI(s) Missing in Selected Region {{ aws_region }}"
 
+- name: Stat AWS Key File
+  stat:
+    path: "{{ aws_pem }}"
+  register: key_ansible_exists
+
+- name: Check for AWS Key File
+  assert:
+    that:
+      - key_ansible_exists.stat.exists
+    fail_msg: "AWS Key File is Missing"
+
 #
 # AWS Configuration
 #
