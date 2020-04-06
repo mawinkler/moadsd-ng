@@ -268,9 +268,19 @@
 #   shell: kubectl apply -f webhook-configuration.yaml --dry-run=true -o yaml | kubectl apply -f -
 #   args:
 #     chdir: $HOME
+- name: How to apply Validating Webhook Deployment Configuration
+  debug:
+    msg:
+      - kubectl apply -f webhook-configuration.yaml --dry-run=true -o yaml | kubectl apply -f -
+
+#
+# OPA Deployment done
+#
+
 
 #
 # Test Policies
+# Ingress Whitelisting
 #
 - name: Define a Ingress Whitelisting Policy and Load it into OPA via Kubernetes
   become: true
@@ -318,40 +328,7 @@
           str == pattern
       }
 
-#
-# Test Policies
-#
-- name: Define a Registry Whitelist Policy and Load it into OPA via Kubernetes
-  become: true
-  become_user: ubuntu
-  copy:
-    dest: /home/ubuntu/registry-whitelist.rego
-    mode: 0640
-    content: |
-      package kubernetes.admission
-
-      deny[msg] {
-        input.request.kind.kind == "Pod"
-        image := input.request.object.spec.containers[_].image
-        not startswith(image, "docker.io/")
-        msg := sprintf("Image is not from our trusted registry: %v", [image])
-      }
-
-- name: Apply Registry Whitelist Policy
-  become: true
-  become_user: ubuntu
-  shell: kubectl -n opa create configmap registry-whitelist --from-file=registry-whitelist.rego
-  args:
-    chdir: $HOME
-
-
-
-
-
-#
-# Tests
-#
-- name: qa-namespace
+- name: Ingress Whitelisting - qa-namespace
   become: true
   become_user: ubuntu
   copy:
@@ -365,7 +342,7 @@
           ingress-whitelist: "*.qa.acmecorp.com,*.internal.acmecorp.com"
         name: qa
 
-- name: production-namespace
+- name: Ingress Whitelisting - production-namespace
   become: true
   become_user: ubuntu
   copy:
@@ -379,7 +356,7 @@
           ingress-whitelist: "*.acmecorp.com"
         name: production
 
-- name: ingress-ok
+- name: Ingress Whitelisting - ingress-ok
   become: true
   become_user: ubuntu
   copy:
@@ -399,7 +376,7 @@
                 serviceName: nginx
                 servicePort: 80
 
-- name: ingress-bad
+- name: Ingress Whitelisting - ingress-bad
   become: true
   become_user: ubuntu
   copy:
@@ -423,11 +400,58 @@
   debug:
     msg:
       - kubectl apply -f webhook-configuration.yaml --dry-run=true -o yaml | kubectl apply -f -
-      - kubectl logs -l app=opa -c opa -f
       - kubectl -n opa logs -l app=opa -c opa -f
       - kubectl -n opa create configmap ingress-whitelist --from-file=ingress-whitelist.rego
-      - kubectl -n opa create configmap ingress-whitelist --from-file=registry-whitelist.rego
       - kubectl create -f qa-namespace.yaml
       - kubectl create -f production-namespace.yaml
       - kubectl create -f ingress-ok.yaml -n production
       - kubectl create -f ingress-bad.yaml -n qa
+#
+# Test Policies
+#
+- name: Define a Registry Whitelist Policy and Load it into OPA via Kubernetes
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/registry-whitelist.rego
+    mode: 0640
+    content: |
+      package kubernetes.admission
+
+      deny[msg] {
+        input.request.kind.kind == "Pod"
+        image := input.request.object.spec.containers[_].image
+        not startswith(image, "docker.io/")
+        msg := sprintf("Image is not from our trusted registry: %v", [image])
+      }
+
+# - name: Apply Registry Whitelist Policy
+#   become: true
+#   become_user: ubuntu
+#   shell: kubectl -n opa create configmap registry-whitelist --from-file=registry-whitelist.rego
+#   args:
+#     chdir: $HOME
+- name: How to
+  debug:
+    msg:
+      - kubectl -n opa create configmap ingress-whitelist --from-file=registry-whitelist.rego
+
+- name: Define a Pod Image Debug Policy and Load it into OPA via Kubernetes
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/pod-image-debug.rego
+    mode: 0640
+    content: |
+      package kubernetes.admission
+
+      allow[msg] {
+              input.request.kind.kind == "Pod"
+              image := input.request.object.spec.containers[_].image
+              msg := sprintf("Image pulled: %v", [image])
+      }
+
+- name: How to
+  debug:
+    msg:
+      - kubectl -n opa create configmap pod-image-debug --from-file=pod-image-debug.rego

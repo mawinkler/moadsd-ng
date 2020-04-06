@@ -48,12 +48,19 @@
         chdir: $HOME
         creates: cluster_initialized.txt
 
-    - name: Enable Admission Plugins
-      replace:
-        regexp: '    - --enable-admission-plugins=NodeRestriction'
-        replace: '    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota,PodSecurityPolicy'
-        name: /etc/kubernetes/manifests/kube-apiserver.yaml
-        backup: yes
+    # - name: Enable Admission Plugins
+    #   replace:
+    #     regexp: '    - --enable-admission-plugins=NodeRestriction'
+    #     replace: '    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,StorageObjectInUseProtection,PersistentVolumeClaimResize,RuntimeClass,CertificateApproval,CertificateSigning,CertificateSubjectRestriction,DefaultIngressClass,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota'
+    #     name: /etc/kubernetes/manifests/kube-apiserver.yaml
+    #     backup: yes
+
+# OPA recommended
+
+# 1.17 defaults
+# NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,StorageObjectInUseProtection,PersistentVolumeClaimResize,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,RuntimeClass,ResourceQuota
+# 1.18 defaults
+# NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,StorageObjectInUseProtection,PersistentVolumeClaimResize,RuntimeClass,CertificateApproval,CertificateSigning,CertificateSubjectRestriction,DefaultIngressClass,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota
 
     - name: Kubernetes Setup Kubeconfig for Ubuntu User Make Directory
       file:
