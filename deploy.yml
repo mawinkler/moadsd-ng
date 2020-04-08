@@ -58,6 +58,28 @@
           - "PostgreSQL                   : {{ hostvars[inventory_hostname]['groups']['tag_role_dsm_db'][0] }}"
       when: "'tag_role_dsm' is in groups"
 
+    - name: Create Jumphost SSH Command
+      delegate_to: 127.0.0.1
+      copy:
+        dest: "./ssh_jumphost"
+        content: |
+          ssh {{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] }}
+        force: yes
+        owner: ansible
+        group: ansible
+        mode: '0700'
+
+    - name: Create Master SSH Command
+      delegate_to: 127.0.0.1
+      copy:
+        dest: "./ssh_master"
+        content: |
+          ssh -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p {{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] }}" {{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}
+        force: yes
+        owner: ansible
+        group: ansible
+        mode: '0700'
+        
 # #####################################################################
 # Create http & https Proxy with Trusted Certificates
 # #####################################################################
