@@ -1,4 +1,16 @@
 # #####################################################################
+# This is a sample configuration of MOADSD-NG. Using it and adding the
+# MANDATORY information will create a three node Kubernetes cluster
+# with Smart Check, Jenkins, Prometheus und Grafana deployed and
+# pre-configured.
+# If you are only going to use AWS or GCP, simply remove the other
+# cloud settings completely.
+# See roles/configurator/defaults/main.yml for all the default values
+#
+# https://github.com/mawinkler/moadsd-ng/blob/master/roles/configurator/defaults/main.yml
+# #####################################################################
+
+# #####################################################################
 # Site Deploy Components
 # #####################################################################
 site_deploy_kubernetes: yes
