@@ -2,21 +2,17 @@
 # #####################################################################
 # Site Deploy Components
 # #####################################################################
-site_deploy_kubernetes: yes
-site_deploy_openshift: no
-site_deploy_deepsecurity: no
-site_deploy_smartcheck: yes
-site_deploy_jenkins: yes
-site_deploy_gitlab: no
-site_deploy_endpoints: no
-site_deploy_linkerd: no
-site_deploy_prometheus: yes
-site_deploy_grafana: yes
-site_deploy_opa: no
-
-kubernetes_worker_count: 3
-linuxep_instance_count: 0
-windowsep_instance_count: 1
+site_deploy_kubernetes: {{ site_deploy_kubernetes }}
+site_deploy_openshift: {{ site_deploy_openshift }}
+site_deploy_deepsecurity: {{ site_deploy_deepsecurity }}
+site_deploy_smartcheck: {{ site_deploy_smartcheck }}
+site_deploy_jenkins: {{ site_deploy_jenkins }}
+site_deploy_gitlab: {{ site_deploy_gitlab }}
+site_deploy_endpoints: {{ site_deploy_endpoints }}
+site_deploy_linkerd: {{ site_deploy_linkerd }}
+site_deploy_prometheus: {{ site_deploy_prometheus }}
+site_deploy_grafana: {{ site_deploy_grafana }}
+site_deploy_opa: {{ site_deploy_opa }}
 
 # #####################################################################
 # AWS Cloud Settings
@@ -24,13 +20,13 @@ windowsep_instance_count: 1
 # aws_zone: eu-central-1a
 # aws_region: eu-central-1
 # #####################################################################
-aws_zone: <zone>
-aws_region: <region>
+aws_zone: {{ aws_zone }}
+aws_region: {{ aws_region }}
 aws_vpc_cidr_block: '10.0.0.0/16'
 aws_public_subnet_cidr_block: '10.0.1.0/24'
 aws_private_subnet_cidr_block: '10.0.2.0/24'
 startup_script_linux: |
-       #!/bin/sh
+       {% raw %}#!/bin/sh
        useradd -m -s /bin/bash ansible
        mkdir -p /home/ansible/.ssh
        chmod 700 /home/ansible/.ssh
@@ -41,68 +37,56 @@ startup_script_linux: |
        echo {{ ansible_ssh_key }} >> /home/ubuntu/.ssh/authorized_keys
        echo "ansible ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/custom-users
        apt update
-       apt install -y python3 python3-simplejson
+       apt install -y python3 python3-simplejson{% endraw %}
+
 startup_script_windows: |
-       ＜powershell＞
+       {% raw %}＜powershell＞
        $url = "https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1"
        $file = "$env:temp\ConfigureRemotingForAnsible.ps1"
        (New-Object -TypeName System.Net.WebClient).DownloadFile($url, $file)
        powershell.exe -ExecutionPolicy ByPass -File $file
        $regitem = "HKLM:\SYSTEM\CurrentControlSet\Control\Network\NewNetworkWindowOff"
        New-Item -Path $regitem
-       ＜/powershell＞
-moadsd_ng_prefix: moadsd-ng
+       ＜/powershell＞{% endraw %}
 
-# #####################################################################
-# Source Images in use
-# ami-0ac05733838eabc06
-#   Ubuntu Server 18.04 LTS (HVM),EBS General Purpose (SSD) Volume Type
-# ami-0badcc5b522737046
-#   Red Hat Enterprise Linux version 8 (HVM), EBS General Purpose (SSD) Volume Type
-# ami-00e37cffd3bb3ac8d
-#   RHEL-7.6_HVM_GA-20181017-x86_64-0-Hourly2-GP2
-# ami-0cbf1b1038bbb408d
-#   Microsoft Windows 2016 Datacenter edition. [English]
-# ami-086486be06fe637e7
-#   Microsoft Windows 2012 R2
+moadsd_ng_prefix: {{ moadsd_ng_prefix }}
+
 # #####################################################################
 # Linux Jumphost Settings
 # #####################################################################
-site_deploy_jumphost: yes
+site_deploy_jumphost: {{ site_deploy_jumphost }}
 jumphost_instance_name: jumphost
 jumphost_instance_count: 1
 jumphost_size_gb: 32
-jumphost_source_image: ami-0ac05733838eabc06
+jumphost_source_image: {{ ami_ubuntu }}
 jumphost_machine_type: t3.medium
-jumphost_startup_script: "{{ startup_script_linux }}"
+jumphost_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
 jumphost_tags: jumphost
-jumphost_tld: nip.io
+jumphost_tld: {{ jumphost_tld }}
 
 # #####################################################################
 # Kubernetes Settings
 # #####################################################################
 # crio or docker
-kubernetes_container_runtime: docker
+kubernetes_container_runtime: {{ kubernetes_container_runtime }}
+kubernetes_worker_count: {{ kubernetes_worker_count }}
 
-# Cluster Networking Configration:
-# pod_network_cidr: "10.244.0.0/16"   cluster_networking: flannel_flannel
-# pod_network_cidr: "10.244.0.0/16"   cluster_networking: calico_flannel
-# pod_network_cidr: "10.244.0.0/16"   cluster_networking: calico_calico
+# Cluster Networking Configuration: flannel_flannel or calico_calico
 pod_network_cidr: "10.244.0.0/16"
-cluster_networking: flannel_flannel
+cluster_networking: {{ cluster_networking }}
 
 kubernetes_master_instance_name: k8smaster
 kubernetes_master_size_gb: 32
-kubernetes_master_source_image: ami-0ac05733838eabc06
+kubernetes_master_source_image: {{ ami_ubuntu }}
 kubernetes_master_machine_type: t3.xlarge
-kubernetes_master_startup_script: "{{ startup_script_linux }}"
+kubernetes_master_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
 kubernetes_master_tags: k8smaster
 
 kubernetes_worker_instance_name: k8sworker
 kubernetes_worker_size_gb: 32
-kubernetes_worker_source_image: ami-0ac05733838eabc06
+kubernetes_worker_source_image: {{ ami_ubuntu }}
 kubernetes_worker_machine_type: t3.xlarge
-kubernetes_worker_startup_script: "{{ startup_script_linux }}"
+kubernetes_worker_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
 kubernetes_worker_tags: k8sworker
 
 kubernetes_dashboard_nodeport: 30000
@@ -114,9 +98,9 @@ linkerd_dashboard_nodeport: 30002
 # #####################################################################
 openshift_instance_name: openshift
 openshift_size_gb: 32
-openshift_source_image: ami-0ac05733838eabc06
+openshift_source_image: {{ ami_ubuntu }}
 openshift_machine_type: t2.large
-openshift_startup_script: "{{ startup_script_linux }}"
+openshift_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
 openshift_tags: openshift
 openshift_dashboard: 6443
 
@@ -124,20 +108,20 @@ openshift_dashboard: 6443
 # Deep Security Settings
 # #####################################################################
 # dsaas or dsm
-deepsecurity_variant: dsaas
+deepsecurity_variant: {{ deepsecurity_variant }}
 
 postgresql_instance_name: postgresql
 postgresql_size_gb: 16
-postgresql_source_image: ami-0ac05733838eabc06
+postgresql_source_image: {{ ami_ubuntu }}
 postgresql_machine_type: t2.medium
-postgresql_startup_script: "{{ startup_script_linux }}"
+postgresql_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
 postgresql_tags: dsm-db
 
 deepsecurity_instance_name: dsm
 deepsecurity_size_gb: 32
-deepsecurity_source_image: ami-00e37cffd3bb3ac8d
+deepsecurity_source_image: {{ ami_redhat }}
 deepsecurity_machine_type: t2.large
-deepsecurity_startup_script: "{{ startup_script_linux }}"
+deepsecurity_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
 deepsecurity_tags: dsm
 
 deepsecurity_database_name: dsmdb
@@ -200,18 +184,20 @@ gitlab_nodeport_ssh: 30016
 # Linux Endpoint Settings
 # #####################################################################
 linuxep_instance_name: linuxep
+linuxep_instance_count: {{ linuxep_instance_count }}
 linuxep_size_gb: 32
-linuxep_source_image: ami-00e37cffd3bb3ac8d
+linuxep_source_image: {{ ami_ubuntu }}
 linuxep_machine_type: t2.medium
-linuxep_startup_script: "{{ startup_script_linux }}"
+linuxep_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
 linuxep_tags: linuxep
 
 # #####################################################################
 # Windows Endpoint Settings
 # #####################################################################
 windowsep_instance_name: windowsep
+windowsep_instance_count: {{ windowsep_instance_count }}
 windowsep_size_gb: 50
-windowsep_source_image: ami-0cbf1b1038bbb408d
+windowsep_source_image: {{ ami_windows }}
 windowsep_machine_type: t2.medium
-windowsep_startup_script: "{{ startup_script_windows }}"
+windowsep_startup_script: "{% raw %}{{ startup_script_windows }}{% endraw %}"
 windowsep_tags: windowsep

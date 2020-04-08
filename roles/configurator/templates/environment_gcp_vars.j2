@@ -2,35 +2,27 @@
 # #####################################################################
 # Site Deploy Components
 # #####################################################################
-site_deploy_kubernetes: yes
-site_deploy_openshift: no
-site_deploy_deepsecurity: no
-site_deploy_smartcheck: yes
-site_deploy_jenkins: yes
-site_deploy_gitlab: no
-site_deploy_endpoints: no
-site_deploy_linkerd: no
-site_deploy_prometheus: yes
-site_deploy_grafana: yes
-site_deploy_opa: no
-
-kubernetes_worker_count: 3
-linuxep_instance_count: 0
-windowsep_instance_count: 1
+site_deploy_kubernetes: {{ site_deploy_kubernetes }}
+site_deploy_openshift: {{ site_deploy_openshift }}
+site_deploy_deepsecurity: {{ site_deploy_deepsecurity }}
+site_deploy_smartcheck: {{ site_deploy_smartcheck }}
+site_deploy_jenkins: {{ site_deploy_jenkins }}
+site_deploy_gitlab: {{ site_deploy_gitlab }}
+site_deploy_endpoints: {{ site_deploy_endpoints }}
+site_deploy_linkerd: {{ site_deploy_linkerd }}
+site_deploy_prometheus: {{ site_deploy_prometheus }}
+site_deploy_grafana: {{ site_deploy_grafana }}
+site_deploy_opa: {{ site_deploy_opa }}
 
 # #####################################################################
 # Google Cloud Settings
-# E.g.
-# gcp_project_id: moadsd-ng
-# gcp_region: europe-west3
-# gcp_zone: europe-west3-c
 # #####################################################################
-gcp_project_id: <project id>
+gcp_project_id: {{ gcp_project_id }}
 gcp_auth_kind: serviceaccount
-gcp_region: <region>
-gcp_zone: <zone>
+gcp_region: {{ gcp_region }}
+gcp_zone: {{ gcp_zone }}
 startup_script_linux: |
-       #!/bin/sh
+       {% raw %}#!/bin/sh
        useradd -m -s /bin/bash ansible
        mkdir -p /home/ansible/.ssh
        chmod 700 /home/ansible/.ssh
@@ -41,53 +33,53 @@ startup_script_linux: |
        echo {{ ansible_ssh_key }} >> /home/ubuntu/.ssh/authorized_keys
        echo "ansible ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/custom-users
        apt update
-       apt install -y python3 python3-simplejson
+       apt install -y python3 python3-simplejson{% endraw %}
+
 startup_script_windows: |
-       Invoke-Expression -Command ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1')); Enable-WSManCredSSP -Role Server -Force
+       {% raw %}Invoke-Expression -Command ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1')); Enable-WSManCredSSP -Role Server -Force
        $regitem = "HKLM:\SYSTEM\CurrentControlSet\Control\Network\NewNetworkWindowOff"
-       New-Item -Path $regitem
+       New-Item -Path $regitem{% endraw %}
+
 scopes:
   - https://www.googleapis.com/auth/compute
-moadsd_ng_prefix: moadsd-ng
+moadsd_ng_prefix: {{ moadsd_ng_prefix }}
 
 # #####################################################################
 # Linux Jumphost Settings
 # #####################################################################
-site_deploy_jumphost: yes
+site_deploy_jumphost: {{ site_deploy_jumphost }}
 jumphost_instance_name: jumphost
 jumphost_instance_count: 1
 jumphost_size_gb: 32
-jumphost_source_image: projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts
+jumphost_source_image: {{ image_ubuntu }}
 jumphost_machine_type: n1-standard-1
-jumphost_startup_script: "{{ startup_script_linux }}"
+jumphost_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
 jumphost_tags: role-jumphost
-jumphost_tld: nip.io
+jumphost_tld: {{ jumphost_tld }}
 
 # #####################################################################
 # Kubernetes Settings
 # #####################################################################
 # crio or docker
-kubernetes_container_runtime: docker
+kubernetes_container_runtime: {{ kubernetes_container_runtime }}
+kubernetes_worker_count: {{ kubernetes_worker_count }}
 
-# Cluster Networking Configration:
-# pod_network_cidr: "10.244.0.0/16"   cluster_networking: flannel_flannel
-# pod_network_cidr: "10.244.0.0/16"   cluster_networking: calico_flannel
-# pod_network_cidr: "10.244.0.0/16"   cluster_networking: calico_calico
+# Cluster Networking Configuration: flannel_flannel or calico_calico
 pod_network_cidr: "10.244.0.0/16"
-cluster_networking: calico_calico
+cluster_networking: {{ cluster_networking }}
 
 kubernetes_master_instance_name: k8smaster
 kubernetes_master_size_gb: 32
-kubernetes_master_source_image: projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts
+kubernetes_master_source_image: {{ image_ubuntu }}
 kubernetes_master_machine_type: n1-standard-4
-kubernetes_master_startup_script: "{{ startup_script_linux }}"
+kubernetes_master_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
 kubernetes_master_tags: role-k8smaster
 
 kubernetes_worker_instance_name: k8sworker
 kubernetes_worker_size_gb: 32
-kubernetes_worker_source_image: projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts
+kubernetes_worker_source_image: {{ image_ubuntu }}
 kubernetes_worker_machine_type: n1-standard-4
-kubernetes_worker_startup_script: "{{ startup_script_linux }}"
+kubernetes_worker_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
 kubernetes_worker_tags: role-k8sworker
 
 kubernetes_dashboard_nodeport: 30000
@@ -98,10 +90,10 @@ linkerd_dashboard_nodeport: 30002
 # Openshift Settings
 # #####################################################################
 openshift_instance_name: openshift
-openshift_size_gb: 32
-openshift_source_image: projects/rhel-cloud/global/images/family/rhel-8
+openshift_size_gb: 50
+openshift_source_image: {{ image_redhat }}
 openshift_machine_type: n1-standard-8
-openshift_startup_script: "{{ startup_script_linux }}"
+openshift_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
 openshift_tags: role-openshift
 openshift_dashboard: 6443
 
@@ -109,20 +101,20 @@ openshift_dashboard: 6443
 # Deep Security Settings
 # #####################################################################
 # dsaas or dsm
-deepsecurity_variant: dsaas
+deepsecurity_variant: {{ deepsecurity_variant }}
 
 postgresql_instance_name: postgresql
 postgresql_size_gb: 16
-postgresql_source_image: projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts
+postgresql_source_image: {{ image_ubuntu }}
 postgresql_machine_type: n1-standard-2
-postgresql_startup_script: "{{ startup_script_linux }}"
+postgresql_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
 postgresql_tags: role-dsm-db
 
 deepsecurity_instance_name: dsm
 deepsecurity_size_gb: 32
-deepsecurity_source_image: projects/rhel-cloud/global/images/family/rhel-7
+deepsecurity_source_image: {{ image_redhat }}
 deepsecurity_machine_type: n1-standard-4
-deepsecurity_startup_script: "{{ startup_script_linux }}"
+deepsecurity_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
 deepsecurity_tags: role-dsm
 
 deepsecurity_database_name: dsmdb
@@ -185,18 +177,20 @@ gitlab_nodeport_ssh: 30016
 # Linux Endpoint Settings
 # #####################################################################
 linuxep_instance_name: linuxep
+linuxep_instance_count: {{ linuxep_instance_count }}
 linuxep_size_gb: 32
-linuxep_source_image: projects/rhel-cloud/global/images/family/rhel-7
+linuxep_source_image: {{ image_redhat }}
 linuxep_machine_type: n1-standard-1
-linuxep_startup_script: "{{ startup_script_linux }}"
+linuxep_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
 linuxep_tags: role-linuxep
 
 # #####################################################################
 # Windows Endpoint Settings
 # #####################################################################
 windowsep_instance_name: windowsep
+windowsep_instance_count: {{ windowsep_instance_count }}
 windowsep_size_gb: 50
-windowsep_source_image: projects/windows-cloud/global/images/family/windows-2012-r2
+windowsep_source_image: {{ image_windows }}
 windowsep_machine_type: n1-standard-1
-windowsep_startup_script: "{{ startup_script_windows }}"
+windowsep_startup_script: "{% raw %}{{ startup_script_windows }}{% endraw %}"
 windowsep_tags: role-windowsep

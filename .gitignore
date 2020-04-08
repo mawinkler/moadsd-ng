@@ -1,4 +1,6 @@
 join-command
+ec2.ini
+ec2.py
 gcp_inventory.gcp.yml
 site_gcp/
 site_esx/
@@ -15,3 +17,4 @@ vars/environment_gcp_secrets.yml
 vars/environment_gcp_vars.yml
 vars/site_secrets.yml
 get-docker.sh
+configuration.yml

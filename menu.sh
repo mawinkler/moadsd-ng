@@ -51,8 +51,7 @@ done
 
 pb_options=("site" "deploy" "deploy_endpoints"
             "jenkins_create_credentials" "deploy_gitlab_runners"
-            "pause" "resume" "terminate" "terminate_site" "manual")
-
+            "pause" "resume" "terminate" "terminate_site" "configurator" "manual")
 echo 'Please choose the playbook: '
 select opt in "${pb_options[@]}"
 do

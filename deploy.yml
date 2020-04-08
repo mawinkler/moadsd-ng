@@ -88,7 +88,7 @@
   become: true
 
   vars:
-    trusted_certificates: False
+    trusted_certificates: {{ trusted_certificates }}
     create_proxy_configurations: True
 
   tasks:

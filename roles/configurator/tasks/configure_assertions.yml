@@ -1,0 +1,104 @@
+# #####################################################################
+# Configurator for MOADSD-NG Check Assertions
+# #####################################################################
+- name: Include Configuration
+  include_vars: configuration.yml
+
+- name: Check for Mandatory Ansible Settings
+  assert:
+    that:
+      - admin_email != "MANDATORY"
+    fail_msg: "Ansible Settings are Incomplete"
+
+- name: Check for Mandatory OpenShift Settings
+  assert:
+    that:
+      - openshift_pull_secret != "MANDATORY"
+    fail_msg: "OpenShift Settings are Incomplete"
+  when:
+    - site_deploy_openshift
+
+- name: Check for Mandatory Smartcheck Settings
+  assert:
+    that:
+      - smartcheck_license != "MANDATORY"
+      - site_deploy_kubernetes == True
+    fail_msg: "Smartcheck Settings are Incomplete"
+  when:
+    - site_deploy_smartcheck
+
+- name: Check for Mandatory Jenkins Settings
+  assert:
+    that:
+      - site_deploy_kubernetes == True
+    fail_msg: "Jenkins Settings are Incomplete"
+  when:
+    - site_deploy_jenkins
+
+- name: Check for Mandatory Gitlab Settings
+  assert:
+    that:
+      - site_deploy_kubernetes == True
+    fail_msg: "Gitlab Settings are Incomplete"
+  when:
+    - site_deploy_gitlab
+
+- name: Check for Mandatory Linkerd Settings
+  assert:
+    that:
+      - site_deploy_kubernetes == True
+    fail_msg: "Linkerd Settings are Incomplete"
+  when:
+    - site_deploy_linkerd
+
+- name: Check for Mandatory Prometheus Settings
+  assert:
+    that:
+      - site_deploy_kubernetes == True
+    fail_msg: "Prometheus Settings are Incomplete"
+  when:
+    - site_deploy_prometheus
+
+- name: Check for Mandatory Grafana Settings
+  assert:
+    that:
+      - site_deploy_kubernetes == True
+      - site_deploy_prometheus == True
+    fail_msg: "Grafana Settings are Incomplete"
+  when:
+    - site_deploy_grafana
+
+- name: Check for Mandatory OPA Settings
+  assert:
+    that:
+      - site_deploy_kubernetes == True
+    fail_msg: "OPA Settings are Incomplete"
+  when:
+    - site_deploy_opa
+
+- name: Check for Mandatory Deep Security as a Service Settings
+  assert:
+    that:
+      - deepsecurity_tenant_id != "MANDATORY"
+      - deepsecurity_token != "MANDATORY"
+    fail_msg: "Deep Security as a Service Settings are Incomplete"
+  when:
+    - site_deploy_deepsecurity
+    - deepsecurity_variant == "dsaas"
+
+- name: Check for Mandatory Deep Security Settings
+  assert:
+    that:
+      - deepsecurity_license != "MANDATORY"
+    fail_msg: "Deep Security Settings are Incomplete"
+  when:
+    - site_deploy_deepsecurity
+    - deepsecurity_variant == "dsm"
+
+- name: Check for Mandatory Deep Security Endpoint Settings
+  assert:
+    that:
+      - site_deploy_deepsecurity == True
+    fail_msg: "Deep Security Endpoint Settings are Incomplete"
+  when:
+    - site_deploy_endpoints

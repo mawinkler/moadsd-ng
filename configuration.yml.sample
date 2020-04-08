@@ -1,0 +1,28 @@
+# #####################################################################
+# Site Deploy Components
+# #####################################################################
+site_deploy_kubernetes: yes
+site_deploy_smartcheck: yes
+site_deploy_jenkins: yes
+site_deploy_prometheus: yes
+site_deploy_grafana: yes
+
+# #####################################################################
+# Google Cloud Settings
+# #####################################################################
+gcp_project_id: MANDATORY
+
+# #####################################################################
+# AWS Cloud Settings
+# #####################################################################
+aws_access_key: MANDATORY
+aws_secret_key: MANDATORY
+
+# #####################################################################
+# Site Secrets
+# #####################################################################
+# Deep Security Smart Check
+smartcheck_license: MANDATORY
+
+# Ansible
+admin_email: MANDATORY

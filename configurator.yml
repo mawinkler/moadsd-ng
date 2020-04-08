@@ -1,0 +1,27 @@
+---
+# #####################################################################
+# Configurator for MOADSD-NG Environment
+# #####################################################################
+- name: Configurator MOADSD-NG Environment
+  hosts: localhost
+  # gather_facts: no
+  connection: local
+
+  vars:
+    scopes:
+      - https://www.googleapis.com/auth/compute
+
+  tasks:
+    - name: Configure MOADSD-NG for GCP
+      include_role:
+        name: configurator
+      vars:
+        operation: configure_gcp
+      when: type == 'gcp'
+
+    - name: Configure MOADSD-NG for AWS
+      include_role:
+        name: configurator
+      vars:
+        operation: configure_aws
+      when: type == 'aws'
