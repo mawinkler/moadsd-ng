@@ -85,8 +85,8 @@ windowsep_instance_count: 0
 # Deep Security
 deepsecurity_license: MANDATORY
 deepsecurity_administrator_username: admin
-deepsecurity_administrator_password: TrendM1cr0
-deepsecurity_database_password: TrendM1cr0
+deepsecurity_administrator_password: trendmicro
+deepsecurity_database_password: trendmicro
 
 # Deep Security as a Service
 deepsecurity_tenant_id: MANDATORY
@@ -95,11 +95,11 @@ deepsecurity_token: MANDATORY
 # Deep Security Smart Check
 smartcheck_license: MANDATORY
 smartcheck_username: admin
-smartcheck_password: TrendM1cr0
+smartcheck_password: trendmicro
 smartcheck_registry_username: reguser
-smartcheck_registry_password: TrendM1cr0
+smartcheck_registry_password: trendmicro
 smartcheck_database_username: dssc
-smartcheck_database_password: TrendM1cr0
+smartcheck_database_password: trendmicro
 
 # Cloud One Application Security
 application_security_key: OPTIONAL
@@ -110,7 +110,7 @@ openshift_pull_secret: MANDATORY
 
 # Jenkins
 jenkins_username: admin
-jenkins_password: TrendM1cr0
+jenkins_password: trendmicro
 jenkins_token: OPTIONAL
 jenkins_github_access_token: OPTIONAL
 
@@ -119,12 +119,12 @@ gitlab_runner_registration_token: OPTIONAL
 
 # Cluster Registry
 cluster_registry_username: reguser
-cluster_registry_password: TrendM1cr0
+cluster_registry_password: trendmicro
 
 # Grafana
 # Only required, if you are using Grafana
 grafana_username: admin
-grafana_password: TrendM1cr0
+grafana_password: trendmicro
 
 # Ansible
 ansible_ssh_key: MANDATORY
