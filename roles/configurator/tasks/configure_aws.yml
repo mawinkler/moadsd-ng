@@ -73,17 +73,18 @@
 - name: Choosing Python Version 2
   set_fact:
     python_version: python
-  when: ansible_python_version|float < 3
+  when: ansible_python_version | regex_search("^2")
 
 - name: Choosing Python Version 3
   set_fact:
     python_version: python3
-  when: ansible_python_version|float >= 3
+  when: ansible_python_version | regex_search("^3")
 
 - name: Create AWS Dynamic Inventory Configuration
   template:
     src: ec2.py.j2
     dest: ./ec2.py
+    mode: 755
 
 - name: Create AWS Secret Configuration
   template:
