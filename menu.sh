@@ -4,7 +4,7 @@ run_inv=""
 run_pb=""
 
 env_options=("gcp" "aws" "esx"
-             "site_secrets"
+             "site_secrets" "configuration"
              "switch_to_gcp" "switch_to_aws" "switch_to_esx")
 echo 'Please choose the target environment: '
 select opt in "${env_options[@]}"
@@ -28,6 +28,11 @@ do
     "site_secrets")
     echo Running ansible-vault edit --vault-password-file ../.vault-pass.txt ./vars/site_secrets.yml
     ansible-vault edit --vault-password-file ../.vault-pass.txt ./vars/site_secrets.yml
+    exit 0
+    ;;
+    "configuration")
+    echo Running ansible-vault edit --vault-password-file ../.vault-pass.txt ./configuration.yml
+    ansible-vault edit --vault-password-file ../.vault-pass.txt ./configuration.yml
     exit 0
     ;;
     "switch_to_gcp")
