@@ -55,7 +55,6 @@
           ssh {{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] }}
         force: yes
         owner: ansible
-        group: ansible
         mode: '0700'
 
     - name: Create Master SSH Command
@@ -66,5 +65,4 @@
           ssh -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p {{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] }}" {{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}
         force: yes
         owner: ansible
-        group: ansible
         mode: '0700'
