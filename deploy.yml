@@ -79,7 +79,7 @@
         owner: ansible
         group: ansible
         mode: '0700'
-        
+
 # #####################################################################
 # Create http & https Proxy with Trusted Certificates
 # #####################################################################
@@ -88,7 +88,7 @@
   become: true
 
   vars:
-    trusted_certificates: {{ trusted_certificates }}
+    trusted_certificates: "{{ trusted_certificates }}"
     create_proxy_configurations: True
 
   tasks:
