@@ -17,12 +17,12 @@
     state: directory
 
 # VAR 1
-# - name: Create OPA Namespace
-#   become: true
-#   become_user: ubuntu
-#   shell: kubectl create namespace {{ opa_namespace }} --dry-run=true -o yaml | kubectl apply -f -
-#   args:
-#     chdir: $HOME
+- name: Create OPA Namespace
+  become: true
+  become_user: ubuntu
+  shell: kubectl create namespace {{ opa_namespace }} --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME
 
 - name: Create OPA Server Certificate Configuration
   become: true
@@ -54,252 +54,96 @@
     chdir: $HOME
 
 # VAR2
-- name: Create Namespace and Auth Resources Configuration
-  become: true
-  become_user: ubuntu
-  copy:
-    dest: /home/ubuntu/opa/namespace-auth-resources.yaml
-    mode: 0640
-    content: |
-      apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: opa
-        labels:
-          app: opa
-      ---
-      apiVersion: v1
-      kind: ServiceAccount
-      metadata:
-        name: opa
-        namespace: opa
-        labels:
-          app: opa
-      ---
-      kind: ClusterRole
-      apiVersion: rbac.authorization.k8s.io/v1
-      metadata:
-        name: opa
-        labels:
-          app: opa
-      rules:
-        - apiGroups: [""]
-          resources:
-            - namespaces
-          verbs:
-            - get
-            - list
-            - watch
-        - apiGroups: ["extensions"]
-          resources:
-            - ingresses
-          verbs:
-            - get
-            - list
-            - watch
-        - apiGroups: ["apps"]
-          resources:
-            - deployments
-          verbs:
-            - get
-            - list
-            - watch
-        - apiGroups: [""]
-          resources:
-            - configmaps
-          verbs:
-            - get
-            - list
-            - patch
-            - watch
-      ---
-      apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: opa
-        labels:
-          app: opa
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: opa
-      subjects:
-      - kind: ServiceAccount
-        name: opa
-        namespace: opa
-
-# VAR 2
-- name: Apply Namespace and Auth Resources Configuration
-  become: true
-  become_user: ubuntu
-  shell: kubectl apply -f opa/namespace-auth-resources.yaml --dry-run=true -o yaml | kubectl apply -f -
-  args:
-    chdir: $HOME
-
-- name: Creating OPA Secret
-  become: true
-  become_user: ubuntu
-  shell: kubectl -n opa create secret tls opa-server --cert=opa/webhook-server-tls.crt --key=opa/webhook-server-tls.key
-  args:
-    chdir: $HOME
-
-# VAR 1
-# - name: Create Admission Controller Deployment Configuration
+# - name: Create Namespace and Auth Resources Configuration
 #   become: true
 #   become_user: ubuntu
 #   copy:
-#     dest: /home/ubuntu/opa/admission-controller.yaml
+#     dest: /home/ubuntu/opa/namespace-auth-resources.yaml
 #     mode: 0640
 #     content: |
-#       # Grant OPA/kube-mgmt read-only access to resources. This lets kube-mgmt
-#       # replicate resources into OPA so they can be used in policies.
-#       kind: ClusterRoleBinding
-#       apiVersion: rbac.authorization.k8s.io/v1
-#       metadata:
-#         name: opa-viewer
-#       roleRef:
-#         kind: ClusterRole
-#         name: view
-#         apiGroup: rbac.authorization.k8s.io
-#       subjects:
-#       - kind: Group
-#         name: system:serviceaccounts:opa
-#         apiGroup: rbac.authorization.k8s.io
-#       ---
-#       # Define role for OPA/kube-mgmt to update configmaps with policy status.
-#       kind: Role
-#       apiVersion: rbac.authorization.k8s.io/v1
-#       metadata:
-#         namespace: opa
-#         name: configmap-modifier
-#       rules:
-#       - apiGroups: [""]
-#         resources: ["configmaps"]
-#         verbs: ["update", "patch"]
-#       ---
-#       # Grant OPA/kube-mgmt role defined above.
-#       kind: RoleBinding
-#       apiVersion: rbac.authorization.k8s.io/v1
-#       metadata:
-#         namespace: opa
-#         name: opa-configmap-modifier
-#       roleRef:
-#         kind: Role
-#         name: configmap-modifier
-#         apiGroup: rbac.authorization.k8s.io
-#       subjects:
-#       - kind: Group
-#         name: system:serviceaccounts:opa
-#         apiGroup: rbac.authorization.k8s.io
-#       ---
-#       kind: Service
 #       apiVersion: v1
+#       kind: Namespace
 #       metadata:
 #         name: opa
-#         namespace: opa
-#       spec:
-#         selector:
-#           app: opa
-#         ports:
-#         - name: https
-#           protocol: TCP
-#           port: 443
-#           targetPort: 443
-#       ---
-#       apiVersion: apps/v1
-#       kind: Deployment
-#       metadata:
 #         labels:
 #           app: opa
-#         namespace: opa
-#         name: opa
-#       spec:
-#         replicas: 1
-#         selector:
-#           matchLabels:
-#             app: opa
-#         template:
-#           metadata:
-#             labels:
-#               app: opa
-#             name: opa
-#           spec:
-#             containers:
-#               # WARNING: OPA is NOT running with an authorization policy configured. This
-#               # means that clients can read and write policies in OPA. If you are
-#               # deploying OPA in an insecure environment, be sure to configure
-#               # authentication and authorization on the daemon. See the Security page for
-#               # details: https://www.openpolicyagent.org/docs/security.html.
-#               - name: opa
-#                 image: openpolicyagent/opa:latest
-#                 args:
-#                   - "run"
-#                   - "--server"
-#                   - "--tls-cert-file=/certs/tls.crt"
-#                   - "--tls-private-key-file=/certs/tls.key"
-#                   - "--addr=0.0.0.0:443"
-#                   - "--addr=http://127.0.0.1:8181"
-#                   - "--log-format=json-pretty"
-#                   - "--set=decision_logs.console=true"
-#                 volumeMounts:
-#                   - readOnly: true
-#                     mountPath: /certs
-#                     name: opa-server
-#                 readinessProbe:
-#                   httpGet:
-#                     path: /health?plugins&bundle
-#                     scheme: HTTPS
-#                     port: 443
-#                   initialDelaySeconds: 3
-#                   periodSeconds: 5
-#                 livenessProbe:
-#                   httpGet:
-#                     path: /health
-#                     scheme: HTTPS
-#                     port: 443
-#                   initialDelaySeconds: 3
-#                   periodSeconds: 5
-#               - name: kube-mgmt
-#                 image: openpolicyagent/kube-mgmt:0.8
-#                 args:
-#                   - "--replicate-cluster=v1/namespaces"
-#                   - "--replicate=extensions/v1beta1/ingresses"
-#             volumes:
-#               - name: opa-server
-#                 secret:
-#                   secretName: opa-server
 #       ---
-#       kind: ConfigMap
 #       apiVersion: v1
+#       kind: ServiceAccount
 #       metadata:
-#         name: opa-default-system-main
+#         name: opa
 #         namespace: opa
-#       data:
-#         main: |
-#           package system
-#
-#           import data.kubernetes.admission
-#
-#           main = {
-#             "apiVersion": "admission.k8s.io/v1beta1",
-#             "kind": "AdmissionReview",
-#             "response": response,
-#           }
-#
-#           default response = {"allowed": true}
-#
-#           response = {
-#               "allowed": false,
-#               "status": {
-#                   "reason": reason,
-#               },
-#           } {
-#               reason = concat(", ", admission.deny)
-#               reason != ""
-#           }
-
+#         labels:
+#           app: opa
+#       ---
+#       kind: ClusterRole
+#       apiVersion: rbac.authorization.k8s.io/v1
+#       metadata:
+#         name: opa
+#         labels:
+#           app: opa
+#       rules:
+#         - apiGroups: [""]
+#           resources:
+#             - namespaces
+#           verbs:
+#             - get
+#             - list
+#             - watch
+#         - apiGroups: ["extensions"]
+#           resources:
+#             - ingresses
+#           verbs:
+#             - get
+#             - list
+#             - watch
+#         - apiGroups: ["apps"]
+#           resources:
+#             - deployments
+#           verbs:
+#             - get
+#             - list
+#             - watch
+#         - apiGroups: [""]
+#           resources:
+#             - configmaps
+#           verbs:
+#             - get
+#             - list
+#             - patch
+#             - watch
+#       ---
+#       apiVersion: rbac.authorization.k8s.io/v1
+#       kind: ClusterRoleBinding
+#       metadata:
+#         name: opa
+#         labels:
+#           app: opa
+#       roleRef:
+#         apiGroup: rbac.authorization.k8s.io
+#         kind: ClusterRole
+#         name: opa
+#       subjects:
+#       - kind: ServiceAccount
+#         name: opa
+#         namespace: opa
 
 # VAR 2
+# - name: Apply Namespace and Auth Resources Configuration
+#   become: true
+#   become_user: ubuntu
+#   shell: kubectl apply -f opa/namespace-auth-resources.yaml --dry-run=true -o yaml | kubectl apply -f -
+#   args:
+#     chdir: $HOME
+#
+# - name: Creating OPA Secret
+#   become: true
+#   become_user: ubuntu
+#   shell: kubectl -n opa create secret tls opa-server --cert=opa/webhook-server-tls.crt --key=opa/webhook-server-tls.key
+#   args:
+#     chdir: $HOME
+
+# VAR 1
 - name: Create Admission Controller Deployment Configuration
   become: true
   become_user: ubuntu
@@ -307,13 +151,52 @@
     dest: /home/ubuntu/opa/admission-controller.yaml
     mode: 0640
     content: |
+      # Grant OPA/kube-mgmt read-only access to resources. This lets kube-mgmt
+      # replicate resources into OPA so they can be used in policies.
+      kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: opa-viewer
+      roleRef:
+        kind: ClusterRole
+        name: view
+        apiGroup: rbac.authorization.k8s.io
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:opa
+        apiGroup: rbac.authorization.k8s.io
+      ---
+      # Define role for OPA/kube-mgmt to update configmaps with policy status.
+      kind: Role
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        namespace: opa
+        name: configmap-modifier
+      rules:
+      - apiGroups: [""]
+        resources: ["configmaps"]
+        verbs: ["update", "patch"]
+      ---
+      # Grant OPA/kube-mgmt role defined above.
+      kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        namespace: opa
+        name: opa-configmap-modifier
+      roleRef:
+        kind: Role
+        name: configmap-modifier
+        apiGroup: rbac.authorization.k8s.io
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:opa
+        apiGroup: rbac.authorization.k8s.io
+      ---
       kind: Service
       apiVersion: v1
       metadata:
         name: opa
         namespace: opa
-        labels:
-          app: opa
       spec:
         selector:
           app: opa
@@ -328,30 +211,27 @@
       metadata:
         labels:
           app: opa
-        name: opa
         namespace: opa
+        name: opa
       spec:
+        replicas: 1
         selector:
           matchLabels:
             app: opa
-        replicas: 1
         template:
           metadata:
             labels:
               app: opa
             name: opa
           spec:
-            serviceAccountName: opa
             containers:
+              # WARNING: OPA is NOT running with an authorization policy configured. This
+              # means that clients can read and write policies in OPA. If you are
+              # deploying OPA in an insecure environment, be sure to configure
+              # authentication and authorization on the daemon. See the Security page for
+              # details: https://www.openpolicyagent.org/docs/security.html.
               - name: opa
                 image: openpolicyagent/opa:latest
-                resources:
-                  limits:
-                    cpu: 500m
-                    memory: 512Mi
-                  requests:
-                    cpu: 500m
-                    memory: 512Mi
                 args:
                   - "run"
                   - "--server"
@@ -365,19 +245,25 @@
                   - readOnly: true
                     mountPath: /certs
                     name: opa-server
+                readinessProbe:
+                  httpGet:
+                    path: /health?plugins&bundle
+                    scheme: HTTPS
+                    port: 443
+                  initialDelaySeconds: 3
+                  periodSeconds: 5
+                livenessProbe:
+                  httpGet:
+                    path: /health
+                    scheme: HTTPS
+                    port: 443
+                  initialDelaySeconds: 3
+                  periodSeconds: 5
               - name: kube-mgmt
                 image: openpolicyagent/kube-mgmt:0.8
-                resources:
-                  limits:
-                    cpu: 500m
-                    memory: 512Mi
-                  requests:
-                    cpu: 500m
-                    memory: 512Mi
                 args:
                   - "--replicate-cluster=v1/namespaces"
-                  - "--replicate=networking.k8s.io/v1beta1/ingresses"
-                  - "--replicate=apps/v1/deployments"
+                  - "--replicate=extensions/v1beta1/ingresses"
             volumes:
               - name: opa-server
                 secret:
@@ -388,8 +274,6 @@
       metadata:
         name: opa-default-system-main
         namespace: opa
-        labels:
-          app: opa
       data:
         main: |
           package system
@@ -413,6 +297,122 @@
               reason = concat(", ", admission.deny)
               reason != ""
           }
+
+
+# VAR 2
+# - name: Create Admission Controller Deployment Configuration
+#   become: true
+#   become_user: ubuntu
+#   copy:
+#     dest: /home/ubuntu/opa/admission-controller.yaml
+#     mode: 0640
+#     content: |
+#       kind: Service
+#       apiVersion: v1
+#       metadata:
+#         name: opa
+#         namespace: opa
+#         labels:
+#           app: opa
+#       spec:
+#         selector:
+#           app: opa
+#         ports:
+#         - name: https
+#           protocol: TCP
+#           port: 443
+#           targetPort: 443
+#       ---
+#       apiVersion: apps/v1
+#       kind: Deployment
+#       metadata:
+#         labels:
+#           app: opa
+#         name: opa
+#         namespace: opa
+#       spec:
+#         selector:
+#           matchLabels:
+#             app: opa
+#         replicas: 1
+#         template:
+#           metadata:
+#             labels:
+#               app: opa
+#             name: opa
+#           spec:
+#             serviceAccountName: opa
+#             containers:
+#               - name: opa
+#                 image: openpolicyagent/opa:latest
+#                 resources:
+#                   limits:
+#                     cpu: 500m
+#                     memory: 512Mi
+#                   requests:
+#                     cpu: 500m
+#                     memory: 512Mi
+#                 args:
+#                   - "run"
+#                   - "--server"
+#                   - "--tls-cert-file=/certs/tls.crt"
+#                   - "--tls-private-key-file=/certs/tls.key"
+#                   - "--addr=0.0.0.0:443"
+#                   - "--addr=http://127.0.0.1:8181"
+#                   - "--log-format=json-pretty"
+#                   - "--set=decision_logs.console=true"
+#                 volumeMounts:
+#                   - readOnly: true
+#                     mountPath: /certs
+#                     name: opa-server
+#               - name: kube-mgmt
+#                 image: openpolicyagent/kube-mgmt:0.8
+#                 resources:
+#                   limits:
+#                     cpu: 500m
+#                     memory: 512Mi
+#                   requests:
+#                     cpu: 500m
+#                     memory: 512Mi
+#                 args:
+#                   - "--replicate-cluster=v1/namespaces"
+#                   - "--replicate=networking.k8s.io/v1beta1/ingresses"
+#                   - "--replicate=apps/v1/deployments"
+#             volumes:
+#               - name: opa-server
+#                 secret:
+#                   secretName: opa-server
+#       ---
+#       kind: ConfigMap
+#       apiVersion: v1
+#       metadata:
+#         name: opa-default-system-main
+#         namespace: opa
+#         labels:
+#           app: opa
+#       data:
+#         main: |
+#           package system
+#
+#           import data.kubernetes.admission
+#
+#           main = {
+#             "apiVersion": "admission.k8s.io/v1",
+#             "kind": "AdmissionReview",
+#             "response": response,
+#           }
+#
+#           default response = {"allowed": true}
+#
+#           response = {
+#               "allowed": false,
+#               "status": {
+#                   "reason": reason,
+#               },
+#           } {
+#               reason = concat(", ", admission.deny)
+#               reason != ""
+#           }
 
 # VAR 3
 # - name: Create Admission Controller Deployment Configuration
