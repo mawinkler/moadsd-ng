@@ -84,7 +84,7 @@
   template:
     src: ec2.py.j2
     dest: ./ec2.py
-    mode: 755
+    mode: 0755
 
 - name: Create AWS Secret Configuration
   template:
