@@ -136,12 +136,12 @@
 #   args:
 #     chdir: $HOME
 #
-# - name: Creating OPA Secret
-#   become: true
-#   become_user: ubuntu
-#   shell: kubectl -n opa create secret tls opa-server --cert=opa/webhook-server-tls.crt --key=opa/webhook-server-tls.key
-#   args:
-#     chdir: $HOME
+- name: Creating OPA Secret
+  become: true
+  become_user: ubuntu
+  shell: kubectl -n opa create secret tls opa-server --cert=opa/webhook-server-tls.crt --key=opa/webhook-server-tls.key
+  args:
+    chdir: $HOME
 
 # VAR 1
 - name: Create Admission Controller Deployment Configuration
