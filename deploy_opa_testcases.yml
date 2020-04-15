@@ -69,8 +69,8 @@
     - name: Include vars
       include: site_vars.yml
 
-    - name: Deploy OPA
+    - name: Deploy OPA Testcases
       include_role:
         name: opa
       vars:
-        operation: deploy
+        operation: testcases

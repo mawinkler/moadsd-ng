@@ -13,7 +13,7 @@
 # Test Policies
 # Ingress Whitelisting
 #
-- name: Define a Ingress Whitelisting Policy and Load it into OPA via Kubernetes
+- name: Define a Ingress Whitelisting Policy
   become: true
   become_user: ubuntu
   copy:
@@ -141,7 +141,7 @@
 # Test Policies
 # Registry Whitelisting
 #
-- name: Define a Registry Whitelist Policy and Load it into OPA via Kubernetes
+- name: Define a Registry Whitelist Policy
   become: true
   become_user: ubuntu
   copy:
@@ -166,22 +166,51 @@
 # Test Policies
 # Pod Image Debug Policy
 #
-- name: Define a Pod Image Debug Policy and Load it into OPA via Kubernetes
+- name: Define a Pod Image Only Nginx Allowed Policy
   become: true
   become_user: ubuntu
   copy:
-    dest: /home/ubuntu/opa-tests/pod-image-debug.rego
+    dest: /home/ubuntu/opa-tests/only-nginx-allowed.rego
     mode: 0640
     content: |
       package kubernetes.admission
 
-      allow[msg] {
-              input.request.kind.kind == "Pod"
-              image := input.request.object.spec.containers[_].image
-              msg := sprintf("Image pulled: %v", [image])
+      deny[msg] {
+        input.request.kind.kind == "Pod"
+        image := input.request.object.spec.containers[_].image
+        trace(sprintf("Image pulled: '%v'", [image]))
+        not startswith(image, "nginx")
+        msg := sprintf("Image pulled is not an nginx: '%v'", [image])
       }
 
-- name: Define a Pod Image Debug Policy and Load it into OPA via Kubernetes
+- name: Define a Busybox Deployment
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/opa-tests/busybox-deployment.yml
+    mode: 0640
+    content: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: busybox-deployment
+        labels:
+          app: busybox
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: busybox
+        template:
+          metadata:
+            labels:
+              app: busybox
+          spec:
+            containers:
+            - name: busybox
+              image: busybox:latest
+
+- name: Define a Nginx Deployment
   become: true
   become_user: ubuntu
   copy:
@@ -213,6 +242,7 @@
 - name: How to
   debug:
     msg:
-      - kubectl -n opa create configmap pod-image-debug --from-file=opa-tests/pod-image-debug.rego
+      - kubectl -n opa create configmap only-nginx-allowed --from-file=opa-tests/only-nginx-allowed.rego
       - kubectl apply -f opa-tests/nginx-deployment.yml
       - kubectl delete -f opa-tests/nginx-deployment.yml
+      - kubectl apply -f opa-tests/busybox-deployment.yml
