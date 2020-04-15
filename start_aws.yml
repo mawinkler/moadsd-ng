@@ -3,7 +3,7 @@
 # Create MOADSD-NG Environment in AWS
 # #####################################################################
 - name: Check if AWS cloud SDK is installed
-  command: aws version
+  command: aws --version
   register: aws_installed
   changed_when: false
   ignore_errors: yes
