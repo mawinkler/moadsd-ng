@@ -74,4 +74,9 @@
         name: opa
       vars:
         operation: deploy
-      # when: site_deploy_opa == True
+
+    - name: Deploy OPA Testcases
+      include_role:
+        name: opa
+      vars:
+        operation: testcases

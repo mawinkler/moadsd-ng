@@ -5,3 +5,7 @@
 - name: Deploy
   include: deploy.yml
   when: operation == 'deploy'
+
+- name: Testcases
+  include: testcases.yml
+  when: operation == 'testcases'

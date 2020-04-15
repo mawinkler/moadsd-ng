@@ -573,6 +573,15 @@
         - site_deploy_opa == True
         - site_deploy_kubernetes == True
 
+    - name: Deploy OPA Testcases
+      include_role:
+        name: opa
+      vars:
+        operation: testcases
+      when:
+        - site_deploy_opa == True
+        - site_deploy_kubernetes == True
+
 # #####################################################################
 # Deploy Prometheus
 # #####################################################################

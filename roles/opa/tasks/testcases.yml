@@ -1,0 +1,218 @@
+---
+# #####################################################################
+# Deploy OPA Test Cases
+# #####################################################################
+- name: Create Subdirectory opa-tests
+  become: true
+  become_user: ubuntu
+  file:
+    path: "/home/ubuntu/opa-tests"
+    state: directory
+
+#
+# Test Policies
+# Ingress Whitelisting
+#
+- name: Define a Ingress Whitelisting Policy and Load it into OPA via Kubernetes
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/opa-tests/ingress-whitelist.rego
+    mode: 0640
+    content: |
+      package kubernetes.admission
+
+      import data.kubernetes.namespaces
+
+      operations = {"CREATE", "UPDATE"}
+
+      deny[msg] {
+      	input.request.kind.kind == "Ingress"
+      	operations[input.request.operation]
+      	host := input.request.object.spec.rules[_].host
+      	not fqdn_matches_any(host, valid_ingress_hosts)
+      	msg := sprintf("invalid ingress host %q", [host])
+      }
+
+      valid_ingress_hosts = {host |
+      	whitelist := namespaces[input.request.namespace].metadata.annotations["ingress-whitelist"]
+      	hosts := split(whitelist, ",")
+      	host := hosts[_]
+      }
+
+      fqdn_matches_any(str, patterns) {
+      	fqdn_matches(str, patterns[_])
+      }
+
+      fqdn_matches(str, pattern) {
+      	pattern_parts := split(pattern, ".")
+      	pattern_parts[0] == "*"
+      	str_parts := split(str, ".")
+      	n_pattern_parts := count(pattern_parts)
+      	n_str_parts := count(str_parts)
+      	suffix := trim(pattern, "*.")
+      	endswith(str, suffix)
+      }
+
+      fqdn_matches(str, pattern) {
+          not contains(pattern, "*")
+          str == pattern
+      }
+
+- name: Ingress Whitelisting - namespace-qa
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/opa-tests/namespace-qa.yaml
+    mode: 0640
+    content: |
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        annotations:
+          ingress-whitelist: "*.qa.acmecorp.com,*.internal.acmecorp.com"
+        name: qa
+
+- name: Ingress Whitelisting - namespace-production
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/opa-tests/namespace-production.yaml
+    mode: 0640
+    content: |
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        annotations:
+          ingress-whitelist: "*.acmecorp.com"
+        name: production
+
+- name: Ingress Whitelisting - ingress-ok
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/opa-tests/ingress-ok.yaml
+    mode: 0640
+    content: |
+      apiVersion: extensions/v1beta1
+      kind: Ingress
+      metadata:
+        name: ingress-ok
+      spec:
+        rules:
+        - host: signin.acmecorp.com
+          http:
+            paths:
+            - backend:
+                serviceName: nginx
+                servicePort: 80
+
+- name: Ingress Whitelisting - ingress-bad
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/opa-tests/ingress-bad.yaml
+    mode: 0640
+    content: |
+      apiVersion: extensions/v1beta1
+      kind: Ingress
+      metadata:
+        name: ingress-bad
+      spec:
+        rules:
+        - host: acmecorp.com
+          http:
+            paths:
+            - backend:
+                serviceName: nginx
+                servicePort: 80
+
+- name: How to
+  debug:
+    msg:
+      - kubectl -n opa logs -l app=opa -c opa -f
+      - kubectl -n opa create configmap ingress-whitelist --from-file=opa-tests/ingress-whitelist.rego
+      - kubectl create -f opa-tests/namespace-qa.yaml
+      - kubectl create -f opa-tests/namespace-production.yaml
+      - kubectl create -f opa-tests/ingress-ok.yaml -n production
+      - kubectl create -f opa-tests/ingress-bad.yaml -n qa
+
+#
+# Test Policies
+# Registry Whitelisting
+#
+- name: Define a Registry Whitelist Policy and Load it into OPA via Kubernetes
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/opa-tests/registry-whitelist.rego
+    mode: 0640
+    content: |
+      package kubernetes.admission
+
+      deny[msg] {
+        input.request.kind.kind == "Pod"
+        image := input.request.object.spec.containers[_].image
+        not startswith(image, "docker.io/")
+        msg := sprintf("Image is not from our trusted registry: %v", [image])
+      }
+
+- name: How to
+  debug:
+    msg:
+      - kubectl -n opa create configmap registry-whitelist --from-file=opa-tests/registry-whitelist.rego
+
+#
+# Test Policies
+# Pod Image Debug Policy
+#
+- name: Define a Pod Image Debug Policy and Load it into OPA via Kubernetes
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/opa-tests/pod-image-debug.rego
+    mode: 0640
+    content: |
+      package kubernetes.admission
+
+      allow[msg] {
+              input.request.kind.kind == "Pod"
+              image := input.request.object.spec.containers[_].image
+              msg := sprintf("Image pulled: %v", [image])
+      }
+
+- name: Define a Pod Image Debug Policy and Load it into OPA via Kubernetes
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/opa-tests/nginx-deployment.yml
+    mode: 0640
+    content: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: nginx-deployment
+        labels:
+          app: nginx
+      spec:
+        replicas: 3
+        selector:
+          matchLabels:
+            app: nginx
+        template:
+          metadata:
+            labels:
+              app: nginx
+          spec:
+            containers:
+            - name: nginx
+              image: nginx:1.14.2
+              ports:
+              - containerPort: 80
+
+- name: How to
+  debug:
+    msg:
+      - kubectl -n opa create configmap pod-image-debug --from-file=opa-tests/pod-image-debug.rego
+      - kubectl apply -f opa-tests/nginx-deployment.yml
+      - kubectl delete -f opa-tests/nginx-deployment.yml

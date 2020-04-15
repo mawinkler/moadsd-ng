@@ -9,14 +9,6 @@
     path: "/home/ubuntu/opa"
     state: directory
 
-- name: Create Subdirectory opa-tests
-  become: true
-  become_user: ubuntu
-  file:
-    path: "/home/ubuntu/opa-tests"
-    state: directory
-
-# VAR 1
 - name: Create OPA Namespace
   become: true
   become_user: ubuntu
@@ -40,7 +32,6 @@
       keyUsage = nonRepudiation, digitalSignature, keyEncipherment
       extendedKeyUsage = clientAuth, serverAuth
 
-    # openssl rand -writerand .rnd
 - name: Creating OPA Certification Authority and Server Certificate
   become: true
   become_user: ubuntu
@@ -53,89 +44,6 @@
   args:
     chdir: $HOME
 
-# VAR2
-# - name: Create Namespace and Auth Resources Configuration
-#   become: true
-#   become_user: ubuntu
-#   copy:
-#     dest: /home/ubuntu/opa/namespace-auth-resources.yaml
-#     mode: 0640
-#     content: |
-#       apiVersion: v1
-#       kind: Namespace
-#       metadata:
-#         name: opa
-#         labels:
-#           app: opa
-#       ---
-#       apiVersion: v1
-#       kind: ServiceAccount
-#       metadata:
-#         name: opa
-#         namespace: opa
-#         labels:
-#           app: opa
-#       ---
-#       kind: ClusterRole
-#       apiVersion: rbac.authorization.k8s.io/v1
-#       metadata:
-#         name: opa
-#         labels:
-#           app: opa
-#       rules:
-#         - apiGroups: [""]
-#           resources:
-#             - namespaces
-#           verbs:
-#             - get
-#             - list
-#             - watch
-#         - apiGroups: ["extensions"]
-#           resources:
-#             - ingresses
-#           verbs:
-#             - get
-#             - list
-#             - watch
-#         - apiGroups: ["apps"]
-#           resources:
-#             - deployments
-#           verbs:
-#             - get
-#             - list
-#             - watch
-#         - apiGroups: [""]
-#           resources:
-#             - configmaps
-#           verbs:
-#             - get
-#             - list
-#             - patch
-#             - watch
-#       ---
-#       apiVersion: rbac.authorization.k8s.io/v1
-#       kind: ClusterRoleBinding
-#       metadata:
-#         name: opa
-#         labels:
-#           app: opa
-#       roleRef:
-#         apiGroup: rbac.authorization.k8s.io
-#         kind: ClusterRole
-#         name: opa
-#       subjects:
-#       - kind: ServiceAccount
-#         name: opa
-#         namespace: opa
-
-# VAR 2
-# - name: Apply Namespace and Auth Resources Configuration
-#   become: true
-#   become_user: ubuntu
-#   shell: kubectl apply -f opa/namespace-auth-resources.yaml --dry-run=true -o yaml | kubectl apply -f -
-#   args:
-#     chdir: $HOME
-#
 - name: Creating OPA Secret
   become: true
   become_user: ubuntu
@@ -143,7 +51,6 @@
   args:
     chdir: $HOME
 
-# VAR 1
 - name: Create Admission Controller Deployment Configuration
   become: true
   become_user: ubuntu
@@ -298,241 +205,6 @@
               reason != ""
           }
 
-
-# VAR 2
-# - name: Create Admission Controller Deployment Configuration
-#   become: true
-#   become_user: ubuntu
-#   copy:
-#     dest: /home/ubuntu/opa/admission-controller.yaml
-#     mode: 0640
-#     content: |
-#       kind: Service
-#       apiVersion: v1
-#       metadata:
-#         name: opa
-#         namespace: opa
-#         labels:
-#           app: opa
-#       spec:
-#         selector:
-#           app: opa
-#         ports:
-#         - name: https
-#           protocol: TCP
-#           port: 443
-#           targetPort: 443
-#       ---
-#       apiVersion: apps/v1
-#       kind: Deployment
-#       metadata:
-#         labels:
-#           app: opa
-#         name: opa
-#         namespace: opa
-#       spec:
-#         selector:
-#           matchLabels:
-#             app: opa
-#         replicas: 1
-#         template:
-#           metadata:
-#             labels:
-#               app: opa
-#             name: opa
-#           spec:
-#             serviceAccountName: opa
-#             containers:
-#               - name: opa
-#                 image: openpolicyagent/opa:latest
-#                 resources:
-#                   limits:
-#                     cpu: 500m
-#                     memory: 512Mi
-#                   requests:
-#                     cpu: 500m
-#                     memory: 512Mi
-#                 args:
-#                   - "run"
-#                   - "--server"
-#                   - "--tls-cert-file=/certs/tls.crt"
-#                   - "--tls-private-key-file=/certs/tls.key"
-#                   - "--addr=0.0.0.0:443"
-#                   - "--addr=http://127.0.0.1:8181"
-#                   - "--log-format=json-pretty"
-#                   - "--set=decision_logs.console=true"
-#                 volumeMounts:
-#                   - readOnly: true
-#                     mountPath: /certs
-#                     name: opa-server
-#               - name: kube-mgmt
-#                 image: openpolicyagent/kube-mgmt:0.8
-#                 resources:
-#                   limits:
-#                     cpu: 500m
-#                     memory: 512Mi
-#                   requests:
-#                     cpu: 500m
-#                     memory: 512Mi
-#                 args:
-#                   - "--replicate-cluster=v1/namespaces"
-#                   - "--replicate=networking.k8s.io/v1beta1/ingresses"
-#                   - "--replicate=apps/v1/deployments"
-#             volumes:
-#               - name: opa-server
-#                 secret:
-#                   secretName: opa-server
-#       ---
-#       kind: ConfigMap
-#       apiVersion: v1
-#       metadata:
-#         name: opa-default-system-main
-#         namespace: opa
-#         labels:
-#           app: opa
-#       data:
-#         main: |
-#           package system
-#
-#           import data.kubernetes.admission
-#
-#           main = {
-#             "apiVersion": "admission.k8s.io/v1",
-#             "kind": "AdmissionReview",
-#             "response": response,
-#           }
-#
-#           default response = {"allowed": true}
-#
-#           response = {
-#               "allowed": false,
-#               "status": {
-#                   "reason": reason,
-#               },
-#           } {
-#               reason = concat(", ", admission.deny)
-#               reason != ""
-#           }
-
-# VAR 3
-# - name: Create Admission Controller Deployment Configuration
-#   become: true
-#   become_user: ubuntu
-#   copy:
-#     dest: /home/ubuntu/opa/admission-controller.yaml
-#     mode: 0640
-#     content: |
-#       kind: Service
-#       apiVersion: v1
-#       metadata:
-#         name: opa
-#         namespace: opa
-#         labels:
-#           app: opa
-#       spec:
-#         type: NodePort
-#         selector:
-#           app: opa
-#         ports:
-#         - name: http
-#           protocol: TCP
-#           port: 8181
-#           targetPort: 8181
-#       ---
-#       apiVersion: apps/v1
-#       kind: Deployment
-#       metadata:
-#         labels:
-#           app: opa
-#         name: opa
-#         namespace: opa
-#       spec:
-#         selector:
-#           matchLabels:
-#             app: opa
-#         replicas: 1
-#         template:
-#           metadata:
-#             labels:
-#               app: opa
-#             name: opa
-#           spec:
-#             serviceAccountName: opa
-#             containers:
-#               - name: opa
-#                 image: openpolicyagent/opa:latest
-#                 ports:
-#                 - name: http
-#                   containerPort: 8181
-#                 resources:
-#                   limits:
-#                     cpu: 500m
-#                     memory: 512Mi
-#                   requests:
-#                     cpu: 500m
-#                     memory: 512Mi
-#                 args:
-#                   - "run"
-#                   - "--server"
-#                   - "--tls-cert-file=/certs/tls.crt"
-#                   - "--tls-private-key-file=/certs/tls.key"
-#                   - "--addr=0.0.0.0:443"
-#                   - "--addr=http://127.0.0.1:8181"
-#                   - "--log-format=json-pretty"
-#                   - "--set=decision_logs.console=true"
-#                 volumeMounts:
-#                   - readOnly: true
-#                     mountPath: /certs
-#                     name: opa-server
-#               - name: kube-mgmt
-#                 image: openpolicyagent/kube-mgmt:0.8
-#                 resources:
-#                   limits:
-#                     cpu: 500m
-#                     memory: 512Mi
-#                   requests:
-#                     cpu: 500m
-#                     memory: 512Mi
-#                 args:
-#                   - "--replicate-cluster=v1/namespaces"
-#                   - "--replicate=networking.k8s.io/v1beta1/ingresses"
-#                   - "--replicate=apps/v1/deployments"
-#             volumes:
-#               - name: opa-server
-#                 secret:
-#                   secretName: opa-server
-#       ---
-#       kind: ConfigMap
-#       apiVersion: v1
-#       metadata:
-#         name: opa-default-system-main
-#         namespace: opa
-#         labels:
-#           app: opa
-#       data:
-#         main: |
-#           package system
-#
-#           import data.kubernetes.admission
-#
-#           main = {
-#             "apiVersion": "admission.k8s.io/v1",
-#             "kind": "AdmissionReview",
-#             "response": response,
-#           }
-#
-#           default response = {"allowed": true}
-#
-#           response = {
-#               "allowed": false,
-#               "status": {
-#                   "reason": reason,
-#               },
-#           } {
-#               reason = concat(", ", admission.deny)
-#               reason != ""
-#           }
-
 - name: Apply Admission Controller Deployment Configuration
   become: true
   become_user: ubuntu
@@ -548,6 +220,41 @@
     chdir: $HOME
   register: cacrt
 
+# NOT WORKING WITH V1 API - NEED TO CHECK
+# - name: Create Validating Webhook Deployment Configuration
+#   become: true
+#   become_user: ubuntu
+#   copy:
+#     dest: /home/ubuntu/opa/webhook-configuration.yaml
+#     mode: 0640
+#     content: |
+#       kind: ValidatingWebhookConfiguration
+#       apiVersion: admissionregistration.k8s.io/v1
+#       metadata:
+#         name: opa-validating-webhook
+#       webhooks:
+#         - name: validating-webhook.openpolicyagent.org
+#           namespaceSelector:
+#             matchExpressions:
+#             - key: openpolicyagent.org/webhook
+#               operator: NotIn
+#               values:
+#               - ignore
+#           rules:
+#             - operations: ["CREATE", "UPDATE"]
+#               apiGroups: ["*"]
+#               apiVersions: ["*"]
+#               resources: ["*"]
+#               # scope: "Namespaced"
+#           clientConfig:
+#             caBundle: "{{ cacrt.stdout }}"
+#             service:
+#               namespace: opa
+#               name: opa
+#           admissionReviewVersions: ["v1", "v1beta1"]
+#           sideEffects: None
+#           timeoutSeconds: 5
+
 - name: Create Validating Webhook Deployment Configuration
   become: true
   become_user: ubuntu
@@ -556,7 +263,7 @@
     mode: 0640
     content: |
       kind: ValidatingWebhookConfiguration
-      apiVersion: admissionregistration.k8s.io/v1
+      apiVersion: admissionregistration.k8s.io/v1beta1
       metadata:
         name: opa-validating-webhook
       webhooks:
@@ -572,15 +279,11 @@
               apiGroups: ["*"]
               apiVersions: ["*"]
               resources: ["*"]
-              # scope: "Namespaced"
           clientConfig:
             caBundle: "{{ cacrt.stdout }}"
             service:
               namespace: opa
               name: opa
-          admissionReviewVersions: ["v1", "v1beta1"]
-          sideEffects: None
-          timeoutSeconds: 5
 
 - name: Label Namespace kube-system openpolicyagent.org/webhook=ignore
   become: true
@@ -598,227 +301,9 @@
     chdir: $HOME
   ignore_errors: true
 
-# - name: Apply Validating Webhook Deployment Configuration
-#   become: true
-#   become_user: ubuntu
-#   shell: kubectl apply -f webhook-configuration.yaml --dry-run=true -o yaml | kubectl apply -f -
-#   args:
-#     chdir: $HOME
-- name: How to apply Validating Webhook Deployment Configuration
-  debug:
-    msg:
-      - kubectl apply -f opa/webhook-configuration.yaml --dry-run=true -o yaml | kubectl apply -f -
-
-#
-# OPA Deployment done
-#
-
-
-#
-# Test Policies
-# Ingress Whitelisting
-#
-- name: Define a Ingress Whitelisting Policy and Load it into OPA via Kubernetes
+- name: Apply Validating Webhook Deployment Configuration
   become: true
   become_user: ubuntu
-  copy:
-    dest: /home/ubuntu/opa-tests/ingress-whitelist.rego
-    mode: 0640
-    content: |
-      package kubernetes.admission
-
-      import data.kubernetes.namespaces
-
-      operations = {"CREATE", "UPDATE"}
-
-      deny[msg] {
-      	input.request.kind.kind == "Ingress"
-      	operations[input.request.operation]
-      	host := input.request.object.spec.rules[_].host
-      	not fqdn_matches_any(host, valid_ingress_hosts)
-      	msg := sprintf("invalid ingress host %q", [host])
-      }
-
-      valid_ingress_hosts = {host |
-      	whitelist := namespaces[input.request.namespace].metadata.annotations["ingress-whitelist"]
-      	hosts := split(whitelist, ",")
-      	host := hosts[_]
-      }
-
-      fqdn_matches_any(str, patterns) {
-      	fqdn_matches(str, patterns[_])
-      }
-
-      fqdn_matches(str, pattern) {
-      	pattern_parts := split(pattern, ".")
-      	pattern_parts[0] == "*"
-      	str_parts := split(str, ".")
-      	n_pattern_parts := count(pattern_parts)
-      	n_str_parts := count(str_parts)
-      	suffix := trim(pattern, "*.")
-      	endswith(str, suffix)
-      }
-
-      fqdn_matches(str, pattern) {
-          not contains(pattern, "*")
-          str == pattern
-      }
-
-- name: Ingress Whitelisting - namespace-qa
-  become: true
-  become_user: ubuntu
-  copy:
-    dest: /home/ubuntu/opa-tests/namespace-qa.yaml
-    mode: 0640
-    content: |
-      apiVersion: v1
-      kind: Namespace
-      metadata:
-        annotations:
-          ingress-whitelist: "*.qa.acmecorp.com,*.internal.acmecorp.com"
-        name: qa
-
-- name: Ingress Whitelisting - namespace-production
-  become: true
-  become_user: ubuntu
-  copy:
-    dest: /home/ubuntu/opa-tests/namespace-production.yaml
-    mode: 0640
-    content: |
-      apiVersion: v1
-      kind: Namespace
-      metadata:
-        annotations:
-          ingress-whitelist: "*.acmecorp.com"
-        name: production
-
-- name: Ingress Whitelisting - ingress-ok
-  become: true
-  become_user: ubuntu
-  copy:
-    dest: /home/ubuntu/opa-tests/ingress-ok.yaml
-    mode: 0640
-    content: |
-      apiVersion: extensions/v1beta1
-      kind: Ingress
-      metadata:
-        name: ingress-ok
-      spec:
-        rules:
-        - host: signin.acmecorp.com
-          http:
-            paths:
-            - backend:
-                serviceName: nginx
-                servicePort: 80
-
-- name: Ingress Whitelisting - ingress-bad
-  become: true
-  become_user: ubuntu
-  copy:
-    dest: /home/ubuntu/opa-tests/ingress-bad.yaml
-    mode: 0640
-    content: |
-      apiVersion: extensions/v1beta1
-      kind: Ingress
-      metadata:
-        name: ingress-bad
-      spec:
-        rules:
-        - host: acmecorp.com
-          http:
-            paths:
-            - backend:
-                serviceName: nginx
-                servicePort: 80
-
-- name: How to
-  debug:
-    msg:
-      - kubectl apply -f opa-tests/webhook-configuration.yaml --dry-run=true -o yaml | kubectl apply -f -
-      - kubectl -n opa logs -l app=opa -c opa -f
-      - kubectl -n opa create configmap ingress-whitelist --from-file=opa-tests/ingress-whitelist.rego
-      - kubectl create -f opa-tests/namespace-qa.yaml
-      - kubectl create -f opa-tests/namespace-production.yaml
-      - kubectl create -f opa-tests/ingress-ok.yaml -n production
-      - kubectl create -f opa-tests/ingress-bad.yaml -n qa
-#
-# Test Policies
-#
-- name: Define a Registry Whitelist Policy and Load it into OPA via Kubernetes
-  become: true
-  become_user: ubuntu
-  copy:
-    dest: /home/ubuntu/opa-tests/registry-whitelist.rego
-    mode: 0640
-    content: |
-      package kubernetes.admission
-
-      deny[msg] {
-        input.request.kind.kind == "Pod"
-        image := input.request.object.spec.containers[_].image
-        not startswith(image, "docker.io/")
-        msg := sprintf("Image is not from our trusted registry: %v", [image])
-      }
-
-# - name: Apply Registry Whitelist Policy
-#   become: true
-#   become_user: ubuntu
-#   shell: kubectl -n opa create configmap registry-whitelist --from-file=registry-whitelist.rego
-#   args:
-#     chdir: $HOME
-- name: How to
-  debug:
-    msg:
-      - kubectl -n opa create configmap registry-whitelist --from-file=opa-tests/registry-whitelist.rego
-
-- name: Define a Pod Image Debug Policy and Load it into OPA via Kubernetes
-  become: true
-  become_user: ubuntu
-  copy:
-    dest: /home/ubuntu/opa-tests/pod-image-debug.rego
-    mode: 0640
-    content: |
-      package kubernetes.admission
-
-      allow[msg] {
-              input.request.kind.kind == "Pod"
-              image := input.request.object.spec.containers[_].image
-              msg := sprintf("Image pulled: %v", [image])
-      }
-
-- name: Define a Pod Image Debug Policy and Load it into OPA via Kubernetes
-  become: true
-  become_user: ubuntu
-  copy:
-    dest: /home/ubuntu/opa-tests/nginx-deployment.yml
-    mode: 0640
-    content: |
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: nginx-deployment
-        labels:
-          app: nginx
-      spec:
-        replicas: 3
-        selector:
-          matchLabels:
-            app: nginx
-        template:
-          metadata:
-            labels:
-              app: nginx
-          spec:
-            containers:
-            - name: nginx
-              image: nginx:1.14.2
-              ports:
-              - containerPort: 80
-
-- name: How to
-  debug:
-    msg:
-      - kubectl -n opa create configmap pod-image-debug --from-file=opa-tests/pod-image-debug.rego
-      - kubectl apply -f opa-tests/nginx-deployment.yml
-      - kubectl delete -f opa-tests/nginx-deployment.yml
+  shell: kubectl apply -f opa/webhook-configuration.yaml --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME
