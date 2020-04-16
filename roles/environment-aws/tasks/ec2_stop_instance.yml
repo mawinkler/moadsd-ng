@@ -8,4 +8,4 @@
 
 - name: Stop instance
   delegate_to: 127.0.0.1
-  command: aws ec2 stop-instances --instance-ids "{{ instance_id }}"
+  command: aws ec2 stop-instances --instance-ids "{{ instance_id }}" --region {{ aws_region }} 
