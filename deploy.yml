@@ -78,6 +78,26 @@
         owner: ansible
         mode: '0700'
 
+
+# #####################################################################
+# Ensure src dst Checks are Disabled on AWS
+# #####################################################################
+- name: Ensure src dst Checks are Disabled on AWS
+  hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Disable AWS src dst Checks
+      become: true
+      become_user: ansible
+      shell: aws ec2 modify-instance-attribute --instance-id {{ hostvars[item]['ec2_id'] }} --region {{ aws_region }} --no-source-dest-check
+      delegate_to: localhost
+      with_inventory_hostnames: all
+      when: type == "aws"
+
 # #####################################################################
 # Create http & https Proxy with Trusted Certificates
 # #####################################################################

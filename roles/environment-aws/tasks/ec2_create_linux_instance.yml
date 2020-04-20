@@ -69,6 +69,8 @@
           project: "{{ moadsd_ng_prefix }}"
         state: present
       register: ec2
+      # async: 600
+      # poll: 0
 
     - name: Create a linux server public address
       ec2_eip:
@@ -149,12 +151,14 @@
           project: "{{ moadsd_ng_prefix }}"
         state: present
       register: ec2
+      async: 600
+      poll: 0
 
-    - name: Disable AWS src dst checks
-      become: true
-      become_user: ansible
-      shell: aws ec2 modify-instance-attribute --instance-id {{ ec2.instance_ids[0] }} --region {{ aws_region }} --no-source-dest-check
-      delegate_to: localhost
+    # - name: Disable AWS src dst checks
+    #   become: true
+    #   become_user: ansible
+    #   shell: aws ec2 modify-instance-attribute --instance-id {{ ec2.instance_ids[0] }} --region {{ aws_region }} --no-source-dest-check
+    #   delegate_to: localhost
   when:
     - instance_public_address == False
 
