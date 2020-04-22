@@ -1,0 +1,16 @@
+version: '2.1'
+services:
+    webhook:
+        restart: unless-stopped
+        build: /home/ubuntu/docker-webhook
+        volumes:
+            - ./:/code
+            - /var/run/docker.sock:/var/run/docker.sock
+        environment:
+            - WEBHOOK_SECRET=secret
+            - WEBHOOK_HOOKS_DIR=/code/hooks
+            - WEBHOOK_BRANCH_LIST=master
+        expose:
+            - 8000
+        ports:
+            - 8000:8000
