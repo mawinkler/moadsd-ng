@@ -78,14 +78,14 @@ cluster_networking: {{ cluster_networking }}
 kubernetes_master_instance_name: k8smaster
 kubernetes_master_size_gb: 32
 kubernetes_master_source_image: {{ ami_ubuntu }}
-kubernetes_master_machine_type: t3.xlarge
+kubernetes_master_machine_type: t3.large
 kubernetes_master_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
 kubernetes_master_tags: k8smaster
 
 kubernetes_worker_instance_name: k8sworker
 kubernetes_worker_size_gb: 32
 kubernetes_worker_source_image: {{ ami_ubuntu }}
-kubernetes_worker_machine_type: t3.xlarge
+kubernetes_worker_machine_type: t3.large
 kubernetes_worker_startup_script: "{% raw %}{{ startup_script_linux }}{% endraw %}"
 kubernetes_worker_tags: k8sworker
 
