@@ -14,7 +14,7 @@
       - aws_secret_key != "MANDATORY"
     fail_msg: "AWS Cloud Settings are Incomplete"
 
-- name: Check for AMI
+- name: Check for Ubuntu AMI
   ec2_ami_info:
     region: "{{ aws_region }}"
     image_ids: "{{ ami_ubuntu }}"
@@ -22,29 +22,46 @@
   no_log: yes
   register: existence_ami_ubuntu
 
-- name: Check for AMI
-  ec2_ami_info:
-    region: "{{ aws_region }}"
-    image_ids: "{{ ami_redhat }}"
-  ignore_errors: true
-  no_log: yes
-  register: existence_ami_redhat
-
-- name: Check for AMI
-  ec2_ami_info:
-    region: "{{ aws_region }}"
-    image_ids: "{{ ami_windows }}"
-  ignore_errors: true
-  no_log: yes
-  register: existence_ami_windows
-
 - name: Check for Mandatory AMI Availablity in Region
   assert:
     that:
       - existence_ami_ubuntu is not failed
-      - existence_ami_redhat is not failed
-      - existence_ami_windows is not failed
-    fail_msg: "Mandatory AMI(s) Missing in Selected Region {{ aws_region }}"
+    fail_msg: "Mandatory Ubuntu AMI Missing in Selected Region {{ aws_region }}"
+
+- block:
+  - name: Check for RedHat AMI
+    ec2_ami_info:
+      region: "{{ aws_region }}"
+      image_ids: "{{ ami_redhat }}"
+    ignore_errors: true
+    no_log: yes
+    register: existence_ami_redhat
+
+  - name: Check for Mandatory AMI Availablity in Region
+    assert:
+      that:
+        - existence_ami_redhat is not failed
+      fail_msg: "Mandatory RedHat AMI Missing in Selected Region {{ aws_region }}"
+  when:
+    - site_deploy_deepsecurity
+    - deepsecurity_variant == "dsm"
+
+- block:
+  - name: Check for AMI
+    ec2_ami_info:
+      region: "{{ aws_region }}"
+      image_ids: "{{ ami_windows }}"
+    ignore_errors: true
+    no_log: yes
+    register: existence_ami_windows
+
+  - name: Check for Mandatory AMI Availablity in Region
+    assert:
+      that:
+        - existence_ami_windows is not failed
+      fail_msg: "Mandatory Windows AMI Missing in Selected Region {{ aws_region }}"
+  when:
+    - site_deploy_deepsecurity
 
 - name: Find moadsd-ng Key Name in .ssh
   find:
