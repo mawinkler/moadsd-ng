@@ -98,7 +98,7 @@
 
 - name: Setting moadsd-ng AWS Pem
   set_fact:
-    aws_key_name: "{{ moadsd_ng_key_name.files[0].path | basename }}"
+    aws_key_name: "{{ moadsd_ng_key_name.files[0].path | basename | replace('.pem','') }}"
 
 - name: Create AWS Secret Configuration
   template:
