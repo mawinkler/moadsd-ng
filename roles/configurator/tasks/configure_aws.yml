@@ -46,9 +46,15 @@
       - existence_ami_windows is not failed
     fail_msg: "Mandatory AMI(s) Missing in Selected Region {{ aws_region }}"
 
+- name: Find moadsd-ng Key Name in .ssh
+  find:
+    paths: "~/.ssh"
+    patterns: "moadsd-ng*"
+  register: moadsd_ng_key_name
+
 - name: Stat AWS Key File
   stat:
-    path: "{{ aws_pem }}"
+    path: "{{ moadsd_ng_key_name.files[0].path }}"
   register: key_ansible_exists
 
 - name: Check for AWS Key File
@@ -86,15 +92,13 @@
     dest: ./ec2.py
     mode: 0755
 
-- name: Find moadsd-ng Key Name in ,ssh
-  find:
-    paths: "~/.ssh"
-    patterns: "moadsd-ng*"
-  register: moadsd_ng_key_name
-
-- name: Setting moadsd-ng Key Name
+- name: Setting moadsd-ng AWS Pem
   set_fact:
-    aws_key_name: {{ moadsd_ng_key_name }}
+    aws_pem: "{{ moadsd_ng_key_name.files[0].path }}"
+
+- name: Setting moadsd-ng AWS Pem
+  set_fact:
+    aws_key_name: "{{ moadsd_ng_key_name.files[0].path | basename }}"
 
 - name: Create AWS Secret Configuration
   template:
