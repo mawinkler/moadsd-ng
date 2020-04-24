@@ -86,6 +86,16 @@
     dest: ./ec2.py
     mode: 0755
 
+- name: Find moadsd-ng Key Name in ,ssh
+  find:
+    paths: "~/.ssh"
+    patterns: "moadsd-ng*"
+  register: moadsd_ng_key_name
+
+- name: Setting moadsd-ng Key Name
+  set_fact:
+    aws_key_name: {{ moadsd_ng_key_name }}
+
 - name: Create AWS Secret Configuration
   template:
     src: environment_aws_secrets.j2

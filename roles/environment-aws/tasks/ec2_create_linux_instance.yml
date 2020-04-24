@@ -51,6 +51,7 @@
       ec2_instance:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
+        key_name: "{{ aws_key_name }}"
         name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
         region: "{{ aws_region }}"
         instance_type: "{{ instance_machine_type }}"
@@ -131,6 +132,7 @@
       ec2_instance:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
+        key_name: "{{ aws_key_name }}"
         name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
         region: "{{ aws_region }}"
         instance_type: "{{ instance_machine_type }}"
