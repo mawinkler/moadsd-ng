@@ -10,7 +10,6 @@ from traceback import print_exc
 
 from flask import Flask, abort, request
 
-
 def get_secret(name):
     """Tries to read Docker secret or corresponding environment variable.
 
@@ -39,7 +38,7 @@ logging.basicConfig(stream=stderr, level=logging.INFO)
 
 # Collect all scripts now; we don't need to search every time
 # Allow the user to override where the hooks are stored
-HOOKS_DIR = getenv("WEBHOOK_HOOKS_DIR", "/app/hooks")
+HOOKS_DIR = getenv("WEBHOOK_HOOKS_DIR", "./hooks")
 scripts = [join(HOOKS_DIR, f) for f in listdir(HOOKS_DIR)]
 scripts = [f for f in scripts if access(f, X_OK)]
 if not scripts:
@@ -113,10 +112,10 @@ def index():
     # Run scripts, saving into responses (which we clear out)
     responses = {}
     image_name = request.get_json(force=True)["scan"]["name"]
-    scan_id = request.get_json(force=True)["scan"]["href"]
+    scan_id = request.get_json(force=True)["scan"]["href"].split("/").pop()
     logging.info("running scripts")
     for script in scripts:
-        logging.info("running: " + str(script))
+        logging.info("running: " + script + " with " + image_name + " and " + scan_id)
         proc = Popen([script, image_name, scan_id], stdout=PIPE, stderr=PIPE)
         stdout, stderr = proc.communicate()
         stdout = stdout.decode('utf-8')
@@ -130,7 +129,9 @@ def index():
             'stdout': stdout,
             'stderr': stderr
         }
-    logging.info("responses: " + responses)
+    for response in responses:
+        logging.info("stdout: " + response)
+        #logging.info("stderr: " + response.stderr)
 
     return dumps(responses)
 
