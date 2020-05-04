@@ -208,6 +208,21 @@
             - site_deploy_kubernetes == True
             - site_deploy_jumphost == True
 
+        - name: Create Proxy Configuration and Certificate for Smart Check Registry
+          include_role:
+            name: proxy
+          vars:
+            operation: create_site
+            service_name: smartcheck-registry
+            jumphost_external_ip: "{{ inventory_hostname }}"
+            proxy_destination: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
+            node_port: "{{ smartcheck_registry }}"
+            target_type: https
+          when:
+            - site_deploy_smartcheck == True
+            - site_deploy_kubernetes == True
+            - site_deploy_jumphost == True
+
         - name: Create Proxy Configuration and Certificate for Jenkins
           include_role:
             name: proxy

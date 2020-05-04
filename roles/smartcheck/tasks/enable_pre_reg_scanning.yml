@@ -44,6 +44,10 @@
   command: kubectl patch service -n {{ dssc_namespace }} proxy --type='json' --patch='[{"op":"replace", "path":"/spec/ports/2/nodePort", "value":{{ smartcheck_registry }}}]'
   ignore_errors: yes
 
+- name: Generate DNS name
+  set_fact:
+    service_dns_name: "https://smartcheck-registry-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+
 - name: Create link document for Deep Security Smart Check
   become: true
   become_user: ubuntu
@@ -52,6 +56,7 @@
     mode: 0640
     content: |
       URL: https://{{ inventory_hostname }}:{{ smartcheck_registry }}
+      URL: {{ service_dns_name }}
       Username: {{ smartcheck_registry_username }}
       Password: {{ smartcheck_registry_password }}
 
