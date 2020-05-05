@@ -1,0 +1,43 @@
+# #####################################################################
+# Configurator for MOADSD-NG on ESX
+# #####################################################################
+- name: Include Configuration
+  include_vars: configuration.yml
+
+- name: include
+  include: configure_assertions.yml
+
+#
+# ESX Configuration
+#
+- name: Create ESX Configuration
+  template:
+    src: environment_esx_vars.j2
+    dest: ./vars/environment_esx_vars.yml
+
+- name: Create ESX Secret Configuration
+  template:
+    src: environment_esx_secrets.j2
+    dest: ./vars/environment_esx_secrets.yml
+
+- name: Encrypt ESX Secret Configuration
+  shell: ansible-vault encrypt --vault-password-file ../.vault-pass.txt ./vars/environment_esx_secrets.yml
+
+#
+# SITE
+#
+- name: Read id_rsa.pub
+  command: cat "~/.ssh/id_rsa.pub"
+  register: public_key
+
+- name: Set Fact for Public Key
+  set_fact:
+    ansible_ssh_key: "{{ public_key.stdout }}"
+
+- name: Create Site Secret Configuration
+  template:
+    src: site_secrets.j2
+    dest: ./vars/site_secrets.yml
+
+- name: Encrypt Site Secret Configuration
+  shell: ansible-vault encrypt --vault-password-file ../.vault-pass.txt ./vars/site_secrets.yml
