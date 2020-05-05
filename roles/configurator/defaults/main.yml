@@ -53,6 +53,16 @@ aws_access_key: MANDATORY
 aws_secret_key: MANDATORY
 
 # #####################################################################
+# ESX Credentials
+# #####################################################################
+kubernetes_master_login_user: k8s
+kubernetes_master_login_password: trendmicro
+kubernetes_worker_login_user: k8s
+kubernetes_worker_login_password: trendmicro
+kubernetes_master_instance_name: vk8smaster
+kubernetes_worker_instance_name: vk8sworker
+
+# #####################################################################
 # Linux Jumphost Settings
 # #####################################################################
 jumphost_tld: nip.io

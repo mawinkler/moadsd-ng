@@ -25,3 +25,10 @@
       vars:
         operation: configure_aws
       when: type == 'aws'
+
+    - name: Configure MOADSD-NG for ESX
+      include_role:
+        name: configurator
+      vars:
+        operation: configure_esx
+      when: type == 'esx'

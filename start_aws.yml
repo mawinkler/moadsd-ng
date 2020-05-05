@@ -207,3 +207,9 @@
       - '1-65535'
   with_sequence: count="{{ windowsep_instance_count }}"
   when: site_deploy_endpoints == True
+
+- name: Information
+  debug:
+    msg:
+      - "Before continuing with the deployment, ensure the instances have"
+      - "completed their Status Checks!"

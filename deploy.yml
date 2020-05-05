@@ -537,7 +537,7 @@
       shell: if [ $(kubectl -n rook-ceph get pods | grep -c "osd\-[0-9]\-.*Running") -eq {{ kubernetes_worker_count }} ] ; then exit 0 ; else exit 1 ; fi
       register: grep_result
       until: grep_result.rc == 0
-      retries: 60
+      retries: 300
       delay: 10
       ignore_errors: yes
       when: site_deploy_kubernetes == True

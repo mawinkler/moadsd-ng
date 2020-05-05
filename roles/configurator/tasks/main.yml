@@ -9,3 +9,7 @@
 - name: Configure for GCP
   include: configure_gcp.yml
   when: operation == 'configure_gcp'
+
+- name: Configure for ESX
+  include: configure_esx.yml
+  when: operation == 'configure_esx'
