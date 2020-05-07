@@ -69,16 +69,6 @@
     - name: Include vars
       include: site_vars.yml
 
-    - name: Delete smartcheck.*
-      become: true
-      become_user: ubuntu
-      file:
-        state: absent
-        path: "{{ item }}"
-      loop:
-        - ~/smartcheck.txt
-        - ~/smartcheck.log
-
     - name: Deploy Deep Security Smart Check
       include_role:
         name: smartcheck
@@ -86,18 +76,9 @@
         operation: deploy
         activationCode: "{{ smartcheck_license }}"
         auth_masterPassword: trendmicro
-      # when: site_deploy_smartcheck == True
-
-    - name: Enable pre-registry scanning for Deep Security Smart Check
-      include_role:
-        name: smartcheck
-      vars:
-        operation: enable_pre_reg_scanning
-      # when: site_deploy_smartcheck == True
 
     - name: Configure Deep Security Smart Check
       include_role:
         name: smartcheck
       vars:
         operation: configure
-      # when: site_deploy_smartcheck == True

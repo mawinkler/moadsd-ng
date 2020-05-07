@@ -2,57 +2,165 @@
 # #####################################################################
 # Create a Deep Security Smart Check instance
 # #####################################################################
-- name: Create Deep Security Smart Check overrides file
+- name: Create Deep Security Smart Check Overrides File
   copy:
     dest: /home/ubuntu/overrides-smartcheck.yml
     mode: 0640
     owner: ubuntu
     content: |
+      ## activationCode is the product activation code.
+      activationCode: {{ activationCode }}
+
+      auth:
+        ## secretSeed is used as part of the password generation process for
+        ## all auto-generated internal passwords, ensuring that each installation of
+        ## Deep Security Smart Check has different passwords.
+        secretSeed: {{ smartcheck_secret_seed }}
+
+        ## roleName is the name of the default administrator role that the system creates on startup.
+        roleName: administrator
+
+        ## auditorRoleName is the name of the default auditor role that the system creates on startup.
+        auditorRoleName: auditor
+
+        ## userRoleName is the name of the default user role that the system creates on startup.
+        userRoleName: user
+
+        ## userName is the name of the default administrator user that the system creates on startup.
+        userName: {{ smartcheck_username }}
+
+        ## password is the password assigned to the default administrator that the system creates on startup.
+        # password: {{ smartcheck_password }}
+
+        masterPassword: {{ smartcheck_master_password }}
+
+      certificate:
+        secret:
+          ## name is the name of the existing secret that stores the service's certificate and private key.
+          ## If this is not provided, the chart will generate a self-signed certificate and private key
+          ## for the service to present.
+          ##
+          ## The secret must exist in the same namespace as the service.
+          name: k8s-certificate
+
+          ## certificate is the name of the key inside the secret that stores the service's certificate.
+          ## The value of the secret must be the PEM-encoded certificate or certificate chain for the service.
+          ## This value is required if `certificate.secret.name` is set.
+          certificate: tls.crt
+
+          ## privateKey is the name of the key inside the secret that stores the service's private key that
+          ## matches the certificate. The value of the secret must be the PEM-encoded private key for the service.
+          ## The private key must not be protected by a passphrase.
+          ## This value is required if `certificate.secret.name` is set.
+          privateKey: tls.key
+
       service:
+        ## type is the Kubernetes Service type for the `proxy` service that acts as
+        ## an entry point to the system.
         type: {{ service_type }}
+
+        ## httpsPort is the port where the service will listen for HTTPS requests.
+        httpsPort: 443
+
+        ## httpPort is the port where the service will listen for HTTP requests.
+        ## The service will automatically redirect all HTTP requests to HTTPS.
+        httpPort: 80
+
+        ## registryPort is the port where the service will listen for docker registry requests.
+        registryPort: 5000
+
+      # db:
+      #   ## Application database host - CHECK COMMENT
+      #   ##
+      #   ## If you leave this blank, the chart will deploy a Postgres database
+      #   ## instance in the cluster. If you provide a value, you must also provide
+      #   ## credentials in `user` and `password`; these credentials must allow
+      #   ## the application to connect and execute the following commands:
+      #   ##
+      #   ##   CREATE ROLE "user" with PASSWORD 'password' LOGIN
+      #   ##   GRANT "user" to CURRENT_USER
+      #   ##   CREATE DATABASE "database" WITH OWNER "user"
+      #   ##   REVOKE CONNECT ON DATABASE "database" FROM PUBLIC
+      #   ##
+      #   # First, create a database in PSQL >9.6, then logon on postgres as postgres user
+      #   # !!The database needs to have the same name as the database user!!
+      #   # $ psql
+      #   # postgres=# create role "dssc" with password 'password' login createdb createrole;
+      #   # postgres=# create database "dssc" with owner "dssc";
+      #   ## The `user` and `password` values for databases created by the application
+      #   ## will be derived from the `auth.secretSeed` and system details.
+      #   host: <HOST>
+      #
+      #   ## Application database port
+      #   ##
+      #   ## This is the port number that the application database runs on.
+      #   port: 5432
+      #
+      #   tls:
+      #     ## mode:
+      #     ## * disable - No SSL
+      #     ## * require - Always SSL (skip verification)
+      #     ## * verify-ca - Always SSL (verify that the certificate presented by the
+      #     ##   server was signed by a trusted CA)
+      #     ## * verify-full - Always SSL (verify that the certification presented by
+      #     ##   the server was signed by a trusted CA and the server host name
+      #     ##   matches the one in the certificate)
+      #     mode: disable
+      #
+      #   ## Application database user
+      #   user: {{ smartcheck_database_username }}
+      #
+      #   ## Application database password
+      #   password: {{ smartcheck_database_password }}
+      #
+      #   ## secret is an application database secret used to encrypt data within the
+      #   ## database. The value is put through PBKDF2 key expansion before being used
+      #   ## as an encryption key.
+      #   ##
+      #   ## IMPORTANT: Do not change this value after the initial install as any
+      #   ## encrypted data will not be able to be decrypted.
+      #   secret: # autogenerated
+
+      scan:
+        results:
+          ## ttl is the time-to-live for scan results expressed as a duration string (or 0).
+          ## A duration string is a sequence of decimal numbers, each with optional fraction
+          ## and a unit suffix, such as "24h". Valid time units are "ns", "us", "ms", "s",
+          ## "m", "h".
+          ##
+          ## Scan results will be purged at some point after the time-to-live expires.
+          ## A value of 0 means that scan results will be kept forever.
+          ttl: 0
+
+        ## Enable malware scan cache.
+        malwareCache:
+          enabled: true
+
+      registry:
+        ## Enable the built-in registry for pre-registry scanning.
+        enabled: true
+        auth:
+          ## User name for authentication to the registry
+          username: {{ smartcheck_registry_username }}
+
+          ## Password for authentication to the registry
+          password: {{ smartcheck_registry_password }}
+
+      persistence:
+        ## enabled is whether a persistent volume claim should be created for database storage.
+        ## If no persistent volume claim is created, then the database will be lost every time the
+        ## database container restarts.
+        enabled: {{ persistence_enabled }}
+
+        ## storageClassName is the name of the storage class that should be used for persistent volumes.
+        ## If no value is specified, then `storageClassName` is left out of the persistent volume claim.
+        storageClassName: {{ persistence_storageClassName }}
+
       networkPolicy:
+        ## additionalRegistryPorts is a list of destination port numbers that are allowed for registry connections
         additionalRegistryPorts:
           - {{ smartcheck_registry }}
           - {{ registry_nodeport }}
-      auth:
-        userName: {{ smartcheck_username }}
-        masterPassword: {{ auth_masterPassword }}
-      activationCode: {{ activationCode }}
-      persistence:
-        enabled: {{ persistence_enabled }}
-        db:
-          storageClassName: {{ persistence_storageClassName }}
-        vulnerabilityDB:
-          storageClassName: {{ persistence_storageClassName }}
-        metrics:
-          storageClassName: {{ persistence_storageClassName }}
-
-  # password: {{ smartcheck_password }}
-
-# Persistence variants - in k8s or external db
-# Variant 1: Within the k8s cluster
-      # persistence:
-      #   enabled: {{ persistence_enabled }}
-      #   db:
-      #     storageClassName: {{ persistence_storageClassName }}
-      #   vulnerabilityDB:
-      #     storageClassName: {{ persistence_storageClassName }}
-      #   metrics:
-      #     storageClassName: {{ persistence_storageClassName }}
-
-# Variant 2: Within an external database
-# First, create a database in PSQL >9.6, then logon on postgres as postgres user
-# !!The database needs to have the same name as the database user!!
-# $ psql
-# postgres=# create role "dssc" with password 'password' login createdb createrole;
-# postgres=# create database "dssc" with owner "dssc";
-      # db:
-      #   host: <HOST>
-      #   port: 5432
-      #   tls:
-      #     mode: disable
-      #   user: {{ smartcheck_database_username }}
-      #   password: {{ smartcheck_database_password }}
 
 # DEPLOY SMARTCHECK WITHOUT HELM
 # - name: Download Deep Security Smart Check Chart
@@ -92,19 +200,122 @@
   args:
     chdir: $HOME
 
+- name: Creating Kubernetes Secret k8s-certificate
+  become: true
+  become_user: ubuntu
+  shell: kubectl create secret tls k8s-certificate --namespace {{ dssc_namespace }} --cert=k8s.crt --key=k8s.key --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME
+
+# TODO: Change to ansible helm as soon as helm3 is supported, 05/07/2020
+- name: Test if Deep Security Smart Check is Already Installed
+  become: true
+  become_user: ubuntu
+  shell: helm --namespace  {{ dssc_namespace }} list -q
+  register: smartcheck_test
+
+- name: Set Fact
+  set_fact:
+    smartcheck_installed: "{{ smartcheck_test.stdout }}"
+
 - name: Install Deep Security Smart Check
   become: true
   become_user: ubuntu
   shell: helm install --namespace {{ dssc_namespace }} --values overrides-smartcheck.yml {{ dssc_name }} {{ dssc_chart }} >> smartcheck.log
   args:
     chdir: $HOME
-    creates: smartcheck.log
+  when: smartcheck_installed != dssc_name
 
-- name: Deep Security Smart Check patch port
+- name: Upgrade Deep Security Smart Check
   become: true
   become_user: ubuntu
-  command: kubectl patch service -n {{ dssc_namespace }} proxy --type='json' --patch='[{"op":"replace", "path":"/spec/ports/0/nodePort", "value":{{ smartcheck_nodeport }}}]'
-  ignore_errors: yes
+  shell: helm upgrade --namespace {{ dssc_namespace }} --values overrides-smartcheck.yml {{ dssc_name }} {{ dssc_chart }} --reuse-values >> smartcheck.log
+  args:
+    chdir: $HOME
+  when: smartcheck_installed == dssc_name
+
+- name: Deep Security Smart Check Patch Ports
+  become: true
+  become_user: ubuntu
+  k8s_service:
+    state: present
+    name: proxy
+    namespace: "{{ dssc_namespace }}"
+    type: NodePort
+    ports:
+    - name: https
+      nodePort: "{{ smartcheck_nodeport }}"
+      port: 443
+      protocol: TCP
+      targetPort: 8443
+    - name: registryhttps
+      nodePort: "{{ smartcheck_registry }}"
+      port: 5000
+      protocol: TCP
+      targetPort: 5000
+    selector:
+      release: deepsecurity-smartcheck
+      service: proxy
+
+# - name: Deep Security Smart Check patch port
+#   become: true
+#   become_user: ubuntu
+#   command: kubectl patch service -n {{ dssc_namespace }} proxy --type='json' --patch='[{"op":"replace", "path":"/spec/ports/0/nodePort", "value":{{ smartcheck_nodeport }}}]'
+#   ignore_errors: yes
+#
+# - name: Deep Security Smart Check Registry patch port
+#   become: true
+#   become_user: ubuntu
+#   command: kubectl patch service -n {{ dssc_namespace }} proxy --type='json' --patch='[{"op":"replace", "path":"/spec/ports/2/nodePort", "value":{{ smartcheck_registry }}}]'
+#   ignore_errors: yes
+
+- name: Generate DNS Name
+  set_fact:
+    service_dns_name_smartcheck: "https://smartcheck-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+
+- name: Generate DNS Name Registry
+  set_fact:
+    service_dns_name_registry: "https://smartcheck-registry-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+
+- name: Create Link Document for Deep Security Smart Check
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/smartcheck.txt
+    mode: 0640
+    content: |
+      URL: https://{{ inventory_hostname }}:{{ smartcheck_nodeport }}
+      URL: {{ service_dns_name_smartcheck }}
+      Username: {{ smartcheck_username }}
+      Password: {{ smartcheck_password }}
+
+- name: Fetch smartcheck.txt
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/smartcheck.txt
+    dest: ./site_{{ type }}/
+    flat: yes
+
+- name: Create Link Document for Deep Security Smart Check Registry
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/smartcheck-registry.txt
+    mode: 0640
+    content: |
+      URL: https://{{ inventory_hostname }}:{{ smartcheck_registry }}
+      URL: {{ service_dns_name_registry }}
+      Username: {{ smartcheck_registry_username }}
+      Password: {{ smartcheck_registry_password }}
+
+- name: Fetch smartcheck-registry.txt
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/smartcheck-registry.txt
+    dest: ./site_{{ type }}/
+    flat: yes
 
 - name: Fetch smartcheck.log
   become: true
@@ -114,16 +325,16 @@
     dest: ./site_{{ type }}/
     flat: yes
 
-- name: Count Smart Check pods
+- name: Count Smart Check Deployments
   become: true
   become_user: ubuntu
-  shell: kubectl -n smartcheck get pods | grep -c "\-"
+  shell: kubectl -n smartcheck get deployments | grep -c "/"
   register: count_result
 
-- name: Check if all started Smart Check pods are in running state
+- name: Check if all Deployments are in Ready State
   become: true
   become_user: ubuntu
-  shell: if [ $(kubectl -n smartcheck get pods | grep -c ".*Running") -eq {{ count_result.stdout }} ] ; then exit 0 ; else exit 1 ; fi
+  shell: if [ $(kubectl -n smartcheck get deployments | grep -c "1/1") -eq {{ count_result.stdout }} ] ; then exit 0 ; else exit 1 ; fi
   register: grep_result
   until: grep_result.rc == 0
   retries: 60

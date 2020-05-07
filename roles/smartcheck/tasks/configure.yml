@@ -15,7 +15,7 @@
   when: not remote_ip
 
 # Initial password change
-- name: Test if Initial Password Change is done
+- name: Test if Initial Password Change is Done
   become: true
   become_user: ubuntu
   stat:
@@ -34,7 +34,7 @@
         namespace: smartcheck
       register: dsscsecrets
 
-    - name: Authenticate to Smart Check (waiting for Smart Check to be in running state)
+    - name: Authenticate to Smart Check (Waiting for Smart Check to be in Running State)
       uri:
         url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/sessions
         method: POST
@@ -54,7 +54,7 @@
       retries: 60
       delay: 10
 
-    - name: Change initial administrator password
+    - name: Change Initial Administrator Password
       uri:
         url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/users/{{ login.json.user.id }}/password
         method: POST
@@ -69,241 +69,236 @@
           }
         status_code: 200
 
-    - name: Create initial Password Changed Done File
+    - name: Create Initial Password Changed Done File
       become: true
       become_user: ubuntu
       copy:
         content: ""
         dest: /home/ubuntu/smartcheck_pwc_done
         mode: 640
+  when: pwc_done_result.stat.exists == False
 
-    - name: Reauthenticate to Smart Check
-      uri:
-        url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/sessions
-        method: POST
-        validate_certs: no
-        body_format: json
-        body: |
-          {
-            "user": {
-              "userid": "{{ smartcheck_username }}",
-              "password": "{{ smartcheck_password }}"
-            }
-          }
-        status_code: 201
-      register: login
-      ignore_errors: yes
-      until: login.status == 201
-      retries: 60
-      delay: 10
+- name: Authenticate to Smart Check
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/sessions
+    method: POST
+    validate_certs: no
+    body_format: json
+    body: |
+      {
+        "user": {
+          "userid": "{{ smartcheck_username }}",
+          "password": "{{ smartcheck_password }}"
+        }
+      }
+    status_code: 201
+  register: login
+  ignore_errors: yes
+  until: login.status == 201
+  retries: 60
+  delay: 10
 
-    - name: Generate DNS name
-      set_fact:
-        service_dns_name: "https://smartcheck-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+# Configure Smart Check
+- name: Create Content Override for libgnutls.so.30.23.2
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
+    method: POST
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body: |
+      {
+        "filename": "usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2",
+        "rule": "private_keys_pem",
+        "registry": "*",
+        "repository": "*",
+        "tag": "*",
+        "expires": "2029-10-01T00:00:00Z",
+        "comment": "Allowing crypto-selftests-pk.c private key for 10 years.."
+      }
+    status_code: 201
 
-    - name: Create link document for Deep Security Smart Check
-      become: true
-      become_user: ubuntu
-      copy:
-        dest: /home/ubuntu/smartcheck.txt
-        mode: 0640
-        content: |
-          URL: https://{{ inventory_hostname }}:{{ smartcheck_nodeport }}
-          URL: {{ service_dns_name }}
-          Username: {{ smartcheck_username }}
-          Password: {{ smartcheck_password }}
+- name: Create Content Override for ssl-cert-snakeoil.key
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
+    method: POST
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body: |
+      {
+        "filename": "etc/ssl/private/ssl-cert-snakeoil.key",
+        "rule": "private_keys_pem",
+        "registry": "*",
+        "repository": "*",
+        "tag": "*",
+        "expires": "2029-10-01T00:00:00Z",
+        "comment": "Allowing ssl-cert-snakeoil.key private key for 10 years.."
+      }
+    status_code: 201
 
-    - name: Fetch smartcheck.txt
-      become: true
-      become_user: ubuntu
-      fetch:
-        src: /home/ubuntu/smartcheck.txt
-        dest: ./site_{{ type }}/
-        flat: yes
+- name: Create Content Override for test_pkcs1_15.py
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
+    method: POST
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body: |
+      {
+        "filename": "usr/lib/python2.7/dist-packages/Crypto/SelfTest/Cipher/test_pkcs1_15.py",
+        "rule": "private_keys_pem",
+        "registry": "*",
+        "repository": "*",
+        "tag": "*",
+        "expires": "2029-10-01T00:00:00Z",
+        "comment": "Allowing test_pkcs1_15.py private key for 10 years.."
+      }
+    status_code: 201
 
-    # Configure Smart Check
-    - name: Create Content Override for libgnutls.so.30.23.2
-      uri:
-        url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
-        method: POST
-        validate_certs: no
-        headers:
-          Authorization: "Bearer {{ login.json.token }}"
-        body_format: json
-        body: |
-          {
-            "filename": "usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2",
-            "rule": "private_keys_pem",
-            "registry": "*",
-            "repository": "*",
-            "tag": "*",
-            "expires": "2029-10-01T00:00:00Z",
-            "comment": "Allowing crypto-selftests-pk.c private key for 10 years.."
-          }
-        status_code: 201
+- name: Create Content Override for test_pkcs1_15.pyc
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
+    method: POST
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body: |
+      {
+        "filename": "usr/lib/python2.7/dist-packages/Crypto/SelfTest/Cipher/test_pkcs1_15.pyc",
+        "rule": "private_keys_pem",
+        "registry": "*",
+        "repository": "*",
+        "tag": "*",
+        "expires": "2029-10-01T00:00:00Z",
+        "comment": "Allowing test_pkcs1_15.pyc private key for 10 years.."
+      }
+    status_code: 201
 
-    - name: Create Content Override for ssl-cert-snakeoil.key
-      uri:
-        url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
-        method: POST
-        validate_certs: no
-        headers:
-          Authorization: "Bearer {{ login.json.token }}"
-        body_format: json
-        body: |
-          {
-            "filename": "etc/ssl/private/ssl-cert-snakeoil.key",
-            "rule": "private_keys_pem",
-            "registry": "*",
-            "repository": "*",
-            "tag": "*",
-            "expires": "2029-10-01T00:00:00Z",
-            "comment": "Allowing ssl-cert-snakeoil.key private key for 10 years.."
-          }
-        status_code: 201
+- name: Create Content Override for test_importKey.py
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
+    method: POST
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body: |
+      {
+        "filename": "usr/lib/python2.7/dist-packages/Crypto/SelfTest/PublicKey/test_importKey.py",
+        "rule": "private_keys_pem",
+        "registry": "*",
+        "repository": "*",
+        "tag": "*",
+        "expires": "2029-10-01T00:00:00Z",
+        "comment": "Allowing test_importKey.py private key for 10 years.."
+      }
+    status_code: 201
 
-    - name: Create Content Override for test_pkcs1_15.py
-      uri:
-        url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
-        method: POST
-        validate_certs: no
-        headers:
-          Authorization: "Bearer {{ login.json.token }}"
-        body_format: json
-        body: |
-          {
-            "filename": "usr/lib/python2.7/dist-packages/Crypto/SelfTest/Cipher/test_pkcs1_15.py",
-            "rule": "private_keys_pem",
-            "registry": "*",
-            "repository": "*",
-            "tag": "*",
-            "expires": "2029-10-01T00:00:00Z",
-            "comment": "Allowing test_pkcs1_15.py private key for 10 years.."
-          }
-        status_code: 201
+- name: Create Content Override for test_importKey.pyc
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
+    method: POST
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body: |
+      {
+        "filename": "usr/lib/python2.7/dist-packages/Crypto/SelfTest/PublicKey/test_importKey.pyc",
+        "rule": "private_keys_pem",
+        "registry": "*",
+        "repository": "*",
+        "tag": "*",
+        "expires": "2029-10-01T00:00:00Z",
+        "comment": "Allowing test_importKey.pyc private key for 10 years.."
+      }
+    status_code: 201
 
-    - name: Create Content Override for test_pkcs1_15.pyc
-      uri:
-        url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
-        method: POST
-        validate_certs: no
-        headers:
-          Authorization: "Bearer {{ login.json.token }}"
-        body_format: json
-        body: |
-          {
-            "filename": "usr/lib/python2.7/dist-packages/Crypto/SelfTest/Cipher/test_pkcs1_15.pyc",
-            "rule": "private_keys_pem",
-            "registry": "*",
-            "repository": "*",
-            "tag": "*",
-            "expires": "2029-10-01T00:00:00Z",
-            "comment": "Allowing test_pkcs1_15.pyc private key for 10 years.."
-          }
-        status_code: 201
+- name: List Registries
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/registries
+    method: GET
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    status_code: 200
+  register: registries
 
-    - name: Create Content Override for test_importKey.py
-      uri:
-        url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
-        method: POST
-        validate_certs: no
-        headers:
-          Authorization: "Bearer {{ login.json.token }}"
-        body_format: json
-        body: |
-          {
-            "filename": "usr/lib/python2.7/dist-packages/Crypto/SelfTest/PublicKey/test_importKey.py",
-            "rule": "private_keys_pem",
-            "registry": "*",
-            "repository": "*",
-            "tag": "*",
-            "expires": "2029-10-01T00:00:00Z",
-            "comment": "Allowing test_importKey.py private key for 10 years.."
-          }
-        status_code: 201
+- name: Test if K8s Registry Already Exists
+  set_fact:
+    k8s_registry: True
+  when: item.name == "K8S Registry"
+  loop: "{{ registries.json.registries }}"
 
-    - name: Create Content Override for test_importKey.pyc
-      uri:
-        url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/overrides/contents
-        method: POST
-        validate_certs: no
-        headers:
-          Authorization: "Bearer {{ login.json.token }}"
-        body_format: json
-        body: |
-          {
-            "filename": "usr/lib/python2.7/dist-packages/Crypto/SelfTest/PublicKey/test_importKey.pyc",
-            "rule": "private_keys_pem",
-            "registry": "*",
-            "repository": "*",
-            "tag": "*",
-            "expires": "2029-10-01T00:00:00Z",
-            "comment": "Allowing test_importKey.pyc private key for 10 years.."
-          }
-        status_code: 201
+- name: Create Registry to K8s Registry
+  uri:
+    url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/registries?scan=true
+    method: POST
+    validate_certs: no
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body: |
+      {
+        "name": "K8S Registry",
+        "description": "Registry running within the cluster\n",
+        "host": "{{ inventory_hostname }}:{{ registry_nodeport }}",
+        "credentials": {
+          "username": "{{ cluster_registry_username }}",
+          "password": "{{ cluster_registry_password }}",
+        },
+        "insecureSkipVerify": true,
+        "filter": {
+          "include": [
+            "*"
+          ],
+          "exclude": [
+            "experimental/*"
+          ]
+        },
+        "schedule": true
+      }
+    status_code: 201
+  when: k8s_registry is undefined
 
-    - name: Create Registry to K8s Registry
-      uri:
-        url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/registries?scan=true
-        method: POST
-        validate_certs: no
-        headers:
-          Authorization: "Bearer {{ login.json.token }}"
-        body_format: json
-        body: |
-          {
-            "name": "K8S Registry",
-            "description": "Registry running within the cluster\n",
-            "host": "{{ inventory_hostname }}:{{ registry_nodeport }}",
-            "credentials": {
-              "username": "{{ cluster_registry_username }}",
-              "password": "{{ cluster_registry_password }}",
-            },
-            "insecureSkipVerify": true,
-            "filter": {
-              "include": [
-                "*"
-              ],
-              "exclude": [
-                "experimental/*"
-              ]
-            },
-            "schedule": true
-          }
-        status_code: 201
+#   - name: Create Registry to PreRegistry Scan Registry
+#     uri:
+#       url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/registries?scan=true
+#       method: POST
+#       validate_certs: no
+#       headers:
+#         Authorization: "Bearer {{ login.json.token }}"
+#       body_format: json
+#       body: |
+#         {
+#           "name": "Smart Check Registry",
+#           "description": "Built in Registry of Smart Check\n",
+#           "host": "{{ inventory_hostname }}:{{ smartcheck_registry }}",
+#           "credentials": {
+#             "username": "{{ smartcheck_registry_username }}",
+#             "password": "{{ smartcheck_registry_password }}",
+#           },
+#           "insecureSkipVerify": true,
+#           "filter": {
+#             "include": [
+#               "*"
+#             ],
+#             "exclude": [
+#               "experimental/*"
+#             ]
+#           },
+#           "schedule": true
+#         }
+#       status_code: 201
+# when: pwc_done_result.stat.exists == False
 
-  #   - name: Create Registry to PreRegistry Scan Registry
-  #     uri:
-  #       url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/registries?scan=true
-  #       method: POST
-  #       validate_certs: no
-  #       headers:
-  #         Authorization: "Bearer {{ login.json.token }}"
-  #       body_format: json
-  #       body: |
-  #         {
-  #           "name": "Smart Check Registry",
-  #           "description": "Built in Registry of Smart Check\n",
-  #           "host": "{{ inventory_hostname }}:{{ smartcheck_registry }}",
-  #           "credentials": {
-  #             "username": "{{ smartcheck_registry_username }}",
-  #             "password": "{{ smartcheck_registry_password }}",
-  #           },
-  #           "insecureSkipVerify": true,
-  #           "filter": {
-  #             "include": [
-  #               "*"
-  #             ],
-  #             "exclude": [
-  #               "experimental/*"
-  #             ]
-  #           },
-  #           "schedule": true
-  #         }
-  #       status_code: 201
-  # when: pwc_done_result.stat.exists == False
-
-# FINISH ME
+# TODO: FINISH ME
     # - name: Create Content Rule for PHP in Images
     #   uri:
     #     url: https://{{ remote_ip }}:{{ smartcheck_nodeport }}/api/registries?scan=true

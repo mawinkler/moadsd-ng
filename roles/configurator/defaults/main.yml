@@ -106,6 +106,8 @@ deepsecurity_token: MANDATORY
 smartcheck_license: MANDATORY
 smartcheck_username: admin
 smartcheck_password: trendmicro
+smartcheck_master_password: trendmicro
+smartcheck_secret_seed: trendmicro
 smartcheck_registry_username: reguser
 smartcheck_registry_password: trendmicro
 smartcheck_database_username: dssc

@@ -679,15 +679,6 @@
         - site_deploy_smartcheck == True
         - site_deploy_kubernetes == True
 
-    - name: Enable pre-registry scanning for Smart Check
-      include_role:
-        name: smartcheck
-      vars:
-        operation: enable_pre_reg_scanning
-      when:
-        - site_deploy_smartcheck == True
-        - site_deploy_kubernetes == True
-
     - name: Configure Smart Check
       include_role:
         name: smartcheck

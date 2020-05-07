@@ -1,7 +1,6 @@
 service_type: NodePort
 persistence_enabled: true
 persistence_storageClassName: rook-ceph-block
-auth_masterPassword: ''
 activationCode: ''
 
 dssc_chart: https://github.com/deep-security/smartcheck-helm/archive/master.tar.gz
