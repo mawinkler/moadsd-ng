@@ -6,6 +6,7 @@ site_gcp/
 site_esx/
 site_aws/
 site_azure/
+group_vars/
 host_vars/
 vars/environment_aws_secrets.yml
 vars/environment_aws_vars.yml
@@ -18,3 +19,5 @@ vars/environment_gcp_vars.yml
 vars/site_secrets.yml
 get-docker.sh
 configuration.yml
+ssh_jumphost
+ssh_master
