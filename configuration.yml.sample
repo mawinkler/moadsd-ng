@@ -22,19 +22,35 @@ site_deploy_grafana: yes
 # #####################################################################
 # Google Cloud Settings
 # #####################################################################
-gcp_project_id: MANDATORY
+# gcp_project_id: MANDATORY
 
 # #####################################################################
 # AWS Cloud Settings
 # #####################################################################
+aws_zone: MANDATORY
+aws_region: MANDATORY
 aws_access_key: MANDATORY
 aws_secret_key: MANDATORY
+# Ubuntu Server 18.04 LTS (HVM), SSD Volume Type
+ami_ubuntu: ami-0ac05733838eabc06
 
 # #####################################################################
 # Site Secrets
 # #####################################################################
 # Deep Security Smart Check
 smartcheck_license: MANDATORY
+smartcheck_password: <PASSWORD>
+smartcheck_registry_password: <PASSWORD>
+
+# Jenkins
+jenkins_password: <PASSWORD>
+jenkins_token: OPTIONAL
+
+# Cluster Registry
+cluster_registry_password: <PASSWORD>
+
+# Grafana
+grafana_password: <PASSWORD>
 
 # Ansible
 admin_email: MANDATORY
