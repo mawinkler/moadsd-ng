@@ -47,6 +47,9 @@
       #   operation: stop_instance
       when: type == 'azure'
 
+- hosts: localhost
+  gather_facts: false
+  tasks:
     - name: Create Jumphost SSH Command
       delegate_to: 127.0.0.1
       copy:
