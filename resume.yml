@@ -73,7 +73,7 @@
     - name: Create Master Watch Pods Command
       delegate_to: 127.0.0.1
       copy:
-        dest: "./ssh_master_watch_pods"
+        dest: "./ssh_master_pods"
         content: |
           watch './ssh_master "kubectl get pods --all-namespaces"'
         force: yes
@@ -83,7 +83,7 @@
     - name: Create Master Watch Services Command
       delegate_to: 127.0.0.1
       copy:
-        dest: "./ssh_master_watch_services"
+        dest: "./ssh_master_services"
         content: |
           watch './ssh_master "kubectl get services --all-namespaces"'
         force: yes
@@ -93,7 +93,7 @@
     - name: Create Master Watch Deployments Command
       delegate_to: 127.0.0.1
       copy:
-        dest: "./ssh_master_watch_deployments"
+        dest: "./ssh_master_deployments"
         content: |
           watch './ssh_master "kubectl get deployments --all-namespaces"'
         force: yes
