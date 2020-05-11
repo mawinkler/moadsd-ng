@@ -19,5 +19,4 @@ vars/environment_gcp_vars.yml
 vars/site_secrets.yml
 get-docker.sh
 configuration.yml
-ssh_jumphost
-ssh_master
+ssh_*
