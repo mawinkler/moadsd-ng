@@ -1,0 +1,69 @@
+---
+# #####################################################################
+# Schedule Pause
+# #####################################################################
+- hosts: tag_role_jumphost
+  gather_facts: false
+  tasks:
+    - debug:
+        msg:
+          - "# #####################################################################"
+          - "# Only Implemented for Linux Instances on AWS yet"
+          - "# #####################################################################"
+
+    - name: Get ipaddr of jumphost
+      set_fact:
+        remote_ip: "{{ inventory_hostname | ipaddr}}"
+
+    - name: Get ipaddr of jumphost
+      set_fact:
+        remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+      when: not remote_ip
+
+    - name: Store external ip address of jumphost
+      add_host:
+        name: "{{ remote_ip }}"
+        groups: "moadsd_ng_jumphost_instance_public"
+
+- hosts: tag_role_jumphost, tag_role_k8sworker, tag_role_k8smaster, tag_role_linuxep
+  gather_facts: false
+  become: yes
+  vars:
+    shutdown_delay: 5
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: AWS
+      block:
+        - name: Query Instance State
+          set_fact:
+            ec2_state: "{{ hostvars[inventory_hostname]['ec2_state'] }}"
+
+        - name: Send Shutdown Command to Linux Instance
+          at:
+            command: shutdown -h now
+            count: "{{ instance_shutdown_delay }}"
+            units: minutes
+          when:
+            - ec2_state == "running"
+      when: type == "aws"
+
+# - hosts: tag_role_windowsep
+#   gather_facts: false
+#   become: yes
+#   vars:
+#     shutdown_delay: 1
+#
+#   tasks:
+#     - name: Include vars
+#       include: site_vars.yml
+#
+#     - name: AWS
+#       block:
+#         - name: Send Shutdown Command to Windows Instance
+#           win_command: shutdown -s -t "{{ shutdown_delay * 60 }}"
+#           when:
+#             - ansible_os_family == "Windows"
+#       when: type == "aws"

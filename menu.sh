@@ -4,7 +4,7 @@ run_inv=""
 run_pb=""
 
 env_options=("gcp" "aws" "esx"
-             "site_secrets" "configuration"
+             "site_secrets"
              "switch_to_gcp" "switch_to_aws" "switch_to_esx")
 echo 'Please choose the target environment: '
 select opt in "${env_options[@]}"
@@ -30,11 +30,6 @@ do
     ansible-vault edit --vault-password-file ../.vault-pass.txt ./vars/site_secrets.yml
     exit 0
     ;;
-    "configuration")
-    echo Running ansible-vault edit --vault-password-file ../.vault-pass.txt ./configuration.yml
-    ansible-vault edit --vault-password-file ../.vault-pass.txt ./configuration.yml
-    exit 0
-    ;;
     "switch_to_gcp")
     echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --extra-vars="type=gcp" switch_to_gcp.yml
     ansible-playbook --vault-password-file ../.vault-pass.txt --extra-vars="type=gcp" switch_to_gcp.yml
@@ -56,29 +51,20 @@ done
 
 pb_options=("site" "deploy" "deploy_endpoints"
             "jenkins_create_credentials" "deploy_gitlab_runners"
-            "pause" "resume" "terminate" "terminate_site" "configurator" "manual")
+            "pause" "pause_scheduled" "pause_scheduled_cancel" "resume"
+            "terminate" "terminate_site" "configuration" "manual")
 echo 'Please choose the playbook: '
 select opt in "${pb_options[@]}"
 do
-  # case $opt in
-  #   "manual")
-  #   select manual_pb in "${pb_manual[@]}"
-  #   do
-  #     # case $manual_pb
-  #     opt=$manual_pb
-  #     run_pb=$opt
-  #     break
-  #       # ;;
-  #     # esac
-  #   done
-  #   ;;
-  #   *) run_pb=$opt
-  #   break
-  #   ;;
-  # esac
   run_pb=$opt
   break
 done
+
+if [ $run_pb = "configuration" ]
+then
+  ansible-vault edit --vault-password-file ../.vault-pass.txt ./configuration.yml
+  run_pb="configurator"
+fi
 
 if [ $run_pb = "manual" ]
 then
@@ -86,7 +72,6 @@ then
   echo 'Please choose the playbook: '
   select opt in "${pb_manual[@]}"
   do
-    # case $manual_pb
     run_pb=$opt
     break
   done

@@ -15,6 +15,7 @@ site_deploy_opa: no
 site_deploy_jumphost: yes
 
 moadsd_ng_prefix: moadsd-ng
+instance_shutdown_delay: 240
 
 # #####################################################################
 # Google Cloud Settings
