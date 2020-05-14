@@ -47,7 +47,7 @@
       pause:
         minutes: 2
 
-- hosts: tag_project_moadsd_ng
+- hosts: tag_role_k8sworker, tag_role_linuxep, tag_role_windowsep
   gather_facts: false
   vars:
   tasks:
