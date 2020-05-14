@@ -28,8 +28,6 @@
 - hosts: tag_role_jumphost, tag_role_k8sworker, tag_role_k8smaster, tag_role_linuxep
   gather_facts: false
   become: yes
-  vars:
-    shutdown_delay: 5
 
   tasks:
     - name: Include vars

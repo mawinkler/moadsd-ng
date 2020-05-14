@@ -15,6 +15,38 @@
         name: "{{ remote_ip }}"
         groups: "moadsd_ng_jumphost_instance_public"
 
+- hosts: tag_role_jumphost, tag_role_k8smaster
+  gather_facts: false
+  vars:
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Start instance
+      include_role:
+        name: environment-gcp
+      vars:
+        operation: start_instance
+        instance_name: "{{ hostvars[inventory_hostname]['name'] }}"
+      when: type == 'gcp'
+
+    - name: Start instance
+      include_role:
+        name: environment-aws
+      vars:
+        operation: start_instance
+        instance_id: "{{ hostvars[inventory_hostname]['ec2_id'] }}"
+      when: type == 'aws'
+
+    - name: Start instance
+      debug:
+        msg: "not yet implemented"
+      when: type == 'azure'
+
+    - name: Wating for Jumphost and Kubernetes Master to Come up
+      pause:
+        minutes: 2
+
 - hosts: tag_project_moadsd_ng
   gather_facts: false
   vars:
