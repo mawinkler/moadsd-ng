@@ -6,10 +6,6 @@
   include: deploy.yml
   when: operation == 'deploy'
 
-- name: Enable pre-Registry Scanning
-  include: enable_pre_reg_scanning.yml
-  when: operation == 'enable_pre_reg_scanning'
-
 - name: Configure
   include: configure.yml
   when: operation == 'configure'
