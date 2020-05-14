@@ -2,6 +2,22 @@
 # #####################################################################
 # Deploy Rook
 # #####################################################################
+#
+# Label master
+#
+- name: Kubernetes Label master as MDS Node
+  become: true
+  become_user: ubuntu
+  k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Node
+      metadata:
+        name: "{{ hostvars[inventory_hostname]['ansible_hostname'] }}"
+        labels:
+          role: mds-node
+
 ## HELM DEPLOY OPERATOR
 - name: Create Rook-Ceph Overrides File
   copy:
