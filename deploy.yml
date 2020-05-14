@@ -851,8 +851,14 @@
 # #####################################################################
 - hosts: localhost
   tasks:
-    - name: Kubernetes Details
-      command: cat "site_{{ type }}/kubernetes.txt"
+    - name: Kubernetes Admin Token
+      command: cat "site_{{ type }}/kubernetes-admin-token.txt"
+      register: details_kubernetes_token
+      when:
+        - site_deploy_kubernetes == True
+
+    - name: Kubernetes Dashboard Details
+      command: cat "site_{{ type }}/kubernetes-dashboard.txt"
       register: details_kubernetes
       when:
         - site_deploy_kubernetes == True
@@ -904,10 +910,11 @@
         - site_deploy_deepsecurity == True
         - deepsecurity_variant == 'dsm'
 
-    - name: Kubernetes Details
+    - name: Kubernetes Admin Token and Dashboard Details
       debug:
         msg:
           - "{{ details_kubernetes.stdout_lines }}"
+          - "{{ details_kubernetes_token.stdout_lines }}"
       when:
         - site_deploy_kubernetes == True
 

@@ -1,15 +1,7 @@
-# kubernetes_version: 1.14.9-00
 kubernetes_version: 1.17.2-00
+kubernetes_dashboard_url: https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0/aio/deploy/recommended.yaml
 
-# crio_version: release-1.14
 crio_version: release-1.17
 
 docker_version: 5:18.09.8~3-0~ubuntu-xenial
 # docker_version: 5:19.03.7~3-0~ubuntu-xenial
-
-# helm_url: https://get.helm.sh/
-# helm_archive: helm-v3.0.1-linux-amd64.tar.gz
-#
-# rook_git: https://github.com/rook/rook.git
-# rook_version: v1.0.4
-# rook_version: v1.2.4

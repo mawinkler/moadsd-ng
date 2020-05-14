@@ -2,18 +2,22 @@
 # Create and Manage a Kubernetes cluster with kubeadmin
 # #####################################################################
 ---
-- name: Create Master
+- name: Create Kubernetes Master
   include: k8s_create_master.yml
   when: operation == 'create_master'
 
-- name: Create Workers
+- name: Create Kubernetes Workers
   include: k8s_create_workers.yml
   when: operation == 'create_workers'
 
-- name: Create k8s certificate
+- name: Create Kubernetes Certificate
   include: k8s_create_certificate.yml
   when: operation == 'k8s_create_certificate'
 
-- name: Create k8s certificate pod
+- name: Create Kubernetes Certificate Pod
   include: k8s_create_certificate_pod.yml
   when: operation == 'k8s_create_certificate_pod'
+
+- name: Deploy Kubernetes Dashboard
+  include: deploy_kubernetes_dashboard.yml
+  when: operation == 'deploy_kubernetes_dashboard'

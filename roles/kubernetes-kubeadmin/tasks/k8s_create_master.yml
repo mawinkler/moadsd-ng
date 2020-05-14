@@ -5,30 +5,35 @@
 #
 # Preparations
 #
-# - name: Update all in Ubuntu
-#   apt:
-#     upgrade: dist
-#     update_cache: yes
-#     cache_valid_time: 86400 #One day
 - name: Deploy Golang
   include: deploy_golang.yml
-  when: deploy_golang == True
+  when:
+    - deploy_golang == True
+    - deploy_kubernetes == True
 
 - name: Deploy Runc
   include: deploy_runc.yml
-  when: deploy_runc == True
+  when:
+    - deploy_runc == True
+    - deploy_kubernetes == True
 
 - name: Deploy cni
   include: deploy_cni.yml
-  when: deploy_cni == True
+  when:
+    - deploy_cni == True
+    - deploy_kubernetes == True
 
 - name: Deploy Docker
   include: deploy_docker.yml
-  when: deploy_docker == True
+  when:
+    - deploy_docker == True
+    - deploy_kubernetes == True
 
 - name: Deploy Cri-O
   include: deploy_crio.yml
-  when: deploy_crio == True
+  when:
+    - deploy_crio == True
+    - deploy_kubernetes == True
 
 - name: Deploy Kubernetes
   block:
@@ -47,20 +52,6 @@
       args:
         chdir: $HOME
         creates: cluster_initialized.txt
-
-    # - name: Enable Admission Plugins
-    #   replace:
-    #     regexp: '    - --enable-admission-plugins=NodeRestriction'
-    #     replace: '    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,StorageObjectInUseProtection,PersistentVolumeClaimResize,RuntimeClass,CertificateApproval,CertificateSigning,CertificateSubjectRestriction,DefaultIngressClass,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota'
-    #     name: /etc/kubernetes/manifests/kube-apiserver.yaml
-    #     backup: yes
-
-# OPA recommended
-
-# 1.17 defaults
-# NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,StorageObjectInUseProtection,PersistentVolumeClaimResize,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,RuntimeClass,ResourceQuota
-# 1.18 defaults
-# NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,StorageObjectInUseProtection,PersistentVolumeClaimResize,RuntimeClass,CertificateApproval,CertificateSigning,CertificateSubjectRestriction,DefaultIngressClass,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota
 
     - name: Kubernetes Setup Kubeconfig for Ubuntu User Make Directory
       file:
@@ -130,7 +121,7 @@
     #
     # Create admin user
     #
-    - name: Create Admin-user Service Account
+    - name: Create admin-user Service Account
       become: true
       become_user: ubuntu
       k8s:
@@ -142,7 +133,7 @@
             name: admin-user
             namespace: kube-system
 
-    - name: Create Admin-user ClusterRoleBinding
+    - name: Create admin-user ClusterRoleBinding
       become: true
       become_user: ubuntu
       k8s:
@@ -161,7 +152,7 @@
               name: admin-user
               namespace: kube-system
 
-    - name: Query Kubernetes secrets
+    - name: Query Kubernetes Secrets
       become: true
       become_user: ubuntu
       k8s_info:
@@ -170,7 +161,7 @@
         namespace: kube-system
       register: k8ssecrets
 
-    - name: Search Admin-user-token
+    - name: Search admin-user-token
       set_fact:
         admintoken: "{% for resource in k8ssecrets.resources %}\
                        {% if 'admin-user-token' in resource.metadata.name %}\
@@ -178,94 +169,23 @@
                        {% endif %}\
                      {% endfor %}"
 
-    #
-    # Label master
-    #
-    - name: Kubernetes Label master as MDS Node
-      become: true
-      become_user: ubuntu
-      k8s:
-        state: present
-        definition:
-          apiVersion: v1
-          kind: Node
-          metadata:
-            name: "{{ hostvars[inventory_hostname]['ansible_hostname'] }}"
-            labels:
-              role: mds-node
-      when: deploy_rook_ceph == True
-
-    #
-    # Kubernetes Dashboard
-    #
-    - name: Kubernetes Download Dashboard Definition
-      get_url:
-        url: https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
-        dest: /home/ubuntu
-
-    - name: Kubernetes Install Dashboard
-      become: true
-      become_user: ubuntu
-      k8s:
-        state: present
-        src: /home/ubuntu/kubernetes-dashboard.yaml
-
-    - name: Create Dashboard ClusterRoleBinding
-      become: true
-      become_user: ubuntu
-      k8s:
-        state: present
-        definition:
-          apiVersion: rbac.authorization.k8s.io/v1
-          kind: ClusterRoleBinding
-          metadata:
-            name: kubernetes-dashboard
-          roleRef:
-            apiGroup: rbac.authorization.k8s.io
-            kind: ClusterRole
-            name: cluster-admin
-          subjects:
-            - kind: ServiceAccount
-              name: kubernetes-dashboard
-              namespace: kube-system
-
-    - name: Kubernetes Delete Exposed Dashboard Port if Existing
-      become: true
-      become_user: ubuntu
-      command: kubectl delete --ignore-not-found=true -n kube-system service dashboard
-
-    - name: Kubernetes Expose Dashboard
-      become: true
-      become_user: ubuntu
-      command: kubectl expose -n kube-system deployment kubernetes-dashboard --type=NodePort --name=dashboard
-
-    - name: Kubernetes Patch Dashboard Port
-      become: true
-      become_user: ubuntu
-      command: kubectl patch service -n kube-system dashboard --type='json' --patch='[{"op":"replace", "path":"/spec/ports/0/nodePort", "value":{{ kubernetes_dashboard_nodeport }}}]'
-
-    - name: Generate DNS Name
-      set_fact:
-        service_dns_name: "https://dashboard-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
-
-    - name: Create Link Document for Kubernetes Dashboard
+    - name: Create Link Document for Kubernetes Admin Token
       become: true
       become_user: ubuntu
       copy:
-        dest: /home/ubuntu/kubernetes.txt
+        dest: /home/ubuntu/kubernetes-admin-token.txt
         mode: 0640
         content: |
-          URL: https://{{ inventory_hostname }}:{{ kubernetes_dashboard_nodeport }}
-          URL: {{ service_dns_name }}
           Token: {{ admintoken | b64decode }}
 
-    - name: Fetch kubernetes.txt
+    - name: Fetch kubernetes-admin-token.txt
       become: true
       become_user: ubuntu
       fetch:
-        src: /home/ubuntu/kubernetes.txt
+        src: /home/ubuntu/kubernetes-admin-token.txt
         dest: ./site_{{ type }}/
         flat: yes
+
     #
     # Create join command
     #
@@ -332,6 +252,12 @@
         mode: 0755
   when: deploy_kubernetes == True
 
-- name: Deploy pod network
+- name: Deploy Pod Network
   include: deploy_pod_network.yml
-  when: deploy_pod_network == True
+  when:
+    - deploy_pod_network == True
+    - deploy_kubernetes == True
+
+- name: Deploy Kubernetes Dashboard
+  include: deploy_kubernetes_dashboard.yml
+  when: deploy_kubernetes == True
