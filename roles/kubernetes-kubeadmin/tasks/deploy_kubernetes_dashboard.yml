@@ -1,0 +1,89 @@
+---
+# #####################################################################
+# Deploy Kubernetes Dashboard
+# #####################################################################
+- name: Kubernetes Dashboard Download Definition
+  become: true
+  become_user: ubuntu
+  get_url:
+    url: "{{ kubernetes_dashboard_url }}"
+    dest: /home/ubuntu/kubernetes-dashboard.yaml
+
+- name: Kubernetes Dashboard Install
+  become: true
+  become_user: ubuntu
+  k8s:
+    state: present
+    src: /home/ubuntu/kubernetes-dashboard.yaml
+
+# - name: Kubernetes Dashboard Create ClusterRoleBinding
+#   become: true
+#   become_user: ubuntu
+#   k8s:
+#     state: present
+#     definition:
+#       apiVersion: rbac.authorization.k8s.io/v1
+#       kind: ClusterRoleBinding
+#       metadata:
+#         name: kubernetes-dashboard
+#       roleRef:
+#         apiGroup: rbac.authorization.k8s.io
+#         kind: ClusterRole
+#         name: cluster-admin
+#       subjects:
+#         - kind: ServiceAccount
+#           name: kubernetes-dashboard
+#           namespace: kubernetes-dashboard
+
+- name: Kubernetes Dashboard Expose Dashboard
+  become: true
+  become_user: ubuntu
+  k8s_service:
+    state: present
+    name: kubernetes-dashboard
+    namespace: kubernetes-dashboard
+    type: NodePort
+    ports:
+    - nodePort: "{{ kubernetes_dashboard_nodeport }}"
+      port: 8443
+      protocol: TCP
+      targetPort: 8443
+    selector:
+      k8s-app: kubernetes-dashboard
+
+# - name: Kubernetes Delete Exposed Dashboard Port if Existing
+#   become: true
+#   become_user: ubuntu
+#   command: kubectl delete --ignore-not-found=true -n kube-system service dashboard
+#
+# - name: Kubernetes Expose Dashboard
+#   become: true
+#   become_user: ubuntu
+#   command: kubectl expose -n kube-system deployment kubernetes-dashboard --type=NodePort --name=dashboard
+
+# - name: Kubernetes Patch Dashboard Port
+#   become: true
+#   become_user: ubuntu
+#   command: kubectl patch service -n kube-system dashboard --type='json' --patch='[{"op":"replace", "path":"/spec/ports/0/nodePort", "value":{{ kubernetes_dashboard_nodeport }}}]'
+
+- name: Generate DNS Name
+  set_fact:
+    service_dns_name: "https://dashboard-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+
+- name: Create Link Document for Kubernetes Dashboard
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/kubernetes-dashboard.txt
+    mode: 0640
+    content: |
+      URL: https://{{ inventory_hostname }}:{{ kubernetes_dashboard_nodeport }}
+      URL: {{ service_dns_name }}
+
+- name: Fetch kubernetes-dashboard.txt
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/kubernetes-dashboard.txt
+    dest: ./site_{{ type }}/
+    flat: yes
