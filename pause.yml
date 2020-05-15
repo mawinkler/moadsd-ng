@@ -15,6 +15,28 @@
         name: "{{ remote_ip }}"
         groups: "moadsd_ng_jumphost_instance_public"
 
+- hosts: tag_role_jumphost, tag_role_k8sworker, tag_role_k8smaster, tag_role_linuxep
+  gather_facts: false
+  become: yes
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+  
+    - name: AWS
+      block:
+        - name: Query Instance State
+          set_fact:
+            ec2_state: "{{ hostvars[inventory_hostname]['ec2_state'] }}"
+
+        - name: Cancel Shutdown on Linux Instance
+          at:
+            command: shutdown -h now
+            state: absent
+          when:
+            - ec2_state == "running"
+      when: type == "aws"
+
 - hosts: tag_project_moadsd_ng
   gather_facts: false
   vars:
