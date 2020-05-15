@@ -41,7 +41,7 @@
           set_fact:
             ec2_state: "{{ hostvars[inventory_hostname]['ec2_state'] }}"
 
-        - name: Cancle Shutdown on Linux Instance
+        - name: Cancel Shutdown on Linux Instance
           at:
             command: shutdown -h now
             state: absent

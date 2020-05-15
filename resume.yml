@@ -131,3 +131,37 @@
         force: yes
         owner: ansible
         mode: '0700'
+
+- hosts: tag_role_jumphost, tag_role_k8sworker, tag_role_k8smaster, tag_role_linuxep
+  gather_facts: false
+  become: yes
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Wating for instances to Come up
+      pause:
+        minutes: 5
+
+    - name: AWS
+      block:
+        - name: Query Instance State
+          set_fact:
+            ec2_state: "{{ hostvars[inventory_hostname]['ec2_state'] }}"
+
+        - name: Cancel Shutdown on Linux Instance
+          at:
+            command: shutdown -h now
+            state: absent
+          when:
+            - ec2_state == "running"
+
+        - name: Send Shutdown Command to Linux Instance
+          at:
+            command: shutdown -h now
+            count: "{{ instance_shutdown_delay }}"
+            units: minutes
+          when:
+            - ec2_state == "running"
+      when: type == "aws"
