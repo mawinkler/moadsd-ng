@@ -20,3 +20,5 @@ vars/site_secrets.yml
 get-docker.sh
 configuration.yml
 ssh_*
+.vagrant
+.DS_Store
