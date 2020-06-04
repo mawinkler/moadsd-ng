@@ -4,6 +4,3 @@ The MOADSD-NG project does provide a simple way to setup a hybrid cloud security
 Ansible, the de facto most used orchestration tool, is used for the whole life-cycle of your MOADSD-NG environment.
 
 Please read the [Wiki](https://github.com/mawinkler/moadsd-ng/wiki).
-
-## Demo setting up MOADSD-NG on GCP
-<a href="https://asciinema.org/a/qCccOnLbFCWcYYIVaGU74alkr?speed=6&autoplay=1" target="_blank"><img src="https://asciinema.org/a/qCccOnLbFCWcYYIVaGU74alkr.svg" /></a>
