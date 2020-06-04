@@ -10,7 +10,7 @@
 - name: Set AWS Configuration
   set_fact:
     aws_region: "{{ lookup('ini', 'region section=default file=~/.aws/config') }}"
-    aws_zone: "{{ lookup('ini', 'zone section=default file=~/.aws/config') }}a"
+    aws_zone: "{{ lookup('ini', 'region section=default file=~/.aws/config') }}a"
     aws_access_key: "{{ lookup('ini', 'aws_access_key_id section=default file=~/.aws/credentials') }}"
     aws_secret_key: "{{ lookup('ini', 'aws_secret_access_key section=default file=~/.aws/credentials') }}"
       
