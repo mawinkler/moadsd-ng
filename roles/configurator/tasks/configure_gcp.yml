@@ -10,6 +10,8 @@
 - name: Set GCP Configuration
   set_fact:
     gcp_project_id: "{{ lookup('ini', 'project section=core file=~/.config/gcloud/configurations/config_default') }}"
+    gcp_region: "{{ lookup('ini', 'region section=compute file=~/.config/gcloud/configurations/config_default') }}"
+    gcp_zone: "{{ lookup('ini', 'zone section=compute file=~/.config/gcloud/configurations/config_default') }}"
     
 - name: Stat GCP Key File
   stat:
