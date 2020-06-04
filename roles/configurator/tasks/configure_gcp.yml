@@ -7,12 +7,10 @@
 - name: include
   include: configure_assertions.yml
 
-- name: Check for Mandatory GCP Settings
-  assert:
-    that:
-      - gcp_project_id != "MANDATORY"
-    fail_msg: "GCP Cloud Settings are Incomplete"
-
+- name: Set GCP Configuration
+  set_fact:
+    gcp_project_id: "{{ lookup('ini', 'project section=core file=~/.config/gcloud/configurations/config_default') }}"
+    
 - name: Stat GCP Key File
   stat:
     path: "{{ gcp_service_account_file }}"
