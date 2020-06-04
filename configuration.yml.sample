@@ -27,12 +27,12 @@ site_deploy_grafana: yes
 # #####################################################################
 # AWS Cloud Settings
 # #####################################################################
-aws_zone: MANDATORY
-aws_region: MANDATORY
-aws_access_key: MANDATORY
-aws_secret_key: MANDATORY
 # Ubuntu Server 18.04 LTS (HVM), SSD Volume Type
 ami_ubuntu: ami-0ac05733838eabc06
+# Red Hat Enterprise Linux 8 (HVM), SSD Volume Type
+ami_redhat: ami-00e37cffd3bb3ac8d
+# Microsoft Windows Server 2012 R2 Base
+ami_windows: ami-0cbf1b1038bbb408d
 
 # #####################################################################
 # Site Secrets
