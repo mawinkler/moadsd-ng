@@ -77,5 +77,5 @@ then
   done
 fi
 
-echo Running ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env}" ${run_pb}.yml
-ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env}" ${run_pb}.yml
+echo Running ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb}" ${run_pb}.yml
+ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb}" ${run_pb}.yml

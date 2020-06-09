@@ -28,3 +28,36 @@
     - vars/environment_esx_secrets.yml
     - vars/environment_esx_vars.yml
   when: type == 'esx'
+
+- name: Report
+  uri:
+    url: "{{ report_url }}"
+    method: POST
+    headers:
+      x-api-key: "{{ report_key | b64decode }}"
+    validate_certs: yes
+    body_format: json
+    body: |
+      {
+          "TableName": "moadsd-ng-reporter",
+      	  "Item": {
+      	    "datetime": {"S": "{{ lookup('pipe','date +%Y-%m-%d-%H-%M-%S') }}" },
+      	    "admin_email": {"S": "{{ admin_email }}" },
+      	    "type": {"S": "{{ type }}" },
+      	    "action": {"S": "{{ run_pb }}" },
+      	    "site_deploy_kubernetes": {"S": "{{ site_deploy_kubernetes }}" },
+      	    "site_deploy_openshift": {"S": "{{ site_deploy_openshift }}" },
+      	    "site_deploy_deepsecurity": {"S": "{{ site_deploy_deepsecurity }}" },
+      	    "site_deploy_smartcheck": {"S": "{{ site_deploy_smartcheck }}" },
+      	    "site_deploy_jenkins": {"S": "{{ site_deploy_jenkins }}" },
+      	    "site_deploy_gitlab": {"S": "{{ site_deploy_gitlab }}" },
+      	    "site_deploy_endpoints": {"S": "{{ site_deploy_endpoints }}" },
+      	    "site_deploy_linkerd": {"S": "{{ site_deploy_linkerd }}" },
+      	    "site_deploy_prometheus": {"S": "{{ site_deploy_prometheus }}" },
+      	    "site_deploy_grafana": {"S": "{{ site_deploy_grafana }}" },
+      	    "site_deploy_opa": {"S": "{{ site_deploy_opa }}" },
+      	    "site_deploy_jumphost": {"S": "{{ site_deploy_jumphost }}" }
+      	}
+      }
+    status_code: 200
+  delegate_to: localhost
