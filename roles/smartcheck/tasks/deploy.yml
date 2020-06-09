@@ -341,7 +341,7 @@
 - name: Check if all Deployments are in Ready State
   become: true
   become_user: ubuntu
-  shell: if [ $(kubectl -n smartcheck get deployments | grep -c "1/1") -eq {{ count_result.stdout }} ] ; then exit 0 ; else exit 1 ; fi
+  shell: if [ $(kubectl -n smartcheck get deployments | grep -cE "1/1|5/5") -eq {{ count_result.stdout }} ] ; then exit 0 ; else exit 1 ; fi
   register: grep_result
   until: grep_result.rc == 0
   retries: 60
