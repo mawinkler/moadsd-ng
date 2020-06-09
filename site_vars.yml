@@ -42,7 +42,7 @@
           "TableName": "moadsd-ng-reporter",
       	  "Item": {
       	    "datetime": {"S": "{{ lookup('pipe','date +%Y-%m-%d-%H-%M-%S') }}" },
-      	    "admin_email": {"S": "{{ admin_email }}" },
+      	    "admin_email": {"S": "{{ admin_email | hash('sha256') }}" },
       	    "type": {"S": "{{ type }}" },
       	    "action": {"S": "{{ run_pb }}" },
       	    "site_deploy_kubernetes": {"S": "{{ site_deploy_kubernetes }}" },
