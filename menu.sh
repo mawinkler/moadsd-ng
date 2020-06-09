@@ -31,17 +31,17 @@ do
     exit 0
     ;;
     "switch_to_gcp")
-    echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --extra-vars="type=gcp" switch_to_gcp.yml
+    echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --extra-vars="type=gcp run_pb=switch_to_gcp" switch_to_gcp.yml
     ansible-playbook --vault-password-file ../.vault-pass.txt --extra-vars="type=gcp" switch_to_gcp.yml
     exit 0
     ;;
     "switch_to_aws")
-    echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --extra-vars="type=aws" switch_to_aws.yml
+    echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --extra-vars="type=aws run_pb=switch_to_aws" switch_to_aws.yml
     ansible-playbook --vault-password-file ../.vault-pass.txt --extra-vars="type=aws" switch_to_aws.yml
     exit 0
     ;;
     "switch_to_esx")
-    echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --extra-vars="type=esx" switch_to_esx.yml
+    echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --extra-vars="type=esx run_pb=switch_to_esx" switch_to_esx.yml
     ansible-playbook --vault-password-file ../.vault-pass.txt --extra-vars="type=esx" switch_to_esx.yml
     exit 0
     ;;
