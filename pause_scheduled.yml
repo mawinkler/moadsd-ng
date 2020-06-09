@@ -48,6 +48,21 @@
             - ec2_state == "running"
       when: type == "aws"
 
+    - name: GCP
+      block:
+        - name: Query Instance State
+          set_fact:
+            gcp_state: "{{ hostvars[inventory_hostname]['status'] }}"
+
+        - name: Send Shutdown Command to Linux Instance
+          at:
+            command: shutdown -h now
+            count: "{{ instance_shutdown_delay }}"
+            units: minutes
+          when:
+            - gcp_state == "RUNNING"
+      when: type == "gcp"
+      
 # - hosts: tag_role_windowsep
 #   gather_facts: false
 #   become: yes
