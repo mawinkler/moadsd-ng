@@ -29,14 +29,32 @@
         storageClass: {{ docker_registry_persistence_storageClassName }}
       storage: filesystem
 
+- name: Install htpasswd binary
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - apache2-utils
+
 - name: Create Docker Registry Credentials
   become: true
   become_user: ubuntu
   shell: |
-    docker run --entrypoint htpasswd registry:2 -Bbn {{ cluster_registry_username }} {{ cluster_registry_password }} > ./registry_htpasswd
+    htpasswd -Bbn {{ cluster_registry_username }} {{ cluster_registry_password }} > ./registry_htpasswd
   args:
     chdir: $HOME
     creates: ./registry_htpasswd
+
+# - name: Create Docker Registry Credentials
+#   become: true
+#   become_user: ubuntu
+#   shell: |
+#     docker run --entrypoint htpasswd registry:2 -Bbn {{ cluster_registry_username }} {{ cluster_registry_password }} > ./registry_htpasswd
+#   args:
+#     chdir: $HOME
+#     creates: ./registry_htpasswd
 
 - name: Create Docker Registry Namespace
   become: true
