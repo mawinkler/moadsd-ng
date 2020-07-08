@@ -22,3 +22,4 @@ configuration.yml
 ssh_*
 .vagrant
 .DS_Store
+.owner
