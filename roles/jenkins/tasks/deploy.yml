@@ -32,11 +32,11 @@
         serviceType: {{ service_type }}
         nodePort: {{ service_port }}
         installPlugins:
-          - kubernetes:1.21.2
-          - workflow-job:2.36
+          - kubernetes:1.26.3
+          - workflow-job:2.39
           - workflow-aggregator:2.6
-          - credentials-binding:1.20
-          - git:4.0.0
+          - credentials-binding:1.23
+          - git:4.3.0
           - github-pullrequest
           - kubernetes-cd
           - blueocean
