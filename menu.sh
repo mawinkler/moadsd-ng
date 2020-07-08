@@ -65,7 +65,8 @@ done
 if [ $run_pb = "configuration" ]
 then
   ansible-vault edit --vault-password-file ../.vault-pass.txt ./configuration.yml
-  run_pb="configurator"
+  ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env} run_pb=configurator" configurator.yml
+  exit 0
 fi
 
 if [ $run_pb = "manual" ]
@@ -79,5 +80,11 @@ then
   done
 fi
 
-echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_owner_${OWNER} -i ${run_inv} --extra-vars=\"type=${run_env} run_pb=${run_pb}\" ${run_pb}.yml
-ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_owner_${OWNER} -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb}" ${run_pb}.yml
+if [ $run_pb = "site" ]
+then
+  echo Running ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars=\"type=${run_env} run_pb=${run_pb}\" ${run_pb}.yml
+  ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb}" ${run_pb}.yml
+else
+  echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_owner_${OWNER} -i ${run_inv} --extra-vars=\"type=${run_env} run_pb=${run_pb}\" ${run_pb}.yml
+  ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_owner_${OWNER} -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb}" ${run_pb}.yml
+fi
