@@ -14,6 +14,7 @@
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+      "tag:owner": "{{ admin_email | hash('md5') }}"
       instance-state-name: [ "running", "stopped" ]
   register: ec2
 
@@ -46,6 +47,7 @@
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+      "tag:owner": "{{ admin_email | hash('md5') }}"
       instance-state-name: running
     state: absent
 
@@ -73,3 +75,4 @@
     description: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
     tags:
       Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
+      owner: "{{ admin_email | hash('md5') }}"

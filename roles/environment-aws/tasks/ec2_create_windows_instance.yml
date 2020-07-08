@@ -22,6 +22,7 @@
         description: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
         tags:
           Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
+          owner: "{{ admin_email | hash('md5') }}"
         rules:
           - proto: tcp
             ports: "{{ instance_ports_anywhere }}"
@@ -70,6 +71,7 @@
         tags:
           role: "{{ instance_tags }}"
           project: "{{ moadsd_ng_prefix }}"
+          owner: "{{ admin_email | hash('md5') }}"
         state: present
       register: ec2
 
@@ -136,6 +138,7 @@
         description: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
         tags:
           Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
+          owner: "{{ admin_email | hash('md5') }}"
         rules:
           - proto: icmp
             from_port: 8
@@ -178,6 +181,7 @@
         tags:
           role: "{{ instance_tags }}"
           project: "{{ moadsd_ng_prefix }}"
+          owner: "{{ admin_email | hash('md5') }}"
         state: present
       register: ec2
 
