@@ -14,7 +14,7 @@
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
-      "tag:owner": "{{ admin_email | hash('md5') }}"
+      "tag:owner": "{{ moadsd_ng_owner }}"
       instance-state-name: [ "running", "stopped" ]
   register: ec2
 
@@ -47,8 +47,8 @@
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
-      "tag:owner": "{{ admin_email | hash('md5') }}"
-      instance-state-name: running
+      "tag:owner": "{{ moadsd_ng_owner }}"
+      instance-state-name: [ "running", "stopped" ]
     state: absent
 
 - name: Release disassociated public addresses in region
@@ -75,4 +75,4 @@
     description: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
     tags:
       Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
-      owner: "{{ admin_email | hash('md5') }}"
+      owner: "{{ moadsd_ng_owner }}"

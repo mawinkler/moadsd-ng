@@ -22,7 +22,7 @@
         description: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
         tags:
           Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
-          owner: "{{ admin_email | hash('md5') }}"
+          owner: "{{ moadsd_ng_owner }}"
         rules:
           - proto: tcp
             ports: "{{ instance_ports_anywhere }}"
@@ -69,7 +69,7 @@
         tags:
           role: "{{ instance_tags }}"
           project: "{{ moadsd_ng_prefix }}"
-          owner: "{{ admin_email | hash('md5') }}"
+          owner: "{{ moadsd_ng_owner }}"
         state: present
       register: ec2
       # async: 600
@@ -85,7 +85,7 @@
         device_id: "{{ ec2.instance_ids[0] }}"
         state: present
         tag_name: "owner"
-        tag_value: "{{ admin_email | hash('md5') }}"
+        tag_value: "{{ moadsd_ng_owner }}"
       register: eip
 
     - name: Output the IP
@@ -113,7 +113,7 @@
         description: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
         tags:
           Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
-          owner: "{{ admin_email | hash('md5') }}"
+          owner: "{{ moadsd_ng_owner }}"
         rules:
           - proto: icmp
             from_port: 8
@@ -156,7 +156,7 @@
         tags:
           role: "{{ instance_tags }}"
           project: "{{ moadsd_ng_prefix }}"
-          owner: "{{ admin_email | hash('md5') }}"
+          owner: "{{ moadsd_ng_owner }}"
         state: present
       register: ec2
       async: 600

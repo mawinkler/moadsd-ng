@@ -12,7 +12,7 @@
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ moadsd_ng_prefix }}-vpc"
-      "tag:owner": "{{ admin_email | hash('md5') }}"
+      "tag:owner": "{{ moadsd_ng_owner }}"
   register: ec2_vpc_net_result
 
 - name: Query Public Subnet id
@@ -20,7 +20,7 @@
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ moadsd_ng_prefix }}-public-subnet"
-      "tag:owner": "{{ admin_email | hash('md5') }}"
+      "tag:owner": "{{ moadsd_ng_owner }}"
   register: public_subnet_result
 
 - name: Query Private Subnet id
@@ -28,7 +28,7 @@
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ moadsd_ng_prefix }}-private-subnet"
-      "tag:owner": "{{ admin_email | hash('md5') }}"
+      "tag:owner": "{{ moadsd_ng_owner }}"
   register: private_subnet_result
 
 - name: Query NAT Gateway id
@@ -88,7 +88,7 @@
     state: absent
     tags:
       Name: "{{ moadsd_ng_prefix }}-public-rt"
-      owner: "{{ admin_email | hash('md5') }}"
+      owner: "{{ moadsd_ng_owner }}"
   register: public_route_table
   when: ec2_vpc_net_result.vpcs | length > 0
 
@@ -101,8 +101,8 @@
     state: absent
     tags:
       Name: "{{ moadsd_ng_prefix }}-private-rt"
-      tag:owner: "{{ admin_email | hash('md5') }}"
-  register: public_route_table
+      tag:owner: "{{ moadsd_ng_owner }}"
+  register: private_route_table
   when: ec2_vpc_net_result.vpcs | length > 0
 
 - name: Terminate VPC
