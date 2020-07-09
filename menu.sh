@@ -80,11 +80,11 @@ then
   done
 fi
 
-# if [ $run_pb = "site" ]
-# then
-#   echo Running ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars=\"type=${run_env} run_pb=${run_pb}\" ${run_pb}.yml
-#   ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb}" ${run_pb}.yml
-# else
+if [ $run_pb = "site" ]
+then
+  echo Running ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars=\"type=${run_env} run_pb=${run_pb}\" ${run_pb}.yml
+  ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb}" ${run_pb}.yml
+else
   echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_owner_${OWNER},localhost -i ${run_inv} --extra-vars=\"type=${run_env} run_pb=${run_pb}\" ${run_pb}.yml
   ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_owner_${OWNER},localhost -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb}" ${run_pb}.yml
-# fi
+fi
