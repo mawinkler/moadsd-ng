@@ -22,7 +22,7 @@
   tasks:
     - name: Include vars
       include: site_vars.yml
-  
+
     - name: AWS
       block:
         - name: Query Instance State
@@ -37,7 +37,7 @@
             - ec2_state == "running"
       when: type == "aws"
 
-- hosts: tag_project_moadsd_ng
+- hosts: tag_role_jumphost, tag_role_k8sworker, tag_role_k8smaster, tag_role_linuxep, tag_role_windowsep, tag_role_openshift, tag_role_dsm, tag_rols_dsmdb
   gather_facts: false
   vars:
   tasks:
