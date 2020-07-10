@@ -101,7 +101,7 @@
     state: absent
     tags:
       Name: "{{ moadsd_ng_prefix }}-private-rt"
-      tag:owner: "{{ moadsd_ng_owner }}"
+      owner: "{{ moadsd_ng_owner }}"
   register: private_route_table
   when: ec2_vpc_net_result.vpcs | length > 0
 
