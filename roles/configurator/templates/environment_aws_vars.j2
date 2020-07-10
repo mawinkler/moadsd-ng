@@ -49,7 +49,7 @@ startup_script_windows: |
        New-Item -Path $regitem
        ＜/powershell＞{% endraw %}
 
-moadsd_ng_prefix: {{ moadsd_ng_prefix }}
+moadsd_ng_prefix: {{ moadsd_ng_prefix }}-{{ moadsd_ng_owner }}
 moadsd_ng_owner: {{ moadsd_ng_owner }}
 instance_shutdown_delay: {{ instance_shutdown_delay }}
 
