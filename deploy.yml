@@ -135,7 +135,7 @@
 # Ensure src dst Checks are Disabled on AWS
 # #####################################################################
 - name: Ensure src dst Checks are Disabled on AWS
-  hosts: localhost
+  hosts: all
   gather_facts: no
 
   tasks:
@@ -145,9 +145,9 @@
     - name: Disable AWS src dst Checks
       become: true
       become_user: ansible
-      shell: aws ec2 modify-instance-attribute --instance-id {{ hostvars[item]['ec2_id'] }} --region {{ aws_region }} --no-source-dest-check
+      shell: aws ec2 modify-instance-attribute --instance-id {{ hostvars[inventory_hostname]['ec2_id'] }} --region {{ aws_region }} --no-source-dest-check
       delegate_to: localhost
-      with_inventory_hostnames: all
+      # with_inventory_hostnames: all
       when: type == "aws"
 
 # #####################################################################
