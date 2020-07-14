@@ -3,7 +3,7 @@ run_env=""
 run_inv=""
 run_pb=""
 
-source ./.owner
+source ./.project
 
 env_options=("gcp" "aws" "esx"
              "site_secrets"
