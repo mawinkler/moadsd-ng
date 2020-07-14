@@ -12,8 +12,8 @@
       - https://www.googleapis.com/auth/compute
 
   tasks:
-    - name: Include vars
-      include: site_vars.yml
+    # - name: Include vars
+    #   include: site_vars.yml
 
     - name: Create subdirectory host_vars
       file:

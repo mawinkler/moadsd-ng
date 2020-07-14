@@ -31,30 +31,6 @@
   tasks:
     - name: Include vars
       include: site_vars.yml
-
-    # - name: Store Jumphost IP
-    #   set_fact:
-    #     jumphost_ip: "{{ hostvars[inventory_hostname]['groups']['tag_Name_' + moadsd_ng_prefix | regex_replace('-', '_') + '_jumphost_instance'] }}"
-    
-    # - name: Store Kubernetes Master IP
-    #   set_fact:
-    #     k8smaster_ip: "{{ hostvars[inventory_hostname]['groups']['tag_Name_' + moadsd_ng_prefix | regex_replace('-', '_') + '_k8smaster_instance'] }}"
-    
-    # - name: Store Kubernetes Worker 1 IP
-    #   set_fact:
-    #     k8sworker1_ip: "{{ hostvars[inventory_hostname]['groups']['tag_Name_' + moadsd_ng_prefix | regex_replace('-', '_') + '_k8sworker1_instance'] }}"
-    
-    # - name: Store Openshift IP
-    #   set_fact:
-    #     openshift_ip: "{{ hostvars[inventory_hostname]['groups']['tag_Name_' + moadsd_ng_prefix | regex_replace('-', '_') + '_openshift_instance'] }}"
-    
-    # - name: Store Deep Security Manager IP
-    #   set_fact:
-    #     dsm_ip: "{{ hostvars[inventory_hostname]['groups']['tag_Name_' + moadsd_ng_prefix | regex_replace('-', '_') + '_dsm_instance'] }}"
-    
-    # - name: Store Deep Security Manager DB IP
-    #   set_fact:
-    #     dsmdb_ip: "{{ hostvars[inventory_hostname]['groups']['tag_Name_' + moadsd_ng_prefix | regex_replace('-', '_') + '_dsmdb_instance'] }}"
     
     - name: Listing Jumphost Environment
       debug:
