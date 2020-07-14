@@ -22,7 +22,8 @@
         description: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
         tags:
           Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
-          owner: "{{ moadsd_ng_owner }}"
+          project: "{{ moadsd_ng_prefix }}"
+          # owner: "{{ moadsd_ng_owner }}"
         rules:
           - proto: tcp
             ports: "{{ instance_ports_anywhere }}"
@@ -71,7 +72,7 @@
         tags:
           role: "{{ instance_tags }}"
           project: "{{ moadsd_ng_prefix }}"
-          owner: "{{ moadsd_ng_owner }}"
+          # owner: "{{ moadsd_ng_owner }}"
         state: present
       register: ec2
 
@@ -84,8 +85,10 @@
         region: "{{ aws_region }}"
         device_id: "{{ ec2.instance_ids[0] }}"
         state: present
-        tag_name: "owner"
-        tag_value: "{{ moadsd_ng_owner }}"
+        # tag_name: "owner"
+        # tag_value: "{{ moadsd_ng_owner }}"
+        tag_name: "project"
+        tag_value: "{{ moadsd_ng_prefix }}"
       register: eip
 
     - name: Output the IP
@@ -140,7 +143,8 @@
         description: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
         tags:
           Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
-          owner: "{{ moadsd_ng_owner }}"
+          project: "{{ moadsd_ng_prefix }}"
+          # owner: "{{ moadsd_ng_owner }}"
         rules:
           - proto: icmp
             from_port: 8
@@ -183,7 +187,7 @@
         tags:
           role: "{{ instance_tags }}"
           project: "{{ moadsd_ng_prefix }}"
-          owner: "{{ moadsd_ng_owner }}"
+          # owner: "{{ moadsd_ng_owner }}"
         state: present
       register: ec2
 

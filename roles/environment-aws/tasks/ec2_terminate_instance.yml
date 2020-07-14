@@ -14,7 +14,8 @@
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
-      "tag:owner": "{{ moadsd_ng_owner }}"
+      # "tag:owner": "{{ moadsd_ng_owner }}"
+      "tag:project": "{{ moadsd_ng_prefix }}"
       instance-state-name: [ "running", "stopped" ]
   register: ec2
 
@@ -47,7 +48,8 @@
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
-      "tag:owner": "{{ moadsd_ng_owner }}"
+      # "tag:owner": "{{ moadsd_ng_owner }}"
+      "tag:project": "{{ moadsd_ng_prefix }}"
       instance-state-name: [ "running", "stopped" ]
     state: absent
 
@@ -75,4 +77,5 @@
     description: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
     tags:
       Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
-      owner: "{{ moadsd_ng_owner }}"
+      # owner: "{{ moadsd_ng_owner }}"
+      project: "{{ moadsd_ng_prefix }}"

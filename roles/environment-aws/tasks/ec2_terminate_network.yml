@@ -12,7 +12,8 @@
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ moadsd_ng_prefix }}-vpc"
-      "tag:owner": "{{ moadsd_ng_owner }}"
+      # "tag:owner": "{{ moadsd_ng_owner }}"
+      "tag:project": "{{ moadsd_ng_prefix }}"
   register: ec2_vpc_net_result
 
 - name: Query Public Subnet id
@@ -20,7 +21,8 @@
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ moadsd_ng_prefix }}-public-subnet"
-      "tag:owner": "{{ moadsd_ng_owner }}"
+      # "tag:owner": "{{ moadsd_ng_owner }}"
+      "tag:project": "{{ moadsd_ng_prefix }}"
   register: public_subnet_result
 
 - name: Query Private Subnet id
@@ -28,7 +30,8 @@
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ moadsd_ng_prefix }}-private-subnet"
-      "tag:owner": "{{ moadsd_ng_owner }}"
+      # "tag:owner": "{{ moadsd_ng_owner }}"
+      "tag:project": "{{ moadsd_ng_prefix }}"
   register: private_subnet_result
 
 - name: Query NAT Gateway id
@@ -88,7 +91,8 @@
     state: absent
     tags:
       Name: "{{ moadsd_ng_prefix }}-public-rt"
-      owner: "{{ moadsd_ng_owner }}"
+      # owner: "{{ moadsd_ng_owner }}"
+      project: "{{ moadsd_ng_prefix }}"
   register: public_route_table
   when: ec2_vpc_net_result.vpcs | length > 0
 
@@ -101,7 +105,8 @@
     state: absent
     tags:
       Name: "{{ moadsd_ng_prefix }}-private-rt"
-      owner: "{{ moadsd_ng_owner }}"
+      # owner: "{{ moadsd_ng_owner }}"
+      project: "{{ moadsd_ng_prefix }}"
   register: private_route_table
   when: ec2_vpc_net_result.vpcs | length > 0
 
