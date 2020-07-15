@@ -840,30 +840,6 @@
         - site_deploy_openshift == True
         - site_deploy_jumphost == True
 
-# # #####################################################################
-# # Deploy OPA
-# # #####################################################################
-# - name: Deploy OPA
-#   hosts: tag_role_k8smaster
-#   become: true
-#
-#   tasks:
-#     - name: Include vars
-#       include: site_vars.yml
-#
-#     - name: pause
-#       pause:
-#         minutes: 3
-#
-#     - name: Deploy OPA
-#       include_role:
-#         name: opa
-#       vars:
-#         operation: deploy
-#       when:
-#         - site_deploy_opa == True
-#         - site_deploy_kubernetes == True
-
 # #####################################################################
 # Print some environment information
 # #####################################################################

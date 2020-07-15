@@ -20,8 +20,8 @@
     state: present
     tags:
       Name: "{{ moadsd_ng_prefix }}-igw"
-      # owner: "{{ moadsd_ng_owner }}"
       project: "{{ moadsd_ng_prefix }}"
+      user: "{{ moadsd_ng_user }}"
   register: ec2_vpc_net_result
 
 - name: Create EC2 VPC Internet Gateway
@@ -33,8 +33,8 @@
     state: present
     tags:
       Name: "{{ moadsd_ng_prefix }}-igw"
-      # owner: "{{ moadsd_ng_owner }}"
       project: "{{ moadsd_ng_prefix }}"
+      user: "{{ moadsd_ng_user }}"
   register: igw_result
 
 - name: Create EC2 VPC Public Subnet within CIDR block
@@ -49,8 +49,8 @@
     map_public: yes
     resource_tags:
       Name: "{{ moadsd_ng_prefix }}-public-subnet"
-      # owner: "{{ moadsd_ng_owner }}"
       project: "{{ moadsd_ng_prefix }}"
+      user: "{{ moadsd_ng_user }}"
   register: public_subnet_result
 
 - name: Create EC2 VPC Private Subnet within CIDR block
@@ -65,8 +65,8 @@
     map_public: yes
     resource_tags:
       Name: "{{ moadsd_ng_prefix }}-private-subnet"
-      # owner: "{{ moadsd_ng_owner }}"
       project: "{{ moadsd_ng_prefix }}"
+      user: "{{ moadsd_ng_user }}"
   register: private_subnet_result
 
 - name: Create NAT Gateway and allocate EIP
@@ -88,7 +88,7 @@
     tags:
       Name: "{{ moadsd_ng_prefix }}-public-rt"
       project: "{{ moadsd_ng_prefix }}"
-      # owner: "{{ moadsd_ng_owner }}"
+      user: "{{ moadsd_ng_user }}"
     subnets: [ "{{ public_subnet_result.subnet.id }}" ]
     routes:
       - dest: "0.0.0.0/0"
@@ -105,7 +105,7 @@
     tags:
       Name: "{{ moadsd_ng_prefix }}-private-rt"
       project: "{{ moadsd_ng_prefix }}"
-      # owner: "{{ moadsd_ng_owner }}"
+      user: "{{ moadsd_ng_user }}"
     subnets: [ "{{ private_subnet_result.subnet.id }}" ]
     routes:
       - dest: "0.0.0.0/0"

@@ -15,7 +15,7 @@ site_deploy_opa: no
 site_deploy_jumphost: yes
 
 moadsd_ng_prefix: moadsd-ng
-# moadsd_ng_owner: moadsd-ng
+moadsd_ng_user: maygyver
 instance_shutdown_delay: 240
 
 # #####################################################################

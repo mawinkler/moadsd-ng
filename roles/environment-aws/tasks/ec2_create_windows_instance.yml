@@ -23,7 +23,7 @@
         tags:
           Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
           project: "{{ moadsd_ng_prefix }}"
-          # owner: "{{ moadsd_ng_owner }}"
+          user: "{{ moadsd_ng_user }}"
         rules:
           - proto: tcp
             ports: "{{ instance_ports_anywhere }}"
@@ -72,11 +72,11 @@
         tags:
           role: "{{ instance_tags }}"
           project: "{{ moadsd_ng_prefix }}"
-          # owner: "{{ moadsd_ng_owner }}"
+          user: "{{ moadsd_ng_user }}"
         state: present
       register: ec2
 
-    - name: Create a windows server public address
+    - name: Create a Windows Server Public Address
       ec2_eip:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
@@ -87,9 +87,17 @@
         state: present
         # tag_name: "owner"
         # tag_value: "{{ moadsd_ng_owner }}"
-        tag_name: "project"
-        tag_value: "{{ moadsd_ng_prefix }}"
+        # tag_name: "project"
+        # tag_value: "{{ moadsd_ng_prefix }}"
       register: eip
+
+    - name: Tag Windows Server Public Address
+      ec2_tag:
+        resource: "{{ eip.allocation_id }}"
+        tags:
+          Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-eip"
+          project: "{{ moadsd_ng_prefix }}"
+          user: "{{ moadsd_ng_user }}"
 
     - name: Output the IP
       debug:
@@ -144,7 +152,7 @@
         tags:
           Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
           project: "{{ moadsd_ng_prefix }}"
-          # owner: "{{ moadsd_ng_owner }}"
+          user: "{{ moadsd_ng_user }}"
         rules:
           - proto: icmp
             from_port: 8
@@ -187,7 +195,7 @@
         tags:
           role: "{{ instance_tags }}"
           project: "{{ moadsd_ng_prefix }}"
-          # owner: "{{ moadsd_ng_owner }}"
+          user: "{{ moadsd_ng_user }}"
         state: present
       register: ec2
 

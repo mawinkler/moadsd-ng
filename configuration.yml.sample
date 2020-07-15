@@ -19,7 +19,8 @@ site_deploy_jenkins: yes
 site_deploy_prometheus: yes
 site_deploy_grafana: yes
 
-moadsd_ng_prefix: moadsd-ng-maygyver
+moadsd_ng_prefix: moadsd-ng-macgyver
+moadsd_ng_user: macgyver
 
 # #####################################################################
 # Google Cloud Settings
