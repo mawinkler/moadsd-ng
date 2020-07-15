@@ -6,7 +6,7 @@
 # #####################################################################
 # Query some private ips
 # #####################################################################
-- hosts: tag_role_jumphost
+- hosts: tag_role_jumphost:&tag_user_{{ user }}
   tasks:
     - name: Get ipaddr of Jumphost
       set_fact:
@@ -133,7 +133,7 @@
 # Ensure src dst Checks are Disabled on AWS
 # #####################################################################
 - name: Ensure src dst Checks are Disabled on AWS
-  hosts: all
+  hosts: all:&tag_user_{{ user }}
   gather_facts: no
 
   tasks:
@@ -152,7 +152,7 @@
 # Create http & https Proxy with Trusted Certificates
 # #####################################################################
 - name: Create and Configure Jumphost Proxy
-  hosts: tag_role_jumphost
+  hosts: tag_role_jumphost:&tag_user_{{ user }}
   become: true
 
   vars:
@@ -409,7 +409,7 @@
 # Deploy PostgreSQL database for Deep Security
 # #####################################################################
 - name: Create PostgreSQL database for Deep Security
-  hosts: tag_role_dsm_db
+  hosts: tag_role_dsm_db:&tag_user_{{ user }}
   become: true
 
   vars:
@@ -443,7 +443,7 @@
 # Deploy Deep Security
 # #####################################################################
 - name: Deploy Deep Security
-  hosts: tag_role_dsm
+  hosts: tag_role_dsm:&tag_user_{{ user }}
   become: true
 
   tasks:
@@ -473,7 +473,7 @@
 # Deploy Kubernetes cluster with kubeadm
 # #####################################################################
 - name: Create Kubernetes cluster with kubeadm
-  hosts: tag_role_k8smaster
+  hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
   # Container Runtime Sockets:
   # /var/run/crio/crio.sock       unix:///var/run/crio/crio.sock
@@ -518,7 +518,7 @@
         - kubernetes_container_runtime == 'docker'
 
 - name: Deploy Kubernetes workers
-  hosts: tag_role_k8sworker
+  hosts: tag_role_k8sworker:&tag_user_{{ user }}
   become: true
 
   vars:
@@ -560,7 +560,7 @@
         - kubernetes_container_runtime == 'docker'
 
 - name: Deploy Basic Services for Kubernetes
-  hosts: tag_role_k8smaster
+  hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
 
   tasks:
@@ -642,7 +642,7 @@
 # Deploy OPA
 # #####################################################################
 - name: Deploy OPA
-  hosts: tag_role_k8smaster
+  hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
 
   tasks:
@@ -671,7 +671,7 @@
 # Deploy Prometheus
 # #####################################################################
 - name: Deploy Prometheus
-  hosts: tag_role_k8smaster
+  hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
 
   tasks:
@@ -691,7 +691,7 @@
 # Deploy Grafana
 # #####################################################################
 - name: Deploy Grafana
-  hosts: tag_role_k8smaster
+  hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
 
   tasks:
@@ -711,7 +711,7 @@
 # Deploy Deep Security Smart Check
 # #####################################################################
 - name: Deploy Smart Check
-  hosts: tag_role_k8smaster
+  hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
 
   tasks:
@@ -742,7 +742,7 @@
 # Deploy Jenkins
 # #####################################################################
 - name: Deploy Jenkins
-  hosts: tag_role_k8smaster
+  hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
 
   tasks:
@@ -775,7 +775,7 @@
 # Deploy GitLab
 # #####################################################################
 - name: Deploy GitLab
-  hosts: tag_role_k8smaster
+  hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
 
   tasks:
@@ -795,7 +795,7 @@
 # Deploy Linkerd
 # #####################################################################
 - name: Deploy Linkerd
-  hosts: tag_role_k8smaster
+  hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
 
   tasks:
@@ -815,7 +815,7 @@
 # Deploy OpenShift
 # #####################################################################
 - name: Deploy OpenShift
-  hosts: tag_role_openshift
+  hosts: tag_role_openshift:&tag_user_{{ user }}
   become: true
 
   tasks:

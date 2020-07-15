@@ -83,10 +83,10 @@
 #
 # AWS Configuration
 #
-# - name: Create Owner Configuration
-#   template:
-#     src: owner.j2
-#     dest: ./.owner
+- name: Create Owner Configuration
+  template:
+    src: user.j2
+    dest: ./.user
 
 - name: Create Project Configuration
   template:
