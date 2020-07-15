@@ -19,7 +19,7 @@ site_deploy_jenkins: yes
 site_deploy_prometheus: yes
 site_deploy_grafana: yes
 
-moadsd_ng_owner: chuck_norris
+moadsd_ng_prefix: moadsd-ng-maygyver
 
 # #####################################################################
 # Google Cloud Settings
