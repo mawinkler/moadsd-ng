@@ -68,7 +68,7 @@
 
 - name: Generate DNS Name
   set_fact:
-    service_dns_name: "https://dashboard-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+    service_dns_name: "https://dashboard-{{ jumphost_ip | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
 - name: Create Link Document for Kubernetes Dashboard
   become: true

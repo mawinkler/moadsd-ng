@@ -22,41 +22,39 @@
         name: "{{ remote_ip }}"
         groups: "moadsd_ng_jumphost_instance_public"
 
-    - name: Store all Groups in Memory
-      set_fact:
-        moadsd_ng_groups: "{{ hostvars[inventory_hostname]['groups'] }}"
-
 - hosts: localhost
-  gather_facts: no
+  gather_facts: false
   tasks:
     - name: Include vars
       include: site_vars.yml
-
+    
     - name: Listing Jumphost Environment
       debug:
         msg:
-          - "Jumphost                     : {{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] }}"
+          - "Jumphost                     : {{ jumphost_ip }}"
       when: site_deploy_jumphost == True
 
     - name: Listing Kubernetes Environment
       debug:
         msg:
-          - "Kubernetes Master            : {{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
-          - "Kubernetes Worker 1          : {{ hostvars[inventory_hostname]['groups']['tag_role_k8sworker'][0] }}"
-      when: "'tag_role_k8smaster' is in groups"
+          - "Kubernetes Master            : {{ k8smaster_ip }}"
+          - "Kubernetes Worker 1          : {{ k8sworker1_ip }}"
+      when: site_deploy_kubernetes == True
 
     - name: Listing OpenShift Environment
       debug:
         msg:
-          - "OpenShift Master             : {{ hostvars[inventory_hostname]['groups']['tag_role_openshift'][0] }}"
-      when: "'tag_role_openshift' is in groups"
+          - "OpenShift Master             : {{ openshift_ip }}"
+      when: site_deploy_openshift == True
 
     - name: Listing Deep Security Environment
       debug:
         msg:
-          - "Deep Security                : {{ hostvars[inventory_hostname]['groups']['tag_role_dsm'][0] }}"
-          - "PostgreSQL                   : {{ hostvars[inventory_hostname]['groups']['tag_role_dsmdb'][0] }}"
-      when: "'tag_role_dsm' is in groups"
+          - "Deep Security                : {{ dsm_ip }}"
+          - "PostgreSQL                   : {{ dsmdb_ip }}"
+      when:
+        - site_deploy_deepsecurity == True
+        - deepsecurity_variant == 'dsm'
 
 # #####################################################################
 # Deploy Kubernetes Dashboard

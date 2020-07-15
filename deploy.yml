@@ -22,10 +22,6 @@
         name: "{{ remote_ip }}"
         groups: "moadsd_ng_jumphost_instance_public"
 
-    - name: Store all Groups in Memory
-      set_fact:
-        moadsd_ng_groups: "{{ hostvars[inventory_hostname]['groups'] }}"
-
 - hosts: localhost
   gather_facts: false
   tasks:

@@ -14,7 +14,7 @@
 
 - name: Generate DNS Name
   set_fact:
-    service_dns_name: "https://ceph-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+    service_dns_name: "https://ceph-{{ jumphost_ip | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
 - name: Create Link Document For Ceph Dashboard
   become: true

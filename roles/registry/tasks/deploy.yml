@@ -81,13 +81,13 @@
 - name: Create image pull secret
   become: true
   become_user: ubuntu
-  shell: kubectl create secret docker-registry cluster-registry --docker-server="https://registry-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}/v2/" --docker-username={{ cluster_registry_username }} --docker-password={{ cluster_registry_password }} --docker-email=k8s@moadsd-ng.io --dry-run=true -o yaml | kubectl apply -f -
+  shell: kubectl create secret docker-registry cluster-registry --docker-server="https://registry-{{ jumphost_ip | regex_replace('\\.', '-') }}.{{ jumphost_tld }}/v2/" --docker-username={{ cluster_registry_username }} --docker-password={{ cluster_registry_password }} --docker-email=k8s@moadsd-ng.io --dry-run=true -o yaml | kubectl apply -f -
   args:
     chdir: $HOME
 
 - name: Generate DNS name
   set_fact:
-    service_dns_name: "https://registry-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+    service_dns_name: "https://registry-{{ jumphost_ip | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
 - name: Create link document for Cluster Registry
   become: true

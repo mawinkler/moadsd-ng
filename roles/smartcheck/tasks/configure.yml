@@ -11,7 +11,7 @@
 
 - name: Get ipaddr of k8smaster
   set_fact:
-    remote_ip: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
+    remote_ip: "{{ k8smaster_ip }}"
   when: not remote_ip
 
 # Initial password change

@@ -278,11 +278,11 @@
 
 - name: Generate DNS Name
   set_fact:
-    service_dns_name_smartcheck: "https://smartcheck-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+    service_dns_name_smartcheck: "https://smartcheck-{{ jumphost_ip | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
 - name: Generate DNS Name Registry
   set_fact:
-    service_dns_name_registry: "https://smartcheck-registry-{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+    service_dns_name_registry: "https://smartcheck-registry-{{ jumphost_ip | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
 - name: Create Link Document for Deep Security Smart Check
   become: true

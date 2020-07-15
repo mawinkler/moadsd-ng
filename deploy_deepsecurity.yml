@@ -35,28 +35,30 @@
     - name: Listing Jumphost Environment
       debug:
         msg:
-          - "Jumphost                     : {{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] }}"
+          - "Jumphost                     : {{ jumphost_ip }}"
       when: site_deploy_jumphost == True
 
     - name: Listing Kubernetes Environment
       debug:
         msg:
-          - "Kubernetes Master            : {{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
-          - "Kubernetes Worker 1          : {{ hostvars[inventory_hostname]['groups']['tag_role_k8sworker'][0] }}"
-      when: "'tag_role_k8smaster' is in groups"
+          - "Kubernetes Master            : {{ k8smaster_ip }}"
+          - "Kubernetes Worker 1          : {{ k8sworker1_ip }}"
+      when: site_deploy_kubernetes == True
 
     - name: Listing OpenShift Environment
       debug:
         msg:
-          - "OpenShift Master             : {{ hostvars[inventory_hostname]['groups']['tag_role_openshift'][0] }}"
-      when: "'tag_role_openshift' is in groups"
+          - "OpenShift Master             : {{ openshift_ip }}"
+      when: site_deploy_openshift == True
 
     - name: Listing Deep Security Environment
       debug:
         msg:
-          - "Deep Security                : {{ hostvars[inventory_hostname]['groups']['tag_role_dsm'][0] }}"
-          - "PostgreSQL                   : {{ hostvars[inventory_hostname]['groups']['tag_role_dsmdb'][0] }}"
-      when: "'tag_role_dsm' is in groups"
+          - "Deep Security                : {{ dsm_ip }}"
+          - "PostgreSQL                   : {{ dsmdb_ip }}"
+      when:
+        - site_deploy_deepsecurity == True
+        - deepsecurity_variant == 'dsm'
 
 # #####################################################################
 # Deploy PostgreSQL database for Deep Security
@@ -75,7 +77,7 @@
         name: postgresql
       vars:
         operation: deploy
-        database_client: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsmdb'][0] }}"
+        database_client: "{{ dsmdb_ip }}"
       when: site_deploy_deepsecurity == True
 
     - name: Create Database for Deep Security in PostgreSQL
@@ -106,9 +108,9 @@
         name: deepsecurity
       vars:
         operation: deploy
-        addressandportsscreen_manageraddress: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsm'][0] }}"
+        addressandportsscreen_manageraddress: "{{ dsm_ip }}"
         licensescreen_license: '{{ deepsecurity_license }}'
-        databasescreen_hostname: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsmdb'][0] }}"
+        databasescreen_hostname: "{{ dsmdb_ip }}"
         databasescreen_databasename: "{{ deepsecurity_database_name }}"
         databasescreen_username: "{{ deepsecurity_database_user }}"
         databasescreen_password: "{{ deepsecurity_database_password }}"
