@@ -2,7 +2,7 @@
 # #####################################################################
 # Cancel Scheduled Pause
 # #####################################################################
-- hosts: tag_role_jumphost
+- hosts: tag_role_jumphost:&tag_user_{{ user }}
   gather_facts: false
   tasks:
     - debug:
@@ -25,7 +25,7 @@
         name: "{{ remote_ip }}"
         groups: "moadsd_ng_jumphost_instance_public"
 
-- hosts: tag_role_jumphost, tag_role_k8sworker, tag_role_k8smaster, tag_role_linuxep
+- hosts: tag_role_jumphost:&tag_user_{{ user }}, tag_role_k8sworker:&tag_user_{{ user }}, tag_role_k8smaster:&tag_user_{{ user }}, tag_role_linuxep:&tag_user_{{ user }}
   gather_facts: false
   become: yes
   vars:

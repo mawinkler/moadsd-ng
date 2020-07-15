@@ -6,7 +6,7 @@
 # #####################################################################
 # Query some private ips
 # #####################################################################
-- hosts: tag_role_jumphost
+- hosts: tag_role_jumphost:&tag_user_{{ user }}
   tasks:
     - name: Get ipaddr of Jumphost
       set_fact:
@@ -60,7 +60,7 @@
 # Deploy Registry
 # #####################################################################
 - name: Deploy Registry
-  hosts: tag_role_k8smaster
+  hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
 
   tasks:

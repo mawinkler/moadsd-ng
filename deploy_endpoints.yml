@@ -6,7 +6,7 @@
 # #####################################################################
 # Query some private ips
 # #####################################################################
-- hosts: tag_role_jumphost
+- hosts: tag_role_jumphost:&tag_user_{{ user }}
   tasks:
     - name: Get ipaddr of Jumphost
       set_fact:
@@ -60,7 +60,7 @@
 # Deploy Endpoints / Servers
 # #####################################################################
 - name: Deploy Endpoints
-  hosts: tag_role_linuxep, tag_role_windowsep
+  hosts: tag_role_linuxep:&tag_user_{{ user }}, tag_role_windowsep:&tag_user_{{ user }}
 
   tasks:
     - name: Include vars
@@ -94,7 +94,7 @@
         - deepsecurity_variant == 'dsm'
 
 - name: Set Linux Server policy
-  hosts: tag_role_linuxep
+  hosts: tag_role_linuxep:&tag_user_{{ user }}
   tasks:
     - name: Set Policy
       include_role:
@@ -104,7 +104,7 @@
         policy_name: Linux Server
 
 - name: Set Windows Server policy
-  hosts: tag_role_windowsep
+  hosts: tag_role_windowsep:&tag_user_{{ user }}
   tasks:
     - name: Set Policy
       include_role:
@@ -114,7 +114,7 @@
         policy_name: Windows Server
 
 - name: Update Configuration
-  hosts: tag_role_linuxep, tag_role_windowsep
+  hosts: tag_role_linuxep:&tag_user_{{ user }}, tag_role_windowsep:&tag_user_{{ user }}
   tasks:
     - name: Update Configuration
       include_role:
@@ -128,7 +128,7 @@
         operation: run-recommendation-scans
 
 - name: Prepare Facter for Deep Security
-  hosts: tag_role_linuxep
+  hosts: tag_role_linuxep:&tag_user_{{ user }}
   become: yes
   tasks:
     - name: Update APT cache

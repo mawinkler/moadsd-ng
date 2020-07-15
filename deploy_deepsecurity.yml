@@ -64,7 +64,7 @@
 # Deploy PostgreSQL database for Deep Security
 # #####################################################################
 - name: Create PostgreSQL database for Deep Security
-  hosts: tag_role_dsm_db
+  hosts: tag_role_dsm_db:&tag_user_{{ user }}
   become: true
 
   vars:
@@ -96,7 +96,7 @@
 # Deploy Deep Security
 # #####################################################################
 - name: Deploy Deep Security
-  hosts: tag_role_dsm
+  hosts: tag_role_dsm:&tag_user_{{ user }}
   become: true
 
   tasks:
