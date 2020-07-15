@@ -147,11 +147,11 @@
           password: {{ smartcheck_registry_password }}
 
       replicas:
-        malwareScan: 5
-        scan: 5
-        imageScan: 5
-        vulnerabilityScan: 5
-        contentScan: 5
+        malwareScan: 2
+        scan: 2
+        imageScan: 2
+        vulnerabilityScan: 2
+        contentScan: 2
 
       persistence:
         ## enabled is whether a persistent volume claim should be created for database storage.
