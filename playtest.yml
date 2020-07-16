@@ -1,0 +1,32 @@
+- hosts: tag_role_jumphost:&tag_user_{{ user }}
+  gather_facts: false
+  tasks:
+    - name: Get ipaddr of jumphost
+      set_fact:
+        remote_ip: "{{ inventory_hostname | ipaddr}}"
+
+    - name: Get ipaddr of jumphost
+      set_fact:
+        remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+      when: not remote_ip
+
+    - name: Store external ip address of jumphost
+      add_host:
+        name: "{{ remote_ip }}"
+        groups: "moadsd_ng_jumphost_instance_public"
+        
+- name: Test
+  hosts: tag_role_jumphost:tag_role_k8smaster:tag_role_k8sworker:tag_role_linuxep:&tag_user_{{ user }}
+  gather_facts: no
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Debug
+      become: true
+      become_user: ansible
+      debug:
+        msg: "{{ hostvars[inventory_hostname]['ec2_id'] }}"
+      delegate_to: localhost
+      # with_inventory_hostnames: all
