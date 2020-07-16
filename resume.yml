@@ -15,7 +15,7 @@
         name: "{{ remote_ip }}"
         groups: "moadsd_ng_jumphost_instance_public"
 
-- hosts: tag_role_jumphost:&tag_user_{{ user }}, tag_role_k8smaster:&tag_user_{{ user }}
+- hosts: tag_role_jumphost:tag_role_k8smaster:&tag_user_{{ user }}
   gather_facts: false
   vars:
   tasks:
@@ -47,7 +47,7 @@
       pause:
         minutes: 1
 
-- hosts: tag_role_k8sworker:&tag_user_{{ user }}, tag_role_linuxep:&tag_user_{{ user }}, tag_role_windowsep:&tag_user_{{ user }}, tag_role_openshift:&tag_user_{{ user }}, tag_role_dsm:&tag_user_{{ user }}, tag_rols_dsmdb:&tag_user_{{ user }}
+- hosts: tag_role_jumphost:tag_role_k8smaster:tag_role_k8sworker:tag_role_linuxep:tag_role_windowsep:tag_role_openshift:tag_role_dsm:tag_rols_dsmdb:&tag_user_{{ user }}
   gather_facts: false
   vars:
   tasks:
@@ -155,7 +155,7 @@
         owner: ansible
         mode: '0700'
 
-# - hosts: tag_role_jumphost:&tag_user_{{ user }}, tag_role_k8sworker:&tag_user_{{ user }}, tag_role_k8smaster:&tag_user_{{ user }}, tag_role_linuxep:&tag_user_{{ user }}
+# - hosts: tag_role_jumphost:tag_role_k8smaster:tag_role_k8sworker:tag_role_linuxep:&tag_user_{{ user }}
 #   gather_facts: false
 #   become: yes
 #
