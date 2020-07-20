@@ -60,7 +60,7 @@
 # Deploy Endpoints / Servers
 # #####################################################################
 - name: Deploy Endpoints
-  hosts: tag_role_linuxep:&tag_user_{{ user }}, tag_role_windowsep:&tag_user_{{ user }}
+  hosts: tag_role_linuxep:tag_role_windowsep:&tag_user_{{ user }}
 
   tasks:
     - name: Include vars
