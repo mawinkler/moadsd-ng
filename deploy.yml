@@ -297,7 +297,7 @@
             jumphost_external_ip: "{{ inventory_hostname }}"
             proxy_destination: "{{ k8smaster_ip }}"
             node_port: "{{ harbor_nodeport_https }}"
-            target_type: http
+            target_type: https
           when:
             - site_deploy_harbor == True
             - site_deploy_kubernetes == True
