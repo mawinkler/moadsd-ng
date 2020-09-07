@@ -414,6 +414,16 @@
   args:
     chdir: $HOME
 
+- name: Install Harbor Repo
+  become: true
+  become_user: ubuntu
+  shell: helm repo add harbor https://helm.goharbor.io
+
+- name: Update Harbor Repo
+  become: true
+  become_user: ubuntu
+  shell: helm repo update
+
 - name: Install Harbor
   become: true
   become_user: ubuntu
