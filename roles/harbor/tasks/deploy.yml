@@ -4,7 +4,7 @@
 # #####################################################################
 - name: Generate DNS Name for Harbor
   set_fact:
-    service_dns_name: "http://harbor-{{ jumphost_ip | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+    service_dns_name: "https://harbor-{{ jumphost_ip | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
 - name: Create Harbor Overrides File
   copy:
