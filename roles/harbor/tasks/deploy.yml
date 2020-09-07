@@ -447,7 +447,7 @@
     dest: /home/ubuntu/harbor.txt
     mode: 0640
     content: |
-      URL: http://{{ inventory_hostname }}:{{ harbor_nodeport }}
+      URL: https://{{ inventory_hostname }}:{{ harbor_nodeport_https }}
       URL: {{ service_dns_name }}
       Username: {{ harbor_username }}
       Password: {{ harbor_password }}

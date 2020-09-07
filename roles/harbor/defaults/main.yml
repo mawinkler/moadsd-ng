@@ -1,4 +1,4 @@
-service_type: NodePort
+service_type: nodePort
 
 harbor_chart: harbor/harbor
 harbor_namespace: harbor
