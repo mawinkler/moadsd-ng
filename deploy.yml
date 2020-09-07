@@ -787,6 +787,26 @@
     #     - site_deploy_kubernetes == True
 
 # #####################################################################
+# Deploy Harbor
+# #####################################################################
+- name: Deploy Harbor
+  hosts: tag_role_k8smaster:&tag_user_{{ user }}
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Deploy Harbor
+      include_role:
+        name: harbor
+      vars:
+        operation: deploy
+      when:
+        - site_deploy_harbor == True
+        - site_deploy_kubernetes == True
+
+# #####################################################################
 # Deploy GitLab
 # #####################################################################
 - name: Deploy GitLab
