@@ -7,6 +7,7 @@ site_deploy_openshift: {{ site_deploy_openshift }}
 site_deploy_deepsecurity: {{ site_deploy_deepsecurity }}
 site_deploy_smartcheck: {{ site_deploy_smartcheck }}
 site_deploy_jenkins: {{ site_deploy_jenkins }}
+site_deploy_harbor: {{ site_deploy_harbor }}
 site_deploy_gitlab: {{ site_deploy_gitlab }}
 site_deploy_endpoints: {{ site_deploy_endpoints }}
 site_deploy_linkerd: {{ site_deploy_linkerd }}
@@ -181,6 +182,13 @@ custom_nodeport3: 30103
 gitlab_nodeport_http: 30014
 gitlab_nodeport_https: 30015
 gitlab_nodeport_ssh: 30016
+
+# #####################################################################
+# Harbor Settings
+# #####################################################################
+harbor_nodeport_http: 30020
+harbor_nodeport_https: 30021
+harbor_nodeport_notary: 30022
 
 # #####################################################################
 # Linux Endpoint Settings

@@ -288,6 +288,21 @@
             - site_deploy_kubernetes == True
             - site_deploy_jumphost == True
 
+        - name: Create Proxy Configuration and Certificate for Harbor
+          include_role:
+            name: proxy
+          vars:
+            operation: create_site
+            service_name: harbor
+            jumphost_external_ip: "{{ inventory_hostname }}"
+            proxy_destination: "{{ k8smaster_ip }}"
+            node_port: "{{ harbor_nodeport_https }}"
+            target_type: http
+          when:
+            - site_deploy_harbor == True
+            - site_deploy_kubernetes == True
+            - site_deploy_jumphost == True
+
         - name: Generate DNS Name for GitLab
           set_fact:
             service_dns_name_gitlab: "gitlab.{{ k8sworker1_ip }}.{{ jumphost_tld }}"

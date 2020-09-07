@@ -6,6 +6,7 @@ site_deploy_openshift: no
 site_deploy_deepsecurity: no
 site_deploy_smartcheck: yes
 site_deploy_jenkins: yes
+site_deploy_harbor: yes
 site_deploy_gitlab: no
 site_deploy_endpoints: no
 site_deploy_linkerd: no
@@ -130,6 +131,10 @@ jenkins_github_access_token: OPTIONAL
 
 # GitLab
 gitlab_runner_registration_token: OPTIONAL
+
+# Harbor
+harbor_username: OPTIONAL
+harbor_password: OPTIONAL
 
 # Cluster Registry
 cluster_registry_username: reguser
