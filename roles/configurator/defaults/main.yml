@@ -133,8 +133,14 @@ jenkins_github_access_token: OPTIONAL
 gitlab_runner_registration_token: OPTIONAL
 
 # Harbor
-harbor_username: OPTIONAL
-harbor_password: OPTIONAL
+harbor_username: admin
+harbor_password: trendmicro
+harbor_secret_key: not-a-secure-key
+harbor_registry_user: reguser
+harbor_registry_password: trendmicro
+# If you update the username or password of registry, make sure use cli tool htpasswd to generate the bcrypt hash
+# e.g. "htpasswd -nbBC10 $username $password"
+harbor_registry_htpasswd: "reguser:$2y$10$s23SJHWQgxiiDRDJM/EHbe/avGlQciQtHdDYtTum6NQCzgnwmMIOe"
 
 # Cluster Registry
 cluster_registry_username: reguser
