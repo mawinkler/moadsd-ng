@@ -44,14 +44,6 @@
       # 1) populate the docker/helm commands showed on portal
       # 2) populate the token service URL returned to docker/notary client
       #
-      # Format: protocol://domain[:port]. Usually:
-      # 1) if "expose.type" is "ingress", the "domain" should be
-      # the value of "expose.ingress.hosts.core"
-      # 2) if "expose.type" is "clusterIP", the "domain" should be
-      # the value of "expose.clusterIP.name"
-      # 3) if "expose.type" is "nodePort", the "domain" should be
-      # the IP address of k8s node
-      #
       # If Harbor is deployed behind the proxy, set it as the URL of proxy
       externalURL: {{ service_dns_name }}
 
@@ -69,138 +61,35 @@
         resourcePolicy: "keep"
         persistentVolumeClaim:
           registry:
-            # Use the existing PVC which must be created manually before bound,
-            # and specify the "subPath" if the PVC is shared with other components
-            existingClaim: ""
-            # Specify the "storageClass" used to provision the volume. Or the default
-            # StorageClass will be used(the default).
-            # Set it to "-" to disable dynamic provisioning
-            storageClass: ""
-            subPath: ""
             accessMode: ReadWriteOnce
             size: 5Gi
           chartmuseum:
-            existingClaim: ""
-            storageClass: ""
-            subPath: ""
             accessMode: ReadWriteOnce
             size: 5Gi
           jobservice:
-            existingClaim: ""
-            storageClass: ""
-            subPath: ""
             accessMode: ReadWriteOnce
             size: 1Gi
           # If external database is used, the following settings for database will
           # be ignored
           database:
-            existingClaim: ""
-            storageClass: ""
-            subPath: ""
             accessMode: ReadWriteOnce
             size: 1Gi
           # If external Redis is used, the following settings for Redis will
           # be ignored
           redis:
-            existingClaim: ""
-            storageClass: ""
-            subPath: ""
             accessMode: ReadWriteOnce
             size: 1Gi
           trivy:
-            existingClaim: ""
-            storageClass: ""
-            subPath: ""
             accessMode: ReadWriteOnce
             size: 5Gi
-        # Define which storage backend is used for registry and chartmuseum to store
-        # images and charts. Refer to
-        # https://github.com/docker/distribution/blob/master/docs/configuration.md#storage
-        # for the detail.
-        imageChartStorage:
-          # Specify whether to disable `redirect` for images and chart storage, for
-          # backends which not supported it (such as using minio for `s3` storage type), please disable
-          # it. To disable redirects, simply set `disableredirect` to `true` instead.
-          # Refer to
-          # https://github.com/docker/distribution/blob/master/docs/configuration.md#redirect
-          # for the detail.
-          disableredirect: false
-          # Specify the "caBundleSecretName" if the storage service uses a self-signed certificate.
-          # The secret must contain keys named "ca.crt" which will be injected into the trust store
-          # of registry's and chartmuseum's containers.
-          # caBundleSecretName:
-
-          # Specify the type of storage: "filesystem", "azure", "gcs", "s3", "swift",
-          # "oss" and fill the information needed in the corresponding section. The type
-          # must be "filesystem" if you want to use persistent volumes for registry
-          # and chartmuseum
-          type: filesystem
-          filesystem:
-            rootdirectory: /storage
-            #maxthreads: 100
-          azure:
-            accountname: accountname
-            accountkey: base64encodedaccountkey
-            container: containername
-            #realm: core.windows.net
-          gcs:
-            bucket: bucketname
-            # The base64 encoded json file which contains the key
-            encodedkey: base64-encoded-json-key-file
-            #rootdirectory: /gcs/object/name/prefix
-            #chunksize: "5242880"
-          s3:
-            region: us-west-1
-            bucket: bucketname
-            #accesskey: awsaccesskey
-            #secretkey: awssecretkey
-            #regionendpoint: http://myobjects.local
-            #encrypt: false
-            #keyid: mykeyid
-            #secure: true
-            #v4auth: true
-            #chunksize: "5242880"
-            #rootdirectory: /s3/object/name/prefix
-            #storageclass: STANDARD
-          swift:
-            authurl: https://storage.myprovider.com/v3/auth
-            username: username
-            password: password
-            container: containername
-            #region: fr
-            #tenant: tenantname
-            #tenantid: tenantid
-            #domain: domainname
-            #domainid: domainid
-            #trustid: trustid
-            #insecureskipverify: false
-            #chunksize: 5M
-            #prefix:
-            #secretkey: secretkey
-            #accesskey: accesskey
-            #authversion: 3
-            #endpointtype: public
-            #tempurlcontainerkey: false
-            #tempurlmethods:
-          oss:
-            accesskeyid: accesskeyid
-            accesskeysecret: accesskeysecret
-            region: regionname
-            bucket: bucketname
-            #endpoint: endpoint
-            #internal: false
-            #encrypt: false
-            #secure: true
-            #chunksize: 10M
-            #rootdirectory: rootdirectory
 
       # debug, info, warning, error or fatal
       logLevel: info
 
       # The initial password of Harbor admin. Change it from portal after launching Harbor
-      harborAdminPassword: "Harbor12345"
+      harborAdminPassword: {{ harbor_password }}
       # The secret key used for encryption. Must be a string of 16 chars.
-      secretKey: "not-a-secure-key"
+      secretKey: {{ harbor_secret_key }}
 
       registry:
         # set the service account to be used, default if left empty
@@ -239,11 +128,11 @@
         # If true, the registry returns relative URLs in Location headers. The client is responsible for resolving the correct URL.
         relativeurls: false
         credentials:
-          username: "harbor_registry_user"
-          password: "harbor_registry_password"
+          username: {{ harbor_registry_user }}
+          password: {{ harbor_registry_password }}
           # If you update the username or password of registry, make sure use cli tool htpasswd to generate the bcrypt hash
           # e.g. "htpasswd -nbBC10 $username $password"
-          htpasswd: "harbor_registry_user:$2y$10$9L4Tc0DJbFFMB6RdSCunrOpTHdwhid4ktBJmLD00bYgqkkGOvll3m"
+          htpasswd: {{ harbor_registry_htpasswd }}
 
       clair:
         enabled: true
