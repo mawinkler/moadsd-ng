@@ -62,21 +62,53 @@
     status_code: 200
   delegate_to: localhost
 
+# - name: Debug
+#   debug:
+#     msg: "{{ hostvars[inventory_hostname] }}"
+
 - name: Get Jumphost IP
   set_fact:
     jumphost_ip: "{{ hostvars[inventory_hostname]['groups']['tag_Name_' + moadsd_ng_prefix | regex_replace('-', '_') + '_jumphost_instance'][0] | default('0.0.0.0') }}"
-  when: site_deploy_jumphost == True
+  when:
+    - site_deploy_jumphost == True
+    - type == 'aws'
+
+- name: Get Jumphost IP
+  set_fact:
+    jumphost_ip: "{{ hostvars[inventory_hostname]['groups']['tag_role_jumphost'][0] }}"
+  when:
+    - site_deploy_jumphost == True
+    - type == 'gcp'
 
 - name: Get Kubernetes IPs
   set_fact:
     k8smaster_ip: "{{ hostvars[inventory_hostname]['groups']['tag_Name_' + moadsd_ng_prefix | regex_replace('-', '_') + '_k8smaster_instance'][0] | default('0.0.0.0') }}"
     k8sworker1_ip: "{{ hostvars[inventory_hostname]['groups']['tag_Name_' + moadsd_ng_prefix | regex_replace('-', '_') + '_k8sworker1_instance'][0] | default('0.0.0.0') }}"
-  when: site_deploy_kubernetes == True
+  when:
+    - site_deploy_kubernetes == True
+    - type == 'aws'
+
+- name: Get Kubernetes IPs
+  set_fact:
+    k8smaster_ip: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8smaster'][0] }}"
+    k8sworker1_ip: "{{ hostvars[inventory_hostname]['groups']['tag_role_k8sworker'][0] }}"
+  when:
+    - site_deploy_kubernetes == True
+    - type == 'gcp'
 
 - name: Get Openshift IP
   set_fact:
     openshift_ip: "{{ hostvars[inventory_hostname]['groups']['tag_Name_' + moadsd_ng_prefix | regex_replace('-', '_') + '_openshift_instance'][0] | default('0.0.0.0') }}"
-  when: site_deploy_openshift == True
+  when:
+    - site_deploy_openshift == True
+    - type == 'aws'
+
+- name: Get Openshift IP
+  set_fact:
+    openshift_ip: "{{ hostvars[inventory_hostname]['groups']['tag_role_openshift'][0] }}"
+  when:
+    - site_deploy_openshift == True
+    - type == 'gcp'
 
 - name: Get Deep Security Manager IPs
   set_fact:
@@ -85,3 +117,13 @@
   when:
     - site_deploy_deepsecurity == True
     - deepsecurity_variant == 'dsm'
+    - type == 'aws'
+
+- name: Get Deep Security Manager IPs
+  set_fact:
+    dsm_ip: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsm'][0] }}"
+    dsmdb_ip: "{{ hostvars[inventory_hostname]['groups']['tag_role_dsmdb'][0] }}"
+  when:
+    - site_deploy_deepsecurity == True
+    - deepsecurity_variant == 'dsm'
+    - type == 'gcp'
