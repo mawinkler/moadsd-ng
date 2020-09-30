@@ -12,7 +12,7 @@
     gcp_project_id: "{{ lookup('ini', 'project section=core file=~/.config/gcloud/configurations/config_default') }}"
     gcp_region: "{{ lookup('ini', 'region section=compute file=~/.config/gcloud/configurations/config_default') }}"
     gcp_zone: "{{ lookup('ini', 'zone section=compute file=~/.config/gcloud/configurations/config_default') }}"
-    
+
 - name: Stat GCP Key File
   stat:
     path: "{{ gcp_service_account_file }}"
@@ -27,6 +27,16 @@
 #
 # GCP Configuration
 #
+- name: Create Owner Configuration
+  template:
+    src: user.j2
+    dest: ./.user
+
+- name: Create Project Configuration
+  template:
+    src: project.j2
+    dest: ./.project
+    
 - name: Create GCP Configuration
   template:
     src: environment_gcp_vars.j2
