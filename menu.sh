@@ -29,32 +29,22 @@ do
     break
     ;;
     "site_secrets")
-    # echo Running ansible-vault edit --vault-password-file ../.vault-pass.txt --limit tag_owner_${OWNER},localhost ./vars/site_secrets.yml
-    # echo Running ansible-vault edit --vault-password-file ../.vault-pass.txt --limit tag_project_${PROJECT},localhost ./vars/site_secrets.yml
-    echo Running ansible-vault edit --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env} run_pb=site_secrets" ./vars/site_secrets.yml
-    # ansible-vault edit --vault-password-file ../.vault-pass.txt --limit tag_owner_${OWNER},localhost ./vars/site_secrets.yml
-    # ansible-vault edit --vault-password-file ../.vault-pass.txt --limit tag_project_${PROJECT},localhost ./vars/site_secrets.yml
-    ansible-vault edit --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env} run_pb=site_secrets" ./vars/site_secrets.yml
+    echo Running ansible-vault edit --vault-password-file ../.vault-pass.txt ./vars/site_secrets.yml
+    ansible-vault edit --vault-password-file ../.vault-pass.txt ./vars/site_secrets.yml
     exit 0
     ;;
     "switch_to_gcp")
-    # echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_owner_${OWNER},localhost --extra-vars=\"type=gcp run_pb=switch_to_gcp\" switch_to_gcp.yml
     echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_project_${PROJECT},localhost --extra-vars=\"type=gcp run_pb=switch_to_gcp\" switch_to_gcp.yml
-    # ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_owner_${OWNER},localhost --extra-vars="type=gcp run_pb=switch_to_gcp" switch_to_gcp.yml
     ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_project_${PROJECT},localhost --extra-vars="type=gcp run_pb=switch_to_gcp" switch_to_gcp.yml
     exit 0
     ;;
     "switch_to_aws")
-    # echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_owner_${OWNER},localhost --extra-vars=\"type=aws run_pb=switch_to_aws\" switch_to_aws.yml
     echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_project_${PROJECT},localhost --extra-vars=\"type=aws run_pb=switch_to_aws\" switch_to_aws.yml
-    # ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_owner_${OWNER},localhost --extra-vars="type=aws run_pb=switch_to_aws" switch_to_aws.yml
     ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_project_${PROJECT},localhost --extra-vars="type=aws run_pb=switch_to_aws" switch_to_aws.yml
     exit 0
     ;;
     "switch_to_esx")
-    # echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_owner_${OWNER},localhost --extra-vars=\"type=esx run_pb=switch_to_esx\" switch_to_esx.yml
     echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_project_${PROJECT},localhost --extra-vars=\"type=esx run_pb=switch_to_esx\" switch_to_esx.yml
-    # ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_owner_${OWNER},localhost --extra-vars="type=esx run_pb=switch_to_esx" switch_to_esx.yml
     ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_project_${PROJECT},localhost --extra-vars="type=esx run_pb=switch_to_esx" switch_to_esx.yml
     exit 0
     ;;
@@ -96,10 +86,6 @@ then
   echo Running ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars=\"type=${run_env} run_pb=${run_pb} user=${USER}\" ${run_pb}.yml
   ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb} user=${USER}" ${run_pb}.yml
 else
-  # echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_owner_${OWNER},localhost -i ${run_inv} --extra-vars=\"type=${run_env} run_pb=${run_pb}\" ${run_pb}.yml
-  # echo Running ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_project_${PROJECT},localhost -i ${run_inv} --extra-vars=\"type=${run_env} run_pb=${run_pb}\" ${run_pb}.yml
   echo Running ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars=\"type=${run_env} run_pb=${run_pb} user=${USER}\" ${run_pb}.yml
-  # ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_owner_${OWNER},localhost -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb}" ${run_pb}.yml
-  # ansible-playbook --vault-password-file ../.vault-pass.txt --limit tag_project_${PROJECT},localhost -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb}" ${run_pb}.yml
   ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb} user=${USER}" ${run_pb}.yml
 fi
