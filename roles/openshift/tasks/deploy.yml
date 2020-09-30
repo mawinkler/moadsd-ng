@@ -3,6 +3,169 @@
 # Create an OpenShift instance
 # #####################################################################
 
+# CodeReady Containers:
+# RHEL 8
+# sudo su -
+# yum install -y NetworkManager qemu-kvm-2.12.0-88.module+el8.1.0+4233+bc44be3f.x86_64
+- name: Install NetworkManager and Nginx
+  become: true
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - NetworkManager
+      - qemu-kvm-2.12.0-88.module+el8.1.0+4233+bc44be3f.x86_64
+      - haproxy
+      - policycoreutils-python-utils
+
+# curl -O https://mirror.openshift.com/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz
+- name: Download CodeReady Containers
+  become: true
+  become_user: ansible
+  get_url:
+    url: https://mirror.openshift.com/pub/openshift-v4/clients/crc/1.16.0/crc-linux-amd64.tar.xz
+    dest: /home/ansible/crc-linux-amd64.tar.xz
+    mode: 0660
+
+# tar xfv crc-linux-amd64.tar.xz
+- name: CodeReady Containers Extract
+  become: true
+  become_user: ansible
+  unarchive:
+    src: /home/ansible/crc-linux-amd64.tar.xz
+    dest: /home/ansible
+    remote_src: yes
+# exit
+
+# sudo cp crc-linux-1.7.0-amd64/crc /usr/local/bin/
+- name: Copy CRC to Path
+  become: true
+  copy:
+    src: /home/ansible/crc-linux-1.16.0-amd64/crc
+    dest: /usr/local/bin/
+    remote_src: yes
+    mode: 0755
+
+# export PATH="/usr/local/bin:$PATH"
+# echo 'export PATH="/usr/local/bin:$PATH"' > ~/.bashrc
+- name: Add Path
+  become: true
+  # become_user: ansible
+  lineinfile:
+    path: /etc/profile.d/sh.local
+    insertafter: EOF
+    line: 'export PATH="/home/ansible/.crc/bin/oc:/home/ansible/.crc/bin:/usr/local/bin:$PATH"'
+
+# # Have the pull secret
+# # https://cloud.redhat.com/openshift/install/crc/installer-provisioned
+# crc setup
+- name: Install CodeReady Containers
+  become: true
+  become_user: ansible
+  shell: /usr/local/bin/crc setup >> crc-setup.log
+  args:
+    chdir: $HOME
+    creates: crc-setup.log
+
+# vi pull.secret
+- name: Create Pull Secret File
+  become: true
+  become_user: ansible
+  copy:
+    dest: /home/ansible/.pull.secret
+    mode: 0640
+    content: |
+      {{ openshift_pull_secret }}
+
+# crc start -f pull.secret
+- name: Start CodeReady Containers
+  become: true
+  become_user: ansible
+  shell: /usr/local/bin/crc start -p .pull.secret >> crc-start.log
+  args:
+    chdir: $HOME
+    creates: crc-start.log
+
+- name: Open Firewall Port for https
+  become: true
+  ansible.posix.firewalld:
+    service: https
+    permanent: yes
+    state: enabled
+
+- name: Open Firewall Port for http
+  become: true
+  ansible.posix.firewalld:
+    service: http
+    permanent: yes
+    state: enabled
+
+- name: Open Firewall Port for api
+  become: true
+  ansible.posix.firewalld:
+    service: 6443/tcp
+    permanent: yes
+    state: enabled
+
+- name: Firewall restart
+  become: true
+  command: systemctl restart firewalld
+
+- name: Start CodeReady Containers
+  become: true
+  shell: sudo semanage port -a -t http_port_t -p tcp 6443
+
+
+#export SERVER_IP=$(hostname --ip-address)
+#export CRC_IP=$(crc ip)
+
+
+- name: Create Jenkins Overrides File
+  copy:
+    dest: /etc/haproxy/haproxy.cfg
+    mode: 0640
+    owner: root
+    content: |
+      global
+      debug
+
+      defaults
+      log global
+      mode http
+      timeout connect 0
+      timeout client 0
+      timeout server 0
+
+      frontend apps
+      bind ${SERVER_IP}:80
+      bind ${SERVER_IP}:443
+      option tcplog
+      mode tcp
+      default_backend apps
+
+      backend apps
+      mode tcp
+      balance roundrobin
+      option ssl-hello-chk
+      server webserver1 ${CRC_IP} check
+
+      frontend api
+      bind ${SERVER_IP}:6443
+      option tcplog
+      mode tcp
+      default_backend api
+
+      backend api
+      mode tcp
+      balance roundrobin
+      option ssl-hello-chk
+      server webserver1 ${CRC_IP}:6443 check
+
+- name: HAProxy restart
+  become: true
+  command: systemctl restart haproxy
+
+
 # grep -cw vmx /proc/cpuinfo   ---> 4
 # sudo apt update
 # sudo apt install -y qemu-kvm libvirt-daemon libvirt-daemon-system
@@ -81,87 +244,6 @@
 # kubectl cluster-info
 
 
-
-# CodeReady Containers:
-# RHEL 7.5
-# sudo su
-# yum install -y NetworkManager
-- name: Install NetworkManager and Nginx
-  become: true
-  yum:
-    name: "{{ packages }}"
-  vars:
-    packages:
-      - nginx
-      - NetworkManager
-
-# curl -O https://mirror.openshift.com/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz
-- name: Download CodeReady Containers
-  become: true
-  become_user: ansible
-  get_url:
-    url: https://mirror.openshift.com/pub/openshift-v4/clients/crc/1.16.0/crc-linux-amd64.tar.xz
-    dest: /home/ansible/crc-linux-amd64.tar.xz
-    mode: 0660
-
-# tar xfv crc-linux-amd64.tar.xz
-- name: CodeReady Containers Extract
-  become: true
-  become_user: ansible
-  unarchive:
-    src: /home/ansible/crc-linux-amd64.tar.xz
-    dest: /home/ansible
-    remote_src: yes
-# exit
-
-# sudo cp crc-linux-1.7.0-amd64/crc /usr/local/bin/
-- name: Copy CRC to Path
-  become: true
-  copy:
-    src: /home/ansible/crc-linux-1.16.0-amd64/crc
-    dest: /usr/local/bin/
-    remote_src: yes
-    mode: 0755
-
-# export PATH="/usr/local/bin:$PATH"
-# echo 'export PATH="/usr/local/bin:$PATH"' > ~/.bashrc
-- name: Add Path
-  become: true
-  # become_user: ansible
-  lineinfile:
-    path: /etc/profile.d/sh.local
-    insertafter: EOF
-    line: 'export PATH="/home/ansible/.crc/bin:/usr/local/bin:$PATH"'
-
-# # Have the pull secret
-# # https://cloud.redhat.com/openshift/install/crc/installer-provisioned
-# crc setup
-- name: Install CodeReady Containers
-  become: true
-  become_user: ansible
-  shell: /usr/local/bin/crc setup >> crc-setup.log
-  args:
-    chdir: $HOME
-    creates: crc-setup.log
-
-# vi pull.secret
-- name: Create Pull Secret File
-  become: true
-  become_user: ansible
-  copy:
-    dest: /home/ansible/.pull.secret
-    mode: 0640
-    content: |
-      {{ openshift_pull_secret }}
-
-# crc start -f pull.secret
-- name: Start CodeReady Containers
-  become: true
-  become_user: ansible
-  shell: /usr/local/bin/crc start -p .pull.secret >> crc-start.log
-  args:
-    chdir: $HOME
-    creates: crc-start.log
 
 # crc oc-env
 # export PATH="/home/ansible/.crc/bin:$PATH"
