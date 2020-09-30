@@ -19,6 +19,8 @@
         type: {{ service_type }}
         tls:
           commonName: {{ service_dns_name }}
+          auto:
+            commonName: {{ service_dns_name }}
         nodePort:
           # The name of NodePort service
           name: harbor
