@@ -100,7 +100,7 @@
   become: true
   become_user: ansible
   get_url:
-    url: https://mirror.openshift.com/pub/openshift-v4/clients/crc/1.7.0/crc-linux-amd64.tar.xz
+    url: https://mirror.openshift.com/pub/openshift-v4/clients/crc/1.16.0/crc-linux-amd64.tar.xz
     dest: /home/ansible/crc-linux-amd64.tar.xz
     mode: 0660
 
@@ -118,7 +118,7 @@
 - name: Copy CRC to Path
   become: true
   copy:
-    src: /home/ansible/crc-linux-1.7.0-amd64/crc
+    src: /home/ansible/crc-linux-1.16.0-amd64/crc
     dest: /usr/local/bin/
     remote_src: yes
     mode: 0755
