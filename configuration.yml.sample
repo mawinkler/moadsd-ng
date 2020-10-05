@@ -19,7 +19,6 @@ site_deploy_jenkins: yes
 site_deploy_prometheus: yes
 site_deploy_grafana: yes
 
-moadsd_ng_prefix: moadsd-ng-macgyver
 moadsd_ng_user: macgyver
 
 # #####################################################################
@@ -30,11 +29,11 @@ moadsd_ng_user: macgyver
 # AWS Cloud Settings
 # #####################################################################
 # Ubuntu Server 18.04 LTS (HVM), SSD Volume Type
-ami_ubuntu: ami-0ac05733838eabc06
+# ami_ubuntu: ami-0ac05733838eabc06
 # Red Hat Enterprise Linux 8 (HVM), SSD Volume Type
-ami_redhat: ami-00e37cffd3bb3ac8d
+# ami_redhat: ami-00e37cffd3bb3ac8d
 # Microsoft Windows Server 2012 R2 Base
-ami_windows: ami-0cbf1b1038bbb408d
+# ami_windows: ami-0cbf1b1038bbb408d
 
 # #####################################################################
 # Site Secrets
@@ -43,6 +42,10 @@ ami_windows: ami-0cbf1b1038bbb408d
 smartcheck_license: MANDATORY
 smartcheck_password: <PASSWORD>
 smartcheck_registry_password: <PASSWORD>
+
+# Cloud One Application Security
+#application_security_key: OPTIONAL
+#application_security_secret: OPTIONAL
 
 # Jenkins
 jenkins_password: <PASSWORD>
