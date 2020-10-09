@@ -1,0 +1,38 @@
+---
+# #####################################################################
+# Pause MOADSD-NG Environment in GCP
+# #####################################################################
+- hosts: tag_role_jumphost:&tag_user_{{ user }}
+  gather_facts: false
+  tasks:
+    - name: Get ipaddr of jumphost
+      set_fact:
+        remote_ip: "{{ inventory_hostname | ipaddr}}"
+
+    - name: Get ipaddr of jumphost
+      set_fact:
+        remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+      when: not remote_ip
+
+    - name: Store external ip address of jumphost
+      add_host:
+        name: "{{ remote_ip }}"
+        groups: "moadsd_ng_jumphost_instance_public"
+
+- name: Stop Instance
+  hosts: tag_role_jumphost:tag_role_k8smaster:tag_role_k8sworker:tag_role_linuxep:tag_role_windowsep:tag_role_openshift:tag_role_dsm:tag_rols_dsmdb:&tag_user_{{ user }}
+  become: yes
+  become_user: ansible
+  gather_facts: false
+  vars:
+  
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Stop instance
+      include_role:
+        name: environment-gcp
+      vars:
+        operation: stop_instance
+        instance_name: "{{ hostvars[inventory_hostname]['name'] }}"
