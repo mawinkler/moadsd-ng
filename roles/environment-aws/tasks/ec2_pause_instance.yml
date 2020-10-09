@@ -1,0 +1,83 @@
+---
+# #####################################################################
+# Pause a linux instance in AWS environment
+# #####################################################################
+- name: Current play
+  debug:
+    msg:
+      - "Pausing instance {{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+
+#- name: Query instance id
+#  ec2_instance_info:
+#    aws_access_key: "{{ aws_access_key }}"
+#    aws_secret_key: "{{ aws_secret_key }}"
+#    region: "{{ aws_region }}"
+#    filters:
+#      "tag:Name": "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+#      "tag:project": "{{ moadsd_ng_prefix }}"
+#      "tag:user": "{{ moadsd_ng_user }}"
+#      instance-state-name: [ "running", "stopped" ]
+#  register: ec2
+
+#- name: Instance id to pause
+#  debug:
+#    msg: "{{ ec2.instances[0].instance_id }}"
+#  when: ec2.instances | length > 0
+
+#- name: Query regional static ip addresses for instance
+#  ec2_eip_info:
+#    aws_access_key: "{{ aws_access_key }}"
+#    aws_secret_key: "{{ aws_secret_key }}"
+#    region: "{{ aws_region }}"
+#    filters:
+#      instance-id: "{{ ec2.instances[0].instance_id }}"
+#  register: regional_eip_addresses
+#  when: ec2.instances | length > 0
+
+#- name: EIP to release
+#  debug:
+#    msg: "{{ regional_eip_addresses.addresses[0].public_ip }}"
+#  when:
+#    - ec2.instances | length > 0
+#    - regional_eip_addresses.addresses | length > 0
+
+- name: Pause a server instance
+  ec2_instance:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Name": "{{ moadsd_ng_prefix }}-{{ instance_name }}-instance"
+      "tag:project": "{{ moadsd_ng_prefix }}"
+      "tag:user": "{{ moadsd_ng_user }}"
+      instance-state-name: [ "running", "stopped" ]
+    state: stopped
+  async: 600
+  poll: 0
+
+#- name: Release disassociated public addresses in region
+#  ec2_eip:
+#    aws_access_key: "{{ aws_access_key }}"
+#    aws_secret_key: "{{ aws_secret_key }}"
+#    region: "{{ aws_region }}"
+#    # device_id: "{{ item.allocation_id }}"
+#    public_ip: "{{ item.public_ip }}"
+#    release_on_disassociation: yes
+#    state: absent
+#  loop: "{{ regional_eip_addresses.addresses }}"
+#  when:
+#    - regional_eip_addresses is not skipped
+
+#- name: Terminate EC2 Security Group
+#  ec2_group:
+#    aws_access_key: "{{ aws_access_key }}"
+#    aws_secret_key: "{{ aws_secret_key }}"
+#    # name: "{{ moadsd_ng_prefix }}-vpc"
+#    region: "{{ aws_region }}"
+#    state: absent
+#    name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
+#    description: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
+#    tags:
+#      Name: "{{ moadsd_ng_prefix }}-{{ instance_name }}-sg"
+#      project: "{{ moadsd_ng_prefix }}"
+#      user: "{{ moadsd_ng_user }}"
