@@ -90,6 +90,10 @@ elif [ $run_pb = "pause" ]
 then
   echo Running ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars=\"type=${run_env} run_pb=${run_pb} user=${USER}\" ${run_pb}_${run_env}.yml
   ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb} user=${USER}" ${run_pb}_${run_env}.yml
+elif [ $run_pb = "resume" ]
+then
+  echo Running ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars=\"type=${run_env} run_pb=${run_pb} user=${USER}\" ${run_pb}_${run_env}.yml
+  ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb} user=${USER}" ${run_pb}_${run_env}.yml
 else
   echo Running ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars=\"type=${run_env} run_pb=${run_pb} user=${USER}\" ${run_pb}.yml
   ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb} user=${USER}" ${run_pb}.yml
