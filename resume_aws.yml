@@ -91,45 +91,6 @@
         instance_name: "{{ windowsep_instance_name }}{{ item }}"
       with_sequence: count="{{ windowsep_instance_count }}"
     
-
-
-
-
-
-
-
-# - hosts: tag_role_jumphost:tag_role_k8smaster:&tag_user_{{ user }}
-#   gather_facts: false
-#   vars:
-#   tasks:
-#     - name: Include vars
-#       include: site_vars.yml
-
-#     - name: Start instance
-#       include_role:
-#         name: environment-aws
-#       vars:
-#         operation: start_instance
-#         instance_id: "{{ hostvars[inventory_hostname]['ec2_id'] }}"
-
-#     - name: Wating for Jumphost and Kubernetes Master to Come up
-#       pause:
-#         minutes: 1
-
-# - hosts: tag_role_jumphost:tag_role_k8smaster:tag_role_k8sworker:tag_role_linuxep:tag_role_windowsep:tag_role_openshift:tag_role_dsm:tag_rols_dsmdb:&tag_user_{{ user }}
-#   gather_facts: false
-#   vars:
-#   tasks:
-#     - name: Include vars
-#       include: site_vars.yml
-
-#     - name: Start instance
-#       include_role:
-#         name: environment-aws
-#       vars:
-#         operation: start_instance
-#         instance_id: "{{ hostvars[inventory_hostname]['ec2_id'] }}"
-
 - hosts: localhost
   gather_facts: false
   tasks:
