@@ -18,6 +18,14 @@
   include: ec2_stop_instance.yml
   when: operation == 'stop_instance'
 
+- name: Pause instance
+  include: ec2_pause_instance.yml
+  when: operation == 'pause_instance'
+
+- name: Resume instance
+  include: ec2_resume_instance.yml
+  when: operation == 'resume_instance'
+  
 - name: Start instance
   include: ec2_start_instance.yml
   when: operation == 'start_instance'

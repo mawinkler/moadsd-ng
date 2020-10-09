@@ -100,8 +100,10 @@
 
 - name: Create AWS Dynamic Inventory Configuration
   template:
-    src: ec2.ini.j2
-    dest: ./ec2.ini
+    # src: ec2.ini.j2
+    # dest: ./ec2.ini
+    src: aws_ec2.yml.j2
+    dest: ./aws_ec2.yml
 
 - name: Choosing Python Version 2
   set_fact:
@@ -113,11 +115,11 @@
     python_version: python3
   when: ansible_python_version | regex_search("^3")
 
-- name: Create AWS Dynamic Inventory Configuration
-  template:
-    src: ec2.py.j2
-    dest: ./ec2.py
-    mode: 0755
+# - name: Create AWS Dynamic Inventory Configuration
+#   template:
+#     src: ec2.py.j2
+#     dest: ./ec2.py
+#     mode: 0755
 
 - name: Setting moadsd-ng AWS Pem
   set_fact:

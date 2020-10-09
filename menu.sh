@@ -20,7 +20,8 @@ do
     ;;
     "aws")
     run_env=$opt
-    run_inv="ec2.py"
+    # run_inv="ec2.py"
+    run_inv="aws_ec2.yml"
     break
     ;;
     "esx")
@@ -85,6 +86,10 @@ if [ $run_pb = "site" ]
 then
   echo Running ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars=\"type=${run_env} run_pb=${run_pb} user=${USER}\" ${run_pb}.yml
   ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb} user=${USER}" ${run_pb}.yml
+elif [ $run_pb = "pause" ]
+then
+  echo Running ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars=\"type=${run_env} run_pb=${run_pb} user=${USER}\" ${run_pb}_${run_env}.yml
+  ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb} user=${USER}" ${run_pb}_${run_env}.yml
 else
   echo Running ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars=\"type=${run_env} run_pb=${run_pb} user=${USER}\" ${run_pb}.yml
   ansible-playbook --vault-password-file ../.vault-pass.txt -i ${run_inv} --extra-vars="type=${run_env} run_pb=${run_pb} user=${USER}" ${run_pb}.yml
