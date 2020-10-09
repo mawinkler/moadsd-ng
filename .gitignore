@@ -23,3 +23,8 @@ ssh_*
 .vagrant
 .DS_Store
 .owner
+aws_ec2.yml
+.project
+.user
+copy_master
+fetch_master
