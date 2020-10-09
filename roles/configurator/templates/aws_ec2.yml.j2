@@ -1,0 +1,17 @@
+plugin: {{ aws_region }}
+regions:
+  - eu-central-1
+#filters:
+#  tag:Name: redacted
+keyed_groups:
+  - key: tags.role
+    prefix: tag_role
+    separator: '_'
+  - key: tags.user
+    prefix: tag_user
+    separator: '_'
+  - key: tags.Name
+    prefix: tag_Name
+hostnames:
+  - ip-address
+  - private-ip-address
