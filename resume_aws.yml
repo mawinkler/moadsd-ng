@@ -1,0 +1,241 @@
+# - hosts: tag_role_jumphost:&tag_user_{{ user }}
+#   gather_facts: false
+#   tasks:
+#     - name: Get ipaddr of jumphost
+#       set_fact:
+#         remote_ip: "{{ inventory_hostname | ipaddr}}"
+
+#     - name: Get ipaddr of jumphost
+#       set_fact:
+#         remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+#       when: not remote_ip
+
+#     - name: Store external ip address of jumphost
+#       add_host:
+#         name: "{{ remote_ip }}"
+#         groups: "moadsd_ng_jumphost_instance_public"
+
+- name: Resume MOADSD-NG Environment
+  hosts: localhost
+  gather_facts: no
+  connection: local
+  vars:
+
+  tasks:
+    - name: Check if AWS cloud SDK is installed
+      command: aws --version
+      register: aws_installed
+      changed_when: false
+      ignore_errors: yes
+    
+    - fail:
+        msg: "Please make sure AWS Cloud SDK is installed before executing the role."
+      when: aws_installed is failed
+    
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Resume jumphost
+      include_role:
+        name: environment-aws
+      vars:
+        operation: resume_instance
+        instance_name: "{{ jumphost_instance_name }}"
+
+    - name: Wating for Jumphost and Kubernetes Master to Come up
+      pause:
+        minutes: 1
+        
+    - name: Resume instance of Kubernetes master
+      include_role:
+        name: environment-aws
+      vars:
+        operation: resume_instance
+        instance_name: "{{ kubernetes_master_instance_name }}"
+    
+    - name: Resume instance of Kubernetes worker(s)
+      include_role:
+        name: environment-aws
+      vars:
+        operation: resume_instance
+        instance_name: "{{ kubernetes_worker_instance_name }}{{ item }}"
+      with_sequence: count="{{ kubernetes_worker_count }}"
+    
+    - name: Resume instance of PostgreSQL
+      include_role:
+        name: environment-aws
+      vars:
+        operation: resume_instance
+        instance_name: "{{ postgresql_instance_name }}"
+    
+    - name: Resume instance of Deep Security Manager
+      include_role:
+        name: environment-aws
+      vars:
+        operation: resume_instance
+        instance_name: "{{ deepsecurity_instance_name }}"
+    
+    - name: Resume linux endpoint instances
+      include_role:
+        name: environment-aws
+      vars:
+        operation: resume_instance
+        instance_name: "{{ linuxep_instance_name }}{{ item }}"
+      with_sequence: count="{{ linuxep_instance_count }}"
+    
+    - name: Resume windows endpoint instances
+      include_role:
+        name: environment-aws
+      vars:
+        operation: resume_instance
+        instance_name: "{{ windowsep_instance_name }}{{ item }}"
+      with_sequence: count="{{ windowsep_instance_count }}"
+    
+
+
+
+
+
+
+
+# - hosts: tag_role_jumphost:tag_role_k8smaster:&tag_user_{{ user }}
+#   gather_facts: false
+#   vars:
+#   tasks:
+#     - name: Include vars
+#       include: site_vars.yml
+
+#     - name: Start instance
+#       include_role:
+#         name: environment-aws
+#       vars:
+#         operation: start_instance
+#         instance_id: "{{ hostvars[inventory_hostname]['ec2_id'] }}"
+
+#     - name: Wating for Jumphost and Kubernetes Master to Come up
+#       pause:
+#         minutes: 1
+
+# - hosts: tag_role_jumphost:tag_role_k8smaster:tag_role_k8sworker:tag_role_linuxep:tag_role_windowsep:tag_role_openshift:tag_role_dsm:tag_rols_dsmdb:&tag_user_{{ user }}
+#   gather_facts: false
+#   vars:
+#   tasks:
+#     - name: Include vars
+#       include: site_vars.yml
+
+#     - name: Start instance
+#       include_role:
+#         name: environment-aws
+#       vars:
+#         operation: start_instance
+#         instance_id: "{{ hostvars[inventory_hostname]['ec2_id'] }}"
+
+- hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+      
+    - name: Create Jumphost SSH Command
+      delegate_to: 127.0.0.1
+      copy:
+        dest: "./ssh_jumphost"
+        content: |
+          ssh ubuntu@{{ jumphost_ip }}
+        force: yes
+        owner: ansible
+        mode: '0700'
+
+    - name: Create Master SSH Command
+      delegate_to: 127.0.0.1
+      copy:
+        dest: "./ssh_master"
+        content: |
+          ssh -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p {{ jumphost_ip }}" ubuntu@{{ k8smaster_ip }} $1
+        force: yes
+        owner: ansible
+        mode: '0700'
+
+    - name: Create Copy Master Command
+      delegate_to: 127.0.0.1
+      copy:
+        dest: "./copy_master"
+        content: |
+          scp -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p {{ jumphost_ip }}" $1 ubuntu@{{ k8smaster_ip }}:~/$1
+        force: yes
+        owner: ansible
+        mode: '0700'
+
+    - name: Create Fetch Master Command
+      delegate_to: 127.0.0.1
+      copy:
+        dest: "./fetch_master"
+        content: |
+          scp -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p {{ jumphost_ip }}" ubuntu@{{ k8smaster_ip }}:~/$1 $1
+        force: yes
+        owner: ansible
+        mode: '0700'
+
+    - name: Create Master Watch Pods Command
+      delegate_to: 127.0.0.1
+      copy:
+        dest: "./ssh_master_pods"
+        content: |
+          watch './ssh_master "kubectl get pods --all-namespaces"'
+        force: yes
+        owner: ansible
+        mode: '0700'
+
+    - name: Create Master Watch Services Command
+      delegate_to: 127.0.0.1
+      copy:
+        dest: "./ssh_master_services"
+        content: |
+          watch './ssh_master "kubectl get services --all-namespaces"'
+        force: yes
+        owner: ansible
+        mode: '0700'
+
+    - name: Create Master Watch Deployments Command
+      delegate_to: 127.0.0.1
+      copy:
+        dest: "./ssh_master_deployments"
+        content: |
+          watch './ssh_master "kubectl get deployments --all-namespaces"'
+        force: yes
+        owner: ansible
+        mode: '0700'
+
+# - hosts: tag_role_jumphost:tag_role_k8smaster:tag_role_k8sworker:tag_role_linuxep:&tag_user_{{ user }}
+#   gather_facts: false
+#   become: yes
+#
+#   tasks:
+#     - name: Include vars
+#       include: site_vars.yml
+#
+#     - name: Wating for instances to Come up
+#       pause:
+#         minutes: 5
+#
+#     - name: AWS
+#       block:
+#         - name: Query Instance State
+#           set_fact:
+#             ec2_state: "{{ hostvars[inventory_hostname]['ec2_state'] }}"
+#
+#         - name: Cancel Shutdown on Linux Instance
+#           at:
+#             command: shutdown -h now
+#             state: absent
+#           when:
+#             - ec2_state == "running"
+#
+#         - name: Send Shutdown Command to Linux Instance
+#           at:
+#             command: shutdown -h now
+#             count: "{{ instance_shutdown_delay }}"
+#             units: minutes
+#           when:
+#             - ec2_state == "running"
+#       when: type == "aws"
