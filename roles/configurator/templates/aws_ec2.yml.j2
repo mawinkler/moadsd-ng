@@ -1,8 +1,6 @@
-plugin: {{ aws_region }}
+plugin: aws_ec2
 regions:
-  - eu-central-1
-#filters:
-#  tag:Name: redacted
+  - {{ aws_region }}
 keyed_groups:
   - key: tags.role
     prefix: tag_role
