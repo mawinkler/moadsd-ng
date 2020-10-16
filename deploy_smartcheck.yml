@@ -59,6 +59,53 @@
 # #####################################################################
 # Deploy Deep Security Smart Check
 # #####################################################################
+- name: Create and Configure Jumphost Proxy
+  hosts: tag_role_jumphost:&tag_user_{{ user }}
+  become: true
+
+  vars:
+    trusted_certificates: "{{ trusted_certificates }}"
+    create_proxy_configurations: True
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Create Proxy instance
+      include_role:
+        name: proxy
+      vars:
+        operation: deploy
+      when: site_deploy_jumphost == True
+
+    - name: Create Proxy Configuration and Certificate for Smart Check
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: smartcheck
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ k8smaster_ip }}"
+        node_port: "{{ smartcheck_nodeport }}"
+        target_type: https
+      when:
+        - site_deploy_kubernetes == True
+        - site_deploy_jumphost == True
+
+    - name: Create Proxy Configuration and Certificate for Smart Check Registry
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: smartcheck-registry
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ k8smaster_ip }}"
+        node_port: "{{ smartcheck_registry }}"
+        target_type: https
+      when:
+        - site_deploy_kubernetes == True
+        - site_deploy_jumphost == True
+
 - name: Deploy Deep Security Smart Check
   hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true

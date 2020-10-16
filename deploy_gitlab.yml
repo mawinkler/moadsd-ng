@@ -59,6 +59,45 @@
 # #####################################################################
 # Deploy GitLab
 # #####################################################################
+- name: Create and Configure Jumphost Proxy
+  hosts: tag_role_jumphost:&tag_user_{{ user }}
+  become: true
+
+  vars:
+    trusted_certificates: "{{ trusted_certificates }}"
+    create_proxy_configurations: True
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Create Proxy instance
+      include_role:
+        name: proxy
+      vars:
+        operation: deploy
+      when: site_deploy_jumphost == True
+
+    - name: Generate DNS Name for GitLab
+      set_fact:
+        service_dns_name_gitlab: "gitlab.{{ k8sworker1_ip }}.{{ jumphost_tld }}"
+      when:
+        - site_deploy_kubernetes == True
+
+    - name: Create Proxy Configuration and Certificate for GitLab
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: gitlab
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ service_dns_name_gitlab }}"
+        node_port: "{{ gitlab_nodeport_https }}"
+        target_type: https
+      when:
+        - site_deploy_kubernetes == True
+        - site_deploy_jumphost == True
+
 - name: Deploy GitLab
   hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true

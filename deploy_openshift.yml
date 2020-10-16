@@ -59,6 +59,38 @@
 # #####################################################################
 # Deploy OpenShift
 # #####################################################################
+- name: Create and Configure Jumphost Proxy
+  hosts: tag_role_jumphost:&tag_user_{{ user }}
+  become: true
+
+  vars:
+    trusted_certificates: "{{ trusted_certificates }}"
+    create_proxy_configurations: True
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Create Proxy instance
+      include_role:
+        name: proxy
+      vars:
+        operation: deploy
+      when: site_deploy_jumphost == True
+
+    - name: Create Proxy Configuration and Certificate for the Openshift
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: openshift
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ openshift_ip }}"
+        node_port: "{{ openshift_dashboard }}"
+        target_type: https
+      when:
+        - site_deploy_jumphost == True
+
 - name: Deploy OpenShift
   hosts: tag_role_openshift:&tag_user_{{ user }}
   become: true
