@@ -14,14 +14,6 @@
     remote_ip: "{{ k8smaster_ip }}"
   when: not remote_ip
 
-# Initial password change
-- name: Test if Initial Password Change is Done
-  become: true
-  become_user: ubuntu
-  stat:
-    path: /home/ubuntu/smartcheck_pwc_done
-  register: pwc_done_result
-
 - name: Initial Configuration of Smart Check
   block:
     - name: Query password
@@ -68,15 +60,7 @@
             "newPassword": "{{ smartcheck_password }}"
           }
         status_code: 200
-
-    - name: Create Initial Password Changed Done File
-      become: true
-      become_user: ubuntu
-      copy:
-        content: ""
-        dest: /home/ubuntu/smartcheck_pwc_done
-        mode: 640
-  when: pwc_done_result.stat.exists == False
+  when: smartcheck_installed != dssc_name
 
 - name: Authenticate to Smart Check
   uri:
