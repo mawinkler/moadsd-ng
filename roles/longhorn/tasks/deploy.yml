@@ -1,0 +1,86 @@
+---
+# #####################################################################
+# Deploy Longhorn
+# #####################################################################
+# - name: Generate DNS Name for Longhorn
+#   set_fact:
+#     service_dns_name: "http://longhorn-{{ jumphost_ip | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+
+- name: Create Longhorn Overrides File
+  copy:
+    dest: /home/ubuntu/overrides-longhorn.yml
+    mode: 0640
+    owner: ubuntu
+    content: |
+      image:
+        longhorn:
+          engineTag: v1.0.2
+          managerTag: v1.0.2
+          uiTag: v1.0.2
+          instanceManagerTag: v1_20200514
+      csi:
+        attacherImageTag: v2.0.0
+        provisionerImageTag: v1.4.0
+        nodeDriverRegistrarImageTag: v1.2.0
+        resizerImageTag: v0.3.0
+      ingress:
+        host: {{ jumphost_tld }}
+
+- name: Create Longhorn Namespace
+  become: true
+  become_user: ubuntu
+  shell: kubectl create namespace {{ longhorn_namespace }} --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME
+
+- name: Install Longhorn Repo
+  become: true
+  become_user: ubuntu
+  shell: helm repo add longhorn https://charts.longhorn.io
+
+- name: Update Longhorn Repo
+  become: true
+  become_user: ubuntu
+  shell: helm repo update
+
+- name: Install Longhorn
+  become: true
+  become_user: ubuntu
+  shell: helm install --namespace {{ longhorn_namespace }} --values overrides-longhorn.yml {{ longhorn_name }} {{ longhorn_chart }} >> longhorn.log
+  args:
+    chdir: $HOME
+    creates: longhorn.log
+
+- name: Fetch longhorn.log
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/longhorn.log
+    dest: ./site_{{ type }}/
+    flat: yes
+
+# - name: Query admin Password
+#   become: true
+#   become_user: ubuntu
+#   shell: kubectl get --namespace {{ longhorn_namespace }} secret longhorn -ojsonpath='{.data.admin-password}' | base64 --decode
+#   register: admin_password
+
+# - name: Create link document for Longhorn
+#   become: true
+#   become_user: ubuntu
+#   copy:
+#     dest: /home/ubuntu/longhorn.txt
+#     mode: 0640
+#     content: |
+#       URL: http://{{ inventory_hostname }}:{{ longhorn_nodeport }}
+#       URL: {{ service_dns_name }}
+#       Username: {{ longhorn_username }}
+#       Password: {{ admin_password.stdout }}
+
+# - name: Fetch longhorn.txt
+#   become: true
+#   become_user: ubuntu
+#   fetch:
+#     src: /home/ubuntu/longhorn.txt
+#     dest: ./site_{{ type }}/
+#     flat: yes

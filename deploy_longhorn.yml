@@ -1,0 +1,117 @@
+---
+# #####################################################################
+# Deploy Longhorn
+# #####################################################################
+
+# #####################################################################
+# Query some private ips
+# #####################################################################
+- hosts: tag_role_jumphost:&tag_user_{{ user }}
+  tasks:
+    - name: Get ipaddr of Jumphost
+      set_fact:
+        remote_ip: "{{ inventory_hostname | ipaddr}}"
+
+    - name: Get ipaddr of Jumphost
+      set_fact:
+        remote_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+      when: not remote_ip
+
+    - name: Store external ip address of Jumphost
+      add_host:
+        name: "{{ remote_ip }}"
+        groups: "moadsd_ng_jumphost_instance_public"
+
+- hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+    
+    - name: Listing Jumphost Environment
+      debug:
+        msg:
+          - "Jumphost                     : {{ jumphost_ip }}"
+      when: site_deploy_jumphost == True
+
+    - name: Listing Kubernetes Environment
+      debug:
+        msg:
+          - "Kubernetes Master            : {{ k8smaster_ip }}"
+          - "Kubernetes Worker 1          : {{ k8sworker1_ip }}"
+      when: site_deploy_kubernetes == True
+
+    - name: Listing OpenShift Environment
+      debug:
+        msg:
+          - "OpenShift Master             : {{ openshift_ip }}"
+      when: site_deploy_openshift == True
+
+    - name: Listing Deep Security Environment
+      debug:
+        msg:
+          - "Deep Security                : {{ dsm_ip }}"
+          - "PostgreSQL                   : {{ dsmdb_ip }}"
+      when:
+        - site_deploy_deepsecurity == True
+        - deepsecurity_variant == 'dsm'
+
+# #####################################################################
+# Deploy Longhorn
+# #####################################################################
+# - name: Create and Configure Jumphost Proxy
+#   hosts: tag_role_jumphost:&tag_user_{{ user }}
+#   become: true
+
+#   vars:
+#     trusted_certificates: "{{ trusted_certificates }}"
+#     create_proxy_configurations: True
+
+#   tasks:
+#     - name: Include vars
+#       include: site_vars.yml
+
+#     - name: Create Proxy instance
+#       include_role:
+#         name: proxy
+#       vars:
+#         operation: deploy
+#       when: site_deploy_jumphost == True
+
+#     - name: Create Proxy Configuration and Certificate for Longhorn
+#       include_role:
+#         name: proxy
+#       vars:
+#         operation: create_site
+#         service_name: longhorn
+#         jumphost_external_ip: "{{ inventory_hostname }}"
+#         proxy_destination: "{{ k8smaster_ip }}"
+#         node_port: "{{ longhorn_nodeport }}"
+#         target_type: http
+#       when:
+#         - site_deploy_kubernetes == True
+#         - site_deploy_jumphost == True
+
+- name: Deploy Longhorn
+  hosts: tag_role_k8smaster:&tag_user_{{ user }}
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Delete longhorn.*
+      become: true
+      become_user: ubuntu
+      file:
+        state: absent
+        path: "{{ item }}"
+      loop:
+        - ~/longhorn.txt
+        - ~/longhorn.log
+
+    - name: Deploy Longhorn
+      include_role:
+        name: longhorn
+      vars:
+        operation: deploy

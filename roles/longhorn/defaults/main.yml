@@ -1,0 +1,3 @@
+longhorn_chart: longhorn/longhorn
+longhorn_namespace: longhorn-system
+longhorn_name: longhorn
