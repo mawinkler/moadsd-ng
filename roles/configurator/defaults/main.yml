@@ -115,6 +115,7 @@ smartcheck_registry_username: reguser
 smartcheck_registry_password: trendmicro
 smartcheck_database_username: dssc
 smartcheck_database_password: trendmicro
+smartcheck_storageclass: rook-ceph-block
 
 # Cloud One Application Security
 application_security_key: OPTIONAL

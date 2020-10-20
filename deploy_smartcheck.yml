@@ -114,6 +114,15 @@
     - name: Include vars
       include: site_vars.yml
 
+    - name: Install OpenShift python client
+      become: true
+      become_user: ubuntu
+      pip:
+        name: "{{ packages }}"
+      vars:
+        packages:
+          - openshift
+
     - name: Deploy Deep Security Smart Check
       include_role:
         name: smartcheck
