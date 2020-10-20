@@ -626,13 +626,25 @@
       when:
         - site_deploy_kubernetes == True
 
-    # Not required anymore
-    # - name: Create k8s certificate pod
-    #   include_role:
-    #     name: kubernetes-kubeadmin
-    #   vars:
-    #     operation: k8s_create_certificate_pod
-    #   when: site_deploy_kubernetes == True
+# #####################################################################
+# Deploy Longhorn
+# #####################################################################
+- name: Deploy Longhorn
+  hosts: tag_role_k8smaster:&tag_user_{{ user }}
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Deploy Longhorn
+      include_role:
+        name: longhorn
+      vars:
+        operation: deploy
+      when:
+        - site_deploy_longhorn == True
+        - site_deploy_kubernetes == True
 
 # #####################################################################
 # Deploy OPA
@@ -704,26 +716,6 @@
         - site_deploy_kubernetes == True
 
 # #####################################################################
-# Deploy Longhorn
-# #####################################################################
-- name: Deploy Longhorn
-  hosts: tag_role_k8smaster:&tag_user_{{ user }}
-  become: true
-
-  tasks:
-    - name: Include vars
-      include: site_vars.yml
-
-    - name: Deploy Longhorn
-      include_role:
-        name: longhorn
-      vars:
-        operation: deploy
-      when:
-        - site_deploy_longhorn == True
-        - site_deploy_kubernetes == True
-
-# #####################################################################
 # Deploy Deep Security Smart Check
 # #####################################################################
 - name: Deploy Smart Check
@@ -775,7 +767,7 @@
         - site_deploy_kubernetes == True
 
     # The following task creates a Jenkins JNLP Slave Docker Image
-    # Currently the only problem is that k8s makes problems pulling the image
+    # Currently the only challenge is that k8s makes problems pulling the image
     # from the internal registry. For now, Jenkins is configured to pull the
     # image from my Docker Hub account
     # - name: Deploy Jenkins JNLP Slave Docker Image
