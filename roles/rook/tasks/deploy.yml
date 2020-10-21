@@ -193,6 +193,14 @@
   args:
     chdir: $HOME
 
+- name: Label Rook-Ceph Namespace to be ignored by Container Security
+  become: true
+  become_user: ubuntu
+  shell: kubectl label ns {{ rook_ceph_namespace }} ignoreAdmissionControl=true --overwrite
+  args:
+    chdir: $HOME
+  ignore_errors: true
+
 - name: Install Rook Repo
   become: true
   become_user: ubuntu
