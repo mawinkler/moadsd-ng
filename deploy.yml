@@ -468,6 +468,30 @@
 # #####################################################################
 # Deploy Kubernetes cluster with kubeadm
 # #####################################################################
+- name: Create and Configure Jumphost Proxy
+  hosts: tag_role_jumphost:&tag_user_{{ user }}
+  become: true
+
+  vars:
+    trusted_certificates: "{{ trusted_certificates }}"
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Create Proxy Configuration and Certificate for the Dashboard
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: dashboard
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ k8smaster_ip }}"
+        node_port: "{{ kubernetes_dashboard_nodeport }}"
+        target_type: https
+      when:
+        - site_deploy_jumphost == True
+
 - name: Create Kubernetes cluster with kubeadm
   hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
@@ -494,19 +518,6 @@
   tasks:
     - name: Include vars
       include: site_vars.yml
-
-    - name: Create Proxy Configuration and Certificate for the Dashboard
-      include_role:
-        name: proxy
-      vars:
-        operation: create_site
-        service_name: dashboard
-        jumphost_external_ip: "{{ inventory_hostname }}"
-        proxy_destination: "{{ k8smaster_ip }}"
-        node_port: "{{ kubernetes_dashboard_nodeport }}"
-        target_type: https
-      when:
-        - site_deploy_jumphost == True
 
     - name: Deploy Kubernetes master with Docker & Cri-O
       include_role:
