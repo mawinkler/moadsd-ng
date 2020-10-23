@@ -1,0 +1,3 @@
+rancher_chart: rancher-latest/rancher
+rancher_namespace: cattle-system
+rancher_name: rancher

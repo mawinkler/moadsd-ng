@@ -676,6 +676,52 @@
         - site_deploy_kubernetes == True
 
 # #####################################################################
+# Deploy Rancher
+# #####################################################################
+- name: Create and Configure Jumphost Proxy
+  hosts: tag_role_jumphost:&tag_user_{{ user }}
+  become: true
+
+  vars:
+    trusted_certificates: "{{ trusted_certificates }}"
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Create Proxy Configuration and Certificate for Rancher
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: rancher
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ k8smaster_ip }}"
+        node_port: "{{ rancher_nodeport }}"
+        target_type: http
+      when:
+        - site_deploy_kubernetes == True
+        - site_deploy_rancher == True
+        - site_deploy_jumphost == True
+
+- name: Deploy Rancher
+  hosts: tag_role_k8smaster:&tag_user_{{ user }}
+  become: true
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Deploy Rancher
+      include_role:
+        name: rancher
+      vars:
+        operation: deploy
+      when:
+        - site_deploy_rancher == True
+        - site_deploy_kubernetes == True
+
+# #####################################################################
 # Deploy Prometheus
 # #####################################################################
 - name: Deploy Prometheus

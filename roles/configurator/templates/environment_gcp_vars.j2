@@ -7,6 +7,7 @@ site_deploy_openshift: {{ site_deploy_openshift }}
 site_deploy_deepsecurity: {{ site_deploy_deepsecurity }}
 site_deploy_smartcheck: {{ site_deploy_smartcheck }}
 site_deploy_jenkins: {{ site_deploy_jenkins }}
+site_deploy_rancher: {{ site_deploy_rancher }}
 site_deploy_harbor: {{ site_deploy_harbor }}
 site_deploy_longhorn: {{ site_deploy_longhorn }}
 site_deploy_gitlab: {{ site_deploy_gitlab }}
@@ -185,6 +186,11 @@ gitlab_nodeport_ssh: 30016
 harbor_nodeport_http: 30020
 harbor_nodeport_https: 30021
 harbor_nodeport_notary: 30022
+
+# #####################################################################
+# Rancher
+# #####################################################################
+rancher_nodeport_https: 30023
 
 # #####################################################################
 # Linux Endpoint Settings

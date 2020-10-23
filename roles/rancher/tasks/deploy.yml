@@ -1,0 +1,101 @@
+---
+# #####################################################################
+# Deploy Rancher
+# #####################################################################
+- name: Generate DNS Name for Rancher
+  set_fact:
+    service_dns_name: "rancher-{{ jumphost_ip | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
+
+- name: Create Rancher Overrides File
+  copy:
+    dest: /home/ubuntu/overrides-rancher.yml
+    mode: 0640
+    owner: ubuntu
+    content: |
+      hostname: {{ service_dns_name }}
+      ingress:
+        tls:
+          source: rancher
+
+- name: Install the CustomResourceDefinition resources separately
+  become: true
+  become_user: ubuntu
+  shell: kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.crds.yaml
+
+- name: Create Cert-Manager Namespace
+  become: true
+  become_user: ubuntu
+  shell: kubectl create namespace cert-manager --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME
+
+- name: Add the Jetstack Helm Repo
+  become: true
+  become_user: ubuntu
+  shell: |
+    helm repo add jetstack https://charts.jetstack.io
+    helm repo update
+
+- name: Install the cert-manager Helm chart
+  become: true
+  become_user: ubuntu
+  shell: helm install cert-manager jetstack/cert-manager --namespace cert-manager --version v0.15.0
+
+- name: Create Rancher Namespace
+  become: true
+  become_user: ubuntu
+  shell: kubectl create namespace {{ rancher_namespace }} --dry-run=true -o yaml | kubectl apply -f -
+  args:
+    chdir: $HOME
+
+- name: Install Rancher Repo
+  become: true
+  become_user: ubuntu
+  shell: helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
+
+- name: Update Rancher Repo
+  become: true
+  become_user: ubuntu
+  shell: helm repo update
+
+- name: Install Rancher
+  become: true
+  become_user: ubuntu
+  shell: helm install --namespace {{ rancher_namespace }} --values overrides-rancher.yml {{ rancher_name }} {{ rancher_chart }} >> rancher.log
+  args:
+    chdir: $HOME
+    creates: rancher.log
+
+- name: Fetch rancher.log
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/rancher.log
+    dest: ./site_{{ type }}/
+    flat: yes
+
+# - name: Query admin Password
+#   become: true
+#   become_user: ubuntu
+#   shell: kubectl get --namespace {{ rancher_namespace }} secret rancher -ojsonpath='{.data.admin-password}' | base64 --decode
+#   register: admin_password
+
+- name: Create link document for Rancher
+  become: true
+  become_user: ubuntu
+  copy:
+    dest: /home/ubuntu/rancher.txt
+    mode: 0640
+    content: |
+      URL: https://{{ inventory_hostname }}:{{ rancher_nodeport }}
+      URL: https://{{ service_dns_name }}
+      Username: {{ rancher_username }}
+      Password: {{ rancher_password }}
+
+- name: Fetch rancher.txt
+  become: true
+  become_user: ubuntu
+  fetch:
+    src: /home/ubuntu/rancher.txt
+    dest: ./site_{{ type }}/
+    flat: yes

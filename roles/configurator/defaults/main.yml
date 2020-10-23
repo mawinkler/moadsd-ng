@@ -6,6 +6,7 @@ site_deploy_openshift: no
 site_deploy_deepsecurity: no
 site_deploy_smartcheck: yes
 site_deploy_jenkins: yes
+site_deploy_rancher: yes
 site_deploy_harbor: no
 site_deploy_longhorn: no
 site_deploy_gitlab: no
@@ -143,6 +144,10 @@ harbor_registry_password: trendmicro
 # If you update the username or password of registry, make sure use cli tool htpasswd to generate the bcrypt hash
 # e.g. "htpasswd -nbBC10 $username $password"
 harbor_registry_htpasswd: "reguser:$2y$10$s23SJHWQgxiiDRDJM/EHbe/avGlQciQtHdDYtTum6NQCzgnwmMIOe"
+
+# Rancher
+rancher_username: admin
+rancher_password: trendmicro
 
 # Cluster Registry
 cluster_registry_username: reguser
