@@ -2,6 +2,19 @@
 # #####################################################################
 # Create an OpenShift instance
 # #####################################################################
+- name: Create Proxy Configuration and Certificate for the Openshift
+  include_role:
+    name: proxy
+  vars:
+    operation: create_site
+    service_name: openshift
+    jumphost_external_ip: "{{ inventory_hostname }}"
+    proxy_destination: "{{ openshift_ip }}"
+    node_port: "{{ openshift_dashboard }}"
+    target_type: https
+  when:
+    - site_deploy_openshift == True
+    - site_deploy_jumphost == True
 
 # CodeReady Containers:
 # RHEL 8

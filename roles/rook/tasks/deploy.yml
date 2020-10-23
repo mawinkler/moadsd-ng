@@ -2,9 +2,20 @@
 # #####################################################################
 # Deploy Rook
 # #####################################################################
-#
-# Label master
-#
+- name: Create Proxy Configuration and Certificate for the Ceph Dashboard
+  include_role:
+    name: proxy
+  vars:
+    operation: create_site
+    service_name: ceph
+    jumphost_external_ip: "{{ inventory_hostname }}"
+    proxy_destination: "{{ k8smaster_ip }}"
+    node_port: "{{ rook_ceph_dashboard_nodeport }}"
+    target_type: https
+  when:
+    - site_deploy_kubernetes == True
+    - site_deploy_jumphost == True
+
 - name: Kubernetes Label master as MDS Node
   become: true
   become_user: ubuntu

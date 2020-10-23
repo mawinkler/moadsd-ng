@@ -2,6 +2,36 @@
 # #####################################################################
 # Create a Deep Security Smart Check instance
 # #####################################################################
+- name: Create Proxy Configuration and Certificate for Smart Check
+  include_role:
+    name: proxy
+  vars:
+    operation: create_site
+    service_name: smartcheck
+    jumphost_external_ip: "{{ inventory_hostname }}"
+    proxy_destination: "{{ k8smaster_ip }}"
+    node_port: "{{ smartcheck_nodeport }}"
+    target_type: https
+  when:
+    - site_deploy_smartcheck == True
+    - site_deploy_kubernetes == True
+    - site_deploy_jumphost == True
+
+- name: Create Proxy Configuration and Certificate for Smart Check Registry
+  include_role:
+    name: proxy
+  vars:
+    operation: create_site
+    service_name: smartcheck-registry
+    jumphost_external_ip: "{{ inventory_hostname }}"
+    proxy_destination: "{{ k8smaster_ip }}"
+    node_port: "{{ smartcheck_registry }}"
+    target_type: https
+  when:
+    - site_deploy_smartcheck == True
+    - site_deploy_kubernetes == True
+    - site_deploy_jumphost == True
+
 - name: Create Deep Security Smart Check Overrides File
   copy:
     dest: /home/ubuntu/overrides-smartcheck.yml

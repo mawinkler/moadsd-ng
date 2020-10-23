@@ -153,195 +153,195 @@
             operation: deploy
           when: site_deploy_jumphost == True
 
-        - name: Create Proxy Configuration and Certificate for the Dashboard
-          include_role:
-            name: proxy
-          vars:
-            operation: create_site
-            service_name: dashboard
-            jumphost_external_ip: "{{ inventory_hostname }}"
-            proxy_destination: "{{ k8smaster_ip }}"
-            node_port: "{{ kubernetes_dashboard_nodeport }}"
-            target_type: https
-          when:
-            - site_deploy_kubernetes == True
-            - site_deploy_jumphost == True
+        # - name: Create Proxy Configuration and Certificate for the Dashboard
+        #   include_role:
+        #     name: proxy
+        #   vars:
+        #     operation: create_site
+        #     service_name: dashboard
+        #     jumphost_external_ip: "{{ inventory_hostname }}"
+        #     proxy_destination: "{{ k8smaster_ip }}"
+        #     node_port: "{{ kubernetes_dashboard_nodeport }}"
+        #     target_type: https
+        #   when:
+        #     - site_deploy_kubernetes == True
+        #     - site_deploy_jumphost == True
 
-        - name: Create Proxy Configuration and Certificate for the Ceph Dashboard
-          include_role:
-            name: proxy
-          vars:
-            operation: create_site
-            service_name: ceph
-            jumphost_external_ip: "{{ inventory_hostname }}"
-            proxy_destination: "{{ k8smaster_ip }}"
-            node_port: "{{ rook_ceph_dashboard_nodeport }}"
-            target_type: https
-          when:
-            - site_deploy_kubernetes == True
-            - site_deploy_jumphost == True
+        # - name: Create Proxy Configuration and Certificate for the Ceph Dashboard
+        #   include_role:
+        #     name: proxy
+        #   vars:
+        #     operation: create_site
+        #     service_name: ceph
+        #     jumphost_external_ip: "{{ inventory_hostname }}"
+        #     proxy_destination: "{{ k8smaster_ip }}"
+        #     node_port: "{{ rook_ceph_dashboard_nodeport }}"
+        #     target_type: https
+        #   when:
+        #     - site_deploy_kubernetes == True
+        #     - site_deploy_jumphost == True
 
-        - name: Create Proxy Configuration and Certificate for the Openshift
-          include_role:
-            name: proxy
-          vars:
-            operation: create_site
-            service_name: openshift
-            jumphost_external_ip: "{{ inventory_hostname }}"
-            proxy_destination: "{{ openshift_ip }}"
-            node_port: "{{ openshift_dashboard }}"
-            target_type: https
-          when:
-            - site_deploy_openshift == True
-            - site_deploy_jumphost == True
+        # - name: Create Proxy Configuration and Certificate for the Openshift
+        #   include_role:
+        #     name: proxy
+        #   vars:
+        #     operation: create_site
+        #     service_name: openshift
+        #     jumphost_external_ip: "{{ inventory_hostname }}"
+        #     proxy_destination: "{{ openshift_ip }}"
+        #     node_port: "{{ openshift_dashboard }}"
+        #     target_type: https
+        #   when:
+        #     - site_deploy_openshift == True
+        #     - site_deploy_jumphost == True
 
-        - name: Create Proxy Configuration and Certificate for the Registry
-          include_role:
-            name: proxy
-          vars:
-            operation: create_site
-            service_name: registry
-            jumphost_external_ip: "{{ inventory_hostname }}"
-            proxy_destination: "{{ k8smaster_ip }}"
-            node_port: "{{ registry_nodeport }}"
-            target_type: https
-          when:
-            - site_deploy_kubernetes == True
-            - site_deploy_jumphost == True
+        # - name: Create Proxy Configuration and Certificate for the Registry
+        #   include_role:
+        #     name: proxy
+        #   vars:
+        #     operation: create_site
+        #     service_name: registry
+        #     jumphost_external_ip: "{{ inventory_hostname }}"
+        #     proxy_destination: "{{ k8smaster_ip }}"
+        #     node_port: "{{ registry_nodeport }}"
+        #     target_type: https
+        #   when:
+        #     - site_deploy_kubernetes == True
+        #     - site_deploy_jumphost == True
 
-        - name: Create Proxy Configuration and Certificate for Grafana
-          include_role:
-            name: proxy
-          vars:
-            operation: create_site
-            service_name: grafana
-            jumphost_external_ip: "{{ inventory_hostname }}"
-            proxy_destination: "{{ k8smaster_ip }}"
-            node_port: "{{ grafana_nodeport }}"
-            target_type: http
-          when:
-            - site_deploy_kubernetes == True
-            - site_deploy_grafana == True
-            - site_deploy_jumphost == True
+        # - name: Create Proxy Configuration and Certificate for Grafana
+        #   include_role:
+        #     name: proxy
+        #   vars:
+        #     operation: create_site
+        #     service_name: grafana
+        #     jumphost_external_ip: "{{ inventory_hostname }}"
+        #     proxy_destination: "{{ k8smaster_ip }}"
+        #     node_port: "{{ grafana_nodeport }}"
+        #     target_type: http
+        #   when:
+        #     - site_deploy_kubernetes == True
+        #     - site_deploy_grafana == True
+        #     - site_deploy_jumphost == True
 
-        - name: Create Proxy Configuration and Certificate for Smart Check
-          include_role:
-            name: proxy
-          vars:
-            operation: create_site
-            service_name: smartcheck
-            jumphost_external_ip: "{{ inventory_hostname }}"
-            proxy_destination: "{{ k8smaster_ip }}"
-            node_port: "{{ smartcheck_nodeport }}"
-            target_type: https
-          when:
-            - site_deploy_smartcheck == True
-            - site_deploy_kubernetes == True
-            - site_deploy_jumphost == True
+        # - name: Create Proxy Configuration and Certificate for Smart Check
+        #   include_role:
+        #     name: proxy
+        #   vars:
+        #     operation: create_site
+        #     service_name: smartcheck
+        #     jumphost_external_ip: "{{ inventory_hostname }}"
+        #     proxy_destination: "{{ k8smaster_ip }}"
+        #     node_port: "{{ smartcheck_nodeport }}"
+        #     target_type: https
+        #   when:
+        #     - site_deploy_smartcheck == True
+        #     - site_deploy_kubernetes == True
+        #     - site_deploy_jumphost == True
 
-        - name: Create Proxy Configuration and Certificate for Smart Check Registry
-          include_role:
-            name: proxy
-          vars:
-            operation: create_site
-            service_name: smartcheck-registry
-            jumphost_external_ip: "{{ inventory_hostname }}"
-            proxy_destination: "{{ k8smaster_ip }}"
-            node_port: "{{ smartcheck_registry }}"
-            target_type: https
-          when:
-            - site_deploy_smartcheck == True
-            - site_deploy_kubernetes == True
-            - site_deploy_jumphost == True
+        # - name: Create Proxy Configuration and Certificate for Smart Check Registry
+        #   include_role:
+        #     name: proxy
+        #   vars:
+        #     operation: create_site
+        #     service_name: smartcheck-registry
+        #     jumphost_external_ip: "{{ inventory_hostname }}"
+        #     proxy_destination: "{{ k8smaster_ip }}"
+        #     node_port: "{{ smartcheck_registry }}"
+        #     target_type: https
+        #   when:
+        #     - site_deploy_smartcheck == True
+        #     - site_deploy_kubernetes == True
+        #     - site_deploy_jumphost == True
 
-        - name: Create Proxy Configuration and Certificate for Jenkins
-          include_role:
-            name: proxy
-          vars:
-            operation: create_site
-            service_name: jenkins
-            jumphost_external_ip: "{{ inventory_hostname }}"
-            proxy_destination: "{{ k8smaster_ip }}"
-            node_port: "{{ jenkins_nodeport }}"
-            target_type: http
-          when:
-            - site_deploy_jenkins == True
-            - site_deploy_kubernetes == True
-            - site_deploy_jumphost == True
+        # - name: Create Proxy Configuration and Certificate for Jenkins
+        #   include_role:
+        #     name: proxy
+        #   vars:
+        #     operation: create_site
+        #     service_name: jenkins
+        #     jumphost_external_ip: "{{ inventory_hostname }}"
+        #     proxy_destination: "{{ k8smaster_ip }}"
+        #     node_port: "{{ jenkins_nodeport }}"
+        #     target_type: http
+        #   when:
+        #     - site_deploy_jenkins == True
+        #     - site_deploy_kubernetes == True
+        #     - site_deploy_jumphost == True
 
-        - name: Create Proxy Configuration and Certificate for Harbor
-          include_role:
-            name: proxy
-          vars:
-            operation: create_site
-            service_name: harbor
-            jumphost_external_ip: "{{ inventory_hostname }}"
-            proxy_destination: "{{ k8smaster_ip }}"
-            node_port: "{{ harbor_nodeport_https }}"
-            target_type: https
-          when:
-            - site_deploy_harbor == True
-            - site_deploy_kubernetes == True
-            - site_deploy_jumphost == True
+        # - name: Create Proxy Configuration and Certificate for Harbor
+        #   include_role:
+        #     name: proxy
+        #   vars:
+        #     operation: create_site
+        #     service_name: harbor
+        #     jumphost_external_ip: "{{ inventory_hostname }}"
+        #     proxy_destination: "{{ k8smaster_ip }}"
+        #     node_port: "{{ harbor_nodeport_https }}"
+        #     target_type: https
+        #   when:
+        #     - site_deploy_harbor == True
+        #     - site_deploy_kubernetes == True
+        #     - site_deploy_jumphost == True
 
-        - name: Generate DNS Name for GitLab
-          set_fact:
-            service_dns_name_gitlab: "gitlab.{{ k8sworker1_ip }}.{{ jumphost_tld }}"
-          when:
-            - site_deploy_gitlab == True
-            - site_deploy_kubernetes == True
-
-        # - name: Generate DNS Name for GitLab Registry
+        # - name: Generate DNS Name for GitLab
         #   set_fact:
-        #     service_dns_name_gitlab: "https://registry.{{ k8sworker1_ip }}.{{ jumphost_tld }}"
+        #     service_dns_name_gitlab: "gitlab.{{ k8sworker1_ip }}.{{ jumphost_tld }}"
         #   when:
         #     - site_deploy_gitlab == True
         #     - site_deploy_kubernetes == True
 
-        - name: Create Proxy Configuration and Certificate for GitLab
-          include_role:
-            name: proxy
-          vars:
-            operation: create_site
-            service_name: gitlab
-            jumphost_external_ip: "{{ inventory_hostname }}"
-            proxy_destination: "{{ service_dns_name_gitlab }}"
-            node_port: "{{ gitlab_nodeport_https }}"
-            target_type: https
-          when:
-            - site_deploy_gitlab == True
-            - site_deploy_kubernetes == True
-            - site_deploy_jumphost == True
+        # # - name: Generate DNS Name for GitLab Registry
+        # #   set_fact:
+        # #     service_dns_name_gitlab: "https://registry.{{ k8sworker1_ip }}.{{ jumphost_tld }}"
+        # #   when:
+        # #     - site_deploy_gitlab == True
+        # #     - site_deploy_kubernetes == True
 
-        - name: Create Proxy Configuration and Certificate for Linkerd
-          include_role:
-            name: proxy
-          vars:
-            operation: create_site
-            service_name: linkerd
-            jumphost_external_ip: "{{ inventory_hostname }}"
-            proxy_destination: "{{ k8smaster_ip }}"
-            node_port: "{{ linkerd_dashboard_nodeport }}"
-            target_type: http
-          when:
-            - site_deploy_linkerd == True
-            - site_deploy_kubernetes == True
-            - site_deploy_jumphost == True
+        # - name: Create Proxy Configuration and Certificate for GitLab
+        #   include_role:
+        #     name: proxy
+        #   vars:
+        #     operation: create_site
+        #     service_name: gitlab
+        #     jumphost_external_ip: "{{ inventory_hostname }}"
+        #     proxy_destination: "{{ service_dns_name_gitlab }}"
+        #     node_port: "{{ gitlab_nodeport_https }}"
+        #     target_type: https
+        #   when:
+        #     - site_deploy_gitlab == True
+        #     - site_deploy_kubernetes == True
+        #     - site_deploy_jumphost == True
 
-        - name: Create Proxy Configuration and Certificate for Deep Security Manager
-          include_role:
-            name: proxy
-          vars:
-            operation: create_site
-            service_name: deepsecurity
-            jumphost_external_ip: "{{ inventory_hostname }}"
-            proxy_destination: "{{ dsm_ip }}"
-            node_port: "{{ addressandportsscreen_managerport }}"
-            target_type: https
-          when:
-            - site_deploy_deepsecurity == True
-            - deepsecurity_variant == 'dsm'
-            - site_deploy_jumphost == True
+        # - name: Create Proxy Configuration and Certificate for Linkerd
+        #   include_role:
+        #     name: proxy
+        #   vars:
+        #     operation: create_site
+        #     service_name: linkerd
+        #     jumphost_external_ip: "{{ inventory_hostname }}"
+        #     proxy_destination: "{{ k8smaster_ip }}"
+        #     node_port: "{{ linkerd_dashboard_nodeport }}"
+        #     target_type: http
+        #   when:
+        #     - site_deploy_linkerd == True
+        #     - site_deploy_kubernetes == True
+        #     - site_deploy_jumphost == True
+
+        # - name: Create Proxy Configuration and Certificate for Deep Security Manager
+        #   include_role:
+        #     name: proxy
+        #   vars:
+        #     operation: create_site
+        #     service_name: deepsecurity
+        #     jumphost_external_ip: "{{ inventory_hostname }}"
+        #     proxy_destination: "{{ dsm_ip }}"
+        #     node_port: "{{ addressandportsscreen_managerport }}"
+        #     target_type: https
+        #   when:
+        #     - site_deploy_deepsecurity == True
+        #     - deepsecurity_variant == 'dsm'
+        #     - site_deploy_jumphost == True
 
         - name: Create Proxy Configuration and Certificate for Demoapp
           include_role:
