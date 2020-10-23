@@ -2,21 +2,6 @@
 # #####################################################################
 # Create a Jenkins instance
 # #####################################################################
-- name: Create Proxy Configuration and Certificate for Jenkins
-  include_role:
-    name: proxy
-  vars:
-    operation: create_site
-    service_name: jenkins
-    jumphost_external_ip: "{{ inventory_hostname }}"
-    proxy_destination: "{{ k8smaster_ip }}"
-    node_port: "{{ jenkins_nodeport }}"
-    target_type: http
-  when:
-    - site_deploy_jenkins == True
-    - site_deploy_kubernetes == True
-    - site_deploy_jumphost == True
-
 - name: Generate DNS Name for Jenkins
   set_fact:
     service_dns_name: "http://jenkins-{{ jumphost_ip | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"

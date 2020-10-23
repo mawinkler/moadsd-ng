@@ -2,21 +2,6 @@
 # #####################################################################
 # Create a Linkerd instance
 # #####################################################################
-- name: Create Proxy Configuration and Certificate for Linkerd
-  include_role:
-    name: proxy
-  vars:
-    operation: create_site
-    service_name: linkerd
-    jumphost_external_ip: "{{ inventory_hostname }}"
-    proxy_destination: "{{ k8smaster_ip }}"
-    node_port: "{{ linkerd_dashboard_nodeport }}"
-    target_type: http
-  when:
-    - site_deploy_linkerd == True
-    - site_deploy_kubernetes == True
-    - site_deploy_jumphost == True
-
 - name: Linkerd Download
   become: true
   become_user: ubuntu

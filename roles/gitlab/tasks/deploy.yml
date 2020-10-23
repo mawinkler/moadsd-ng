@@ -4,35 +4,6 @@
 # #####################################################################
 - name: Generate DNS Name for GitLab
   set_fact:
-    service_dns_name_gitlab: "gitlab.{{ k8sworker1_ip }}.{{ jumphost_tld }}"
-  when:
-    - site_deploy_gitlab == True
-    - site_deploy_kubernetes == True
-
-# - name: Generate DNS Name for GitLab Registry
-#   set_fact:
-#     service_dns_name_gitlab: "https://registry.{{ k8sworker1_ip }}.{{ jumphost_tld }}"
-#   when:
-#     - site_deploy_gitlab == True
-#     - site_deploy_kubernetes == True
-
-- name: Create Proxy Configuration and Certificate for GitLab
-  include_role:
-    name: proxy
-  vars:
-    operation: create_site
-    service_name: gitlab
-    jumphost_external_ip: "{{ inventory_hostname }}"
-    proxy_destination: "{{ service_dns_name_gitlab }}"
-    node_port: "{{ gitlab_nodeport_https }}"
-    target_type: https
-  when:
-    - site_deploy_gitlab == True
-    - site_deploy_kubernetes == True
-    - site_deploy_jumphost == True
-
-- name: Generate DNS Name for GitLab
-  set_fact:
     service_dns_name: "https://gitlab-{{ jumphost_ip | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"
 
 - name: Create GitLab Overrides File

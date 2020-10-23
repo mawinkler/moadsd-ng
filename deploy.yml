@@ -438,6 +438,32 @@
 # #####################################################################
 # Deploy Deep Security
 # #####################################################################
+- name: Create and Configure Jumphost Proxy
+  hosts: tag_role_jumphost:&tag_user_{{ user }}
+  become: true
+
+  vars:
+    trusted_certificates: "{{ trusted_certificates }}"
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Create Proxy Configuration and Certificate for Deep Security Manager
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: deepsecurity
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ dsm_ip }}"
+        node_port: "{{ addressandportsscreen_managerport }}"
+        target_type: https
+      when:
+        - site_deploy_deepsecurity == True
+        - deepsecurity_variant == 'dsm'
+        - site_deploy_jumphost == True
+
 - name: Deploy Deep Security
   hosts: tag_role_dsm:&tag_user_{{ user }}
   become: true
@@ -490,6 +516,34 @@
         node_port: "{{ kubernetes_dashboard_nodeport }}"
         target_type: https
       when:
+        - site_deploy_jumphost == True
+
+    - name: Create Proxy Configuration and Certificate for the Registry
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: registry
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ k8smaster_ip }}"
+        node_port: "{{ registry_nodeport }}"
+        target_type: https
+      when:
+        - site_deploy_kubernetes == True
+        - site_deploy_jumphost == True
+
+    - name: Create Proxy Configuration and Certificate for the Ceph Dashboard
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: ceph
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ k8smaster_ip }}"
+        node_port: "{{ rook_ceph_dashboard_nodeport }}"
+        target_type: https
+      when:
+        - site_deploy_kubernetes == True
         - site_deploy_jumphost == True
 
 - name: Create Kubernetes cluster with kubeadm
@@ -722,6 +776,32 @@
 # #####################################################################
 # Deploy Grafana
 # #####################################################################
+- name: Create and Configure Jumphost Proxy
+  hosts: tag_role_jumphost:&tag_user_{{ user }}
+  become: true
+
+  vars:
+    trusted_certificates: "{{ trusted_certificates }}"
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Create Proxy Configuration and Certificate for Grafana
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: grafana
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ k8smaster_ip }}"
+        node_port: "{{ grafana_nodeport }}"
+        target_type: http
+      when:
+        - site_deploy_kubernetes == True
+        - site_deploy_grafana == True
+        - site_deploy_jumphost == True
+
 - name: Deploy Grafana
   hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
@@ -742,6 +822,47 @@
 # #####################################################################
 # Deploy Deep Security Smart Check
 # #####################################################################
+- name: Create and Configure Jumphost Proxy
+  hosts: tag_role_jumphost:&tag_user_{{ user }}
+  become: true
+
+  vars:
+    trusted_certificates: "{{ trusted_certificates }}"
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Create Proxy Configuration and Certificate for Smart Check
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: smartcheck
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ k8smaster_ip }}"
+        node_port: "{{ smartcheck_nodeport }}"
+        target_type: https
+      when:
+        - site_deploy_smartcheck == True
+        - site_deploy_kubernetes == True
+        - site_deploy_jumphost == True
+
+    - name: Create Proxy Configuration and Certificate for Smart Check Registry
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: smartcheck-registry
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ k8smaster_ip }}"
+        node_port: "{{ smartcheck_registry }}"
+        target_type: https
+      when:
+        - site_deploy_smartcheck == True
+        - site_deploy_kubernetes == True
+        - site_deploy_jumphost == True
+
 - name: Deploy Smart Check
   hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
@@ -773,6 +894,32 @@
 # #####################################################################
 # Deploy Jenkins
 # #####################################################################
+- name: Create and Configure Jumphost Proxy
+  hosts: tag_role_jumphost:&tag_user_{{ user }}
+  become: true
+
+  vars:
+    trusted_certificates: "{{ trusted_certificates }}"
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Create Proxy Configuration and Certificate for Jenkins
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: jenkins
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ k8smaster_ip }}"
+        node_port: "{{ jenkins_nodeport }}"
+        target_type: http
+      when:
+        - site_deploy_jenkins == True
+        - site_deploy_kubernetes == True
+        - site_deploy_jumphost == True
+
 - name: Deploy Jenkins
   hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
@@ -806,6 +953,32 @@
 # #####################################################################
 # Deploy Harbor
 # #####################################################################
+- name: Create and Configure Jumphost Proxy
+  hosts: tag_role_jumphost:&tag_user_{{ user }}
+  become: true
+
+  vars:
+    trusted_certificates: "{{ trusted_certificates }}"
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Create Proxy Configuration and Certificate for Harbor
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: harbor
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ k8smaster_ip }}"
+        node_port: "{{ harbor_nodeport_https }}"
+        target_type: https
+      when:
+        - site_deploy_harbor == True
+        - site_deploy_kubernetes == True
+        - site_deploy_jumphost == True
+
 - name: Deploy Harbor
   hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
@@ -826,6 +999,46 @@
 # #####################################################################
 # Deploy GitLab
 # #####################################################################
+- name: Create and Configure Jumphost Proxy
+  hosts: tag_role_jumphost:&tag_user_{{ user }}
+  become: true
+
+  vars:
+    trusted_certificates: "{{ trusted_certificates }}"
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Generate DNS Name for GitLab
+      set_fact:
+        service_dns_name_gitlab: "gitlab.{{ k8sworker1_ip }}.{{ jumphost_tld }}"
+      when:
+        - site_deploy_gitlab == True
+        - site_deploy_kubernetes == True
+
+    # - name: Generate DNS Name for GitLab Registry
+    #   set_fact:
+    #     service_dns_name_gitlab: "https://registry.{{ k8sworker1_ip }}.{{ jumphost_tld }}"
+    #   when:
+    #     - site_deploy_gitlab == True
+    #     - site_deploy_kubernetes == True
+
+    - name: Create Proxy Configuration and Certificate for GitLab
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: gitlab
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ service_dns_name_gitlab }}"
+        node_port: "{{ gitlab_nodeport_https }}"
+        target_type: https
+      when:
+        - site_deploy_gitlab == True
+        - site_deploy_kubernetes == True
+        - site_deploy_jumphost == True
+
 - name: Deploy GitLab
   hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
@@ -846,6 +1059,32 @@
 # #####################################################################
 # Deploy Linkerd
 # #####################################################################
+- name: Create and Configure Jumphost Proxy
+  hosts: tag_role_jumphost:&tag_user_{{ user }}
+  become: true
+
+  vars:
+    trusted_certificates: "{{ trusted_certificates }}"
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Create Proxy Configuration and Certificate for Linkerd
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: linkerd
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ k8smaster_ip }}"
+        node_port: "{{ linkerd_dashboard_nodeport }}"
+        target_type: http
+      when:
+        - site_deploy_linkerd == True
+        - site_deploy_kubernetes == True
+        - site_deploy_jumphost == True
+
 - name: Deploy Linkerd
   hosts: tag_role_k8smaster:&tag_user_{{ user }}
   become: true
@@ -866,6 +1105,31 @@
 # #####################################################################
 # Deploy OpenShift
 # #####################################################################
+- name: Create and Configure Jumphost Proxy
+  hosts: tag_role_jumphost:&tag_user_{{ user }}
+  become: true
+
+  vars:
+    trusted_certificates: "{{ trusted_certificates }}"
+
+  tasks:
+    - name: Include vars
+      include: site_vars.yml
+
+    - name: Create Proxy Configuration and Certificate for the Openshift
+      include_role:
+        name: proxy
+      vars:
+        operation: create_site
+        service_name: openshift
+        jumphost_external_ip: "{{ inventory_hostname }}"
+        proxy_destination: "{{ openshift_ip }}"
+        node_port: "{{ openshift_dashboard }}"
+        target_type: https
+      when:
+        - site_deploy_openshift == True
+        - site_deploy_jumphost == True
+
 - name: Deploy OpenShift
   hosts: tag_role_openshift:&tag_user_{{ user }}
   become: true

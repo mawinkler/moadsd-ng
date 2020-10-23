@@ -2,21 +2,6 @@
 # #####################################################################
 # Deploy Grafana
 # #####################################################################
-- name: Create Proxy Configuration and Certificate for Grafana
-  include_role:
-    name: proxy
-  vars:
-    operation: create_site
-    service_name: grafana
-    jumphost_external_ip: "{{ inventory_hostname }}"
-    proxy_destination: "{{ k8smaster_ip }}"
-    node_port: "{{ grafana_nodeport }}"
-    target_type: http
-  when:
-    - site_deploy_kubernetes == True
-    - site_deploy_grafana == True
-    - site_deploy_jumphost == True
-
 - name: Generate DNS Name for Grafana
   set_fact:
     service_dns_name: "http://grafana-{{ jumphost_ip | regex_replace('\\.', '-') }}.{{ jumphost_tld }}"

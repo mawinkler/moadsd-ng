@@ -2,21 +2,6 @@
 # #####################################################################
 # Create a Deep Security instance
 # #####################################################################
-- name: Create Proxy Configuration and Certificate for Deep Security Manager
-  include_role:
-    name: proxy
-  vars:
-    operation: create_site
-    service_name: deepsecurity
-    jumphost_external_ip: "{{ inventory_hostname }}"
-    proxy_destination: "{{ dsm_ip }}"
-    node_port: "{{ addressandportsscreen_managerport }}"
-    target_type: https
-  when:
-    - site_deploy_deepsecurity == True
-    - deepsecurity_variant == 'dsm'
-    - site_deploy_jumphost == True
-
 # Preparations required if not running within a public cloud
 # - name: RHEL register
 #   command: subscription-manager register --username="{{ rhel_username }}" --password="{{ rhel_password }}" --auto-attach
