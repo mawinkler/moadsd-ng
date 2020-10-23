@@ -5,19 +5,6 @@
 #
 # Preparations
 #
-- name: Create Proxy Configuration and Certificate for the Dashboard
-  include_role:
-    name: proxy
-  vars:
-    operation: create_site
-    service_name: dashboard
-    jumphost_external_ip: "{{ inventory_hostname }}"
-    proxy_destination: "{{ k8smaster_ip }}"
-    node_port: "{{ kubernetes_dashboard_nodeport }}"
-    target_type: https
-  when:
-    - site_deploy_jumphost == True
-
 - name: Deploy Golang
   include: deploy_golang.yml
   when:
