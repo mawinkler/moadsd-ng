@@ -62,9 +62,9 @@
         security_groups:
           - "{{ public_security_group_results.group_id }}"
         vpc_subnet_id: "{{ public_subnet_result.subnet.id }}"
-        source_dest_check: false
         network:
           assign_public_ip: true
+          source_dest_check: false
         volumes:
           - device_name: /dev/sda1
             ebs:
@@ -186,9 +186,9 @@
         security_groups:
           - "{{ private_security_group_results.group_id }}"
         vpc_subnet_id: "{{ private_subnet_result.subnet.id }}"
-        source_dest_check: false
         network:
           assign_public_ip: false
+          source_dest_check: false
         volumes:
           - device_name: /dev/sda1
             ebs:
