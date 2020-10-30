@@ -62,7 +62,7 @@
     - name: Create Jumphost SSH Command
       delegate_to: 127.0.0.1
       copy:
-        dest: "./ssh_jumphost"
+        dest: "./jumphost"
         content: |
           ssh ubuntu@{{ jumphost_ip }}
         force: yes
@@ -72,7 +72,7 @@
     - name: Create Master SSH Command
       delegate_to: 127.0.0.1
       copy:
-        dest: "./ssh_master"
+        dest: "./master"
         content: |
           ssh -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p {{ jumphost_ip }}" ubuntu@{{ k8smaster_ip }} $1
         force: yes
@@ -82,7 +82,7 @@
     - name: Create Copy Master Command
       delegate_to: 127.0.0.1
       copy:
-        dest: "./copy_master"
+        dest: "./master_copy"
         content: |
           scp -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p {{ jumphost_ip }}" $1 ubuntu@{{ k8smaster_ip }}:~/$1
         force: yes
@@ -92,7 +92,7 @@
     - name: Create Fetch Master Command
       delegate_to: 127.0.0.1
       copy:
-        dest: "./fetch_master"
+        dest: "./master_fetch"
         content: |
           scp -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p {{ jumphost_ip }}" ubuntu@{{ k8smaster_ip }}:~/$1 $1
         force: yes
@@ -102,7 +102,7 @@
     - name: Create Master Watch Pods Command
       delegate_to: 127.0.0.1
       copy:
-        dest: "./ssh_master_pods"
+        dest: "./cluster_pods"
         content: |
           watch './ssh_master "kubectl get pods --all-namespaces"'
         force: yes
@@ -112,7 +112,7 @@
     - name: Create Master Watch Services Command
       delegate_to: 127.0.0.1
       copy:
-        dest: "./ssh_master_services"
+        dest: "./cluster_services"
         content: |
           watch './ssh_master "kubectl get services --all-namespaces"'
         force: yes
@@ -122,7 +122,7 @@
     - name: Create Master Watch Deployments Command
       delegate_to: 127.0.0.1
       copy:
-        dest: "./ssh_master_deployments"
+        dest: "./cluster_deployments"
         content: |
           watch './ssh_master "kubectl get deployments --all-namespaces"'
         force: yes
