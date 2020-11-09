@@ -110,12 +110,3 @@
         region: "{{ aws_region }}"
       loop: "{{ nat_gateway_result.result }}"
       when: nat_gateway_result is not skipped
-
-    - name: Terminate EC2 VPC Internet Gateway
-      ec2_vpc_igw:
-        aws_access_key: "{{ aws_access_key }}"
-        aws_secret_key: "{{ aws_secret_key }}"
-        vpc_id: "{{ ec2_vpc_net_result.vpcs[0].id }}"
-        region: "{{ aws_region }}"
-        state: absent
-      when: ec2_vpc_net_result.vpcs | length > 0
