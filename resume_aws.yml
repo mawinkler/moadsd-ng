@@ -35,6 +35,12 @@
     - name: Include vars
       include: site_vars.yml
 
+    - name: Recreate AWS VPC
+      include_role:
+        name: environment-aws
+      vars:
+        operation: create_network
+
     - name: Resume jumphost
       include_role:
         name: environment-aws

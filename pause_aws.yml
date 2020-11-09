@@ -73,3 +73,49 @@
       vars:
         operation: pause_instance
         instance_name: "{{ jumphost_instance_name }}"
+
+    - name: Query VPC id
+      ec2_vpc_net_info:
+        region: "{{ aws_region }}"
+        filters:
+          "tag:Name": "{{ moadsd_ng_prefix }}-vpc"
+          "tag:project": "{{ moadsd_ng_prefix }}"
+          "tag:user": "{{ moadsd_ng_user }}"
+      register: ec2_vpc_net_result
+
+    - name: Query Public Subnet id
+      ec2_vpc_subnet_info:
+        region: "{{ aws_region }}"
+        filters:
+          "tag:Name": "{{ moadsd_ng_prefix }}-public-subnet"
+          "tag:project": "{{ moadsd_ng_prefix }}"
+          "tag:user": "{{ moadsd_ng_user }}"
+      register: public_subnet_result
+
+    - name: Query NAT Gateway id
+      ec2_vpc_nat_gateway_info:
+        region: "{{ aws_region }}"
+        filters:
+          subnet-id: "{{ public_subnet_result.subnets[0].subnet_id }}"
+      register: nat_gateway_result
+      when: public_subnet_result.subnets
+
+    - name: Terminate NAT Gateway and wait for deleted status.
+      ec2_vpc_nat_gateway:
+        state: absent
+        nat_gateway_id: "{{ item.nat_gateway_id }}"
+        wait: yes
+        wait_timeout: 500
+        release_eip: yes
+        region: "{{ aws_region }}"
+      loop: "{{ nat_gateway_result.result }}"
+      when: nat_gateway_result is not skipped
+
+    - name: Terminate EC2 VPC Internet Gateway
+      ec2_vpc_igw:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        vpc_id: "{{ ec2_vpc_net_result.vpcs[0].id }}"
+        region: "{{ aws_region }}"
+        state: absent
+      when: ec2_vpc_net_result.vpcs | length > 0
