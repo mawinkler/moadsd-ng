@@ -148,7 +148,7 @@
       copy:
         dest: "./cluster_pods"
         content: |
-          watch './ssh_master "kubectl get pods --all-namespaces"'
+          watch './master "kubectl get pods --all-namespaces"'
         force: yes
         owner: ansible
         mode: '0700'
@@ -158,7 +158,7 @@
       copy:
         dest: "./cluster_services"
         content: |
-          watch './ssh_master "kubectl get services --all-namespaces"'
+          watch './master "kubectl get services --all-namespaces"'
         force: yes
         owner: ansible
         mode: '0700'
@@ -168,7 +168,7 @@
       copy:
         dest: "./cluster_deployments"
         content: |
-          watch './ssh_master "kubectl get deployments --all-namespaces"'
+          watch './master "kubectl get deployments --all-namespaces"'
         force: yes
         owner: ansible
         mode: '0700'
