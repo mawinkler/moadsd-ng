@@ -143,7 +143,7 @@
         owner: ansible
         mode: '0700'
 
-    - name: Create Master Watch Pods Command
+    - name: Create Cluster Watch Pods Command
       delegate_to: 127.0.0.1
       copy:
         dest: "./cluster_pods"
@@ -153,7 +153,7 @@
         owner: ansible
         mode: '0700'
 
-    - name: Create Master Watch Services Command
+    - name: Create Cluster Watch Services Command
       delegate_to: 127.0.0.1
       copy:
         dest: "./cluster_services"
@@ -163,12 +163,22 @@
         owner: ansible
         mode: '0700'
 
-    - name: Create Master Watch Deployments Command
+    - name: Create Cluster Watch Deployments Command
       delegate_to: 127.0.0.1
       copy:
         dest: "./cluster_deployments"
         content: |
           watch './master "kubectl get deployments --all-namespaces"'
+        force: yes
+        owner: ansible
+        mode: '0700'
+
+    - name: Create Cluster Check Command
+      delegate_to: 127.0.0.1
+      copy:
+        dest: "./cluster_check"
+        content: |
+          ./master 'if [ $(kubectl get deployments --all-namespaces | grep -cw "\([1-9]\)/\1") -eq $(kubectl get deployments --all-namespaces | grep -c "/") ] ; then echo cluster clean ; else echo cluster not clean ; fi'
         force: yes
         owner: ansible
         mode: '0700'
