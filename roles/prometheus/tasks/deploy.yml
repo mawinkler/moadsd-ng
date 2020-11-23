@@ -27,6 +27,16 @@
   args:
     chdir: $HOME
 
+- name: Install Prometheus Repo
+  become: true
+  become_user: ubuntu
+  shell: helm repo add stable https://charts.helm.sh/stable
+
+- name: Update Prometheus Repo
+  become: true
+  become_user: ubuntu
+  shell: helm repo update
+
 - name: Install Prometheus
   become: true
   become_user: ubuntu

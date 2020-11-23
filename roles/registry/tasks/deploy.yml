@@ -1,7 +1,7 @@
+# #####################################################################
+# Create a Docker Registry
+# #####################################################################
 ---
-# #####################################################################
-# Create a little web werver serving a cluster wide ssl certificate
-# #####################################################################
 - name: Create Docker Registry overrides file
   become: true
   become_user: ubuntu
@@ -13,7 +13,7 @@
       replicaCount: 1
       image:
         repository: registry
-        tag: {{ docker_registry_version }}
+        # tag: {{ docker_registry_version }}
         pullPolicy: IfNotPresent
       tlsSecretName: k8s-certificate
       service:
@@ -62,6 +62,16 @@
   shell: kubectl create namespace {{ docker_registry_namespace }} --dry-run=true -o yaml | kubectl apply -f -
   args:
     chdir: $HOME
+
+- name: Install Docker Repo
+  become: true
+  become_user: ubuntu
+  shell: helm repo add stable https://charts.helm.sh/stable
+
+- name: Update Docker Repo
+  become: true
+  become_user: ubuntu
+  shell: helm repo update
 
 - name: Install Docker Registry
   become: true

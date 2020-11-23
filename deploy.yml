@@ -139,6 +139,16 @@
         owner: ansible
         mode: '0700'
 
+    - name: Create Cluster Check Docker Rate Limit
+      delegate_to: 127.0.0.1
+      copy:
+        dest: "./cluster_limits"
+        content: |
+          ./master 'curl -s --head -H "Authorization: Bearer $(curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repository:ratelimitpreview/test:pull" | jq -r .token)" https://registry-1.docker.io/v2/ratelimitpreview/test/manifests/latest | grep RateLimit'
+        force: yes
+        owner: ansible
+        mode: '0700'
+
 # #####################################################################
 # Create http & https Proxy with Trusted Certificates
 # #####################################################################

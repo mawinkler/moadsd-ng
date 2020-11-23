@@ -102,11 +102,7 @@
       - kubernetes-cni
       - python-pip
       - python3-pip
-
-# - python
-# - python3
-# - python-requests
-# - python3-requests
+      - jq
 
 - name: Install OpenShift python client
   become: true
