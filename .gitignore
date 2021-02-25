@@ -28,3 +28,7 @@ aws_ec2.yml
 .user
 copy_master
 fetch_master
+cluster_*
+master_*
+jumphost
+master
