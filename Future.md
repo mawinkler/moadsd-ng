@@ -1,10 +1,15 @@
 # MOADSD-NG Future
 
 - [MOADSD-NG Future](#moadsd-ng-future)
+  - [Known Issues](#known-issues)
   - [Infrastructure](#infrastructure)
   - [Integrations](#integrations)
   - [Feedback](#feedback)
   - [Wishes](#wishes)
+
+## Known Issues
+
+- After the initial deployment the user needs to approve the already existing script request. ToDo: Reenable auto script approval within Jenkins during deployment.
 
 ## Infrastructure
 
