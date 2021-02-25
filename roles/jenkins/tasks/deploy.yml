@@ -34,17 +34,29 @@
         serviceType: {{ service_type }}
         nodePort: {{ service_port }}
         installPlugins:
-          - kubernetes:1.27.5
-          - workflow-job:2.40
-          - workflow-aggregator:2.6
-          - credentials-binding:1.24
-          - git:4.4.5
-          - configuration-as-code:1.46
-          - kubernetes-cd:2.3.1
-          - blueocean:1.24.3
-          - locale:1.4
-          - python:1.3
-          - deepsecurity-smartcheck:1.1.3
+          - kubernetes
+          - workflow-job
+          - workflow-aggregator
+          - credentials-binding
+          - git
+          - configuration-as-code
+          - kubernetes-cd
+          - blueocean
+          - locale
+          - python
+          - deepsecurity-smartcheck
+        # installPlugins:
+        #   - kubernetes:1.27.5
+        #   - workflow-job:2.40
+        #   - workflow-aggregator:2.6
+        #   - credentials-binding:1.24
+        #   - git:4.4.5
+        #   - configuration-as-code:1.46
+        #   - kubernetes-cd:2.3.1
+        #   - blueocean:1.24.3
+        #   - locale:1.4
+        #   - python:1.3
+        #   - deepsecurity-smartcheck:1.1.3
         scriptApproval:
           - "new groovy.json.JsonBuilder java.lang.Object"
           - "method groovy.lang.GroovyObject invokeMethod java.lang.String java.lang.Object"
@@ -104,10 +116,18 @@
 - name: Install Jenkins
   become: true
   become_user: ubuntu
-  shell: helm install --namespace {{ jenkins_namespace }} --values overrides-jenkins.yml {{ jenkins_name }} {{ jenkins_chart }} --version {{ jenkins_chart_version }} >> jenkins.log
+  shell: helm install --namespace {{ jenkins_namespace }} --values overrides-jenkins.yml {{ jenkins_name }} {{ jenkins_chart }} >> jenkins.log
   args:
     chdir: $HOME
     creates: jenkins.log
+    
+# - name: Install Jenkins
+#   become: true
+#   become_user: ubuntu
+#   shell: helm install --namespace {{ jenkins_namespace }} --values overrides-jenkins.yml {{ jenkins_name }} {{ jenkins_chart }} --version {{ jenkins_chart_version }} >> jenkins.log
+#   args:
+#     chdir: $HOME
+#     creates: jenkins.log
 
 - name: Fetch jenkins.log
   become: true
