@@ -38,10 +38,6 @@
       include: start_aws.yml
       when: type == 'aws'
 
-    - name: Create Azure environment
-      include: start_azure.yml
-      when: type == 'azure'
-
     - name: Create ESXi environment
       include: start_esx.yml
       when: type == 'esx'

@@ -45,7 +45,3 @@
     - name: Terminate AWS environment
       include: stop_aws.yml
       when: type == 'aws'
-
-    - name: Terminate Azure environment
-      include: stop_azure.yml
-      when: type == 'azure'

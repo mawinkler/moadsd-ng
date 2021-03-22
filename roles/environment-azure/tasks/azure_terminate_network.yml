@@ -1,4 +1,0 @@
----
-- name: Debug
-  debug:
-    msg: Not implemented yet
