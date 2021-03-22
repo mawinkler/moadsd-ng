@@ -21,91 +21,387 @@
     mode: 0640
     owner: ubuntu
     content: |
-      master:
-        image: {{ jenkins_image }}
-        tag: {{ jenkins_tag }}
-        adminUser: {{ jenkins_username }}
-        adminPassword: {{ jenkins_password }}
-        resources:
-          limits:
-            cpu: {{ limits_cpu }}
-            memory: {{ limits_memory }}
-        jenkinsUrl: {{ service_dns_name }}
-        serviceType: {{ service_type }}
-        nodePort: {{ service_port }}
-        installPlugins:
-          - kubernetes
-          - workflow-job
-          - workflow-aggregator
-          - credentials-binding
-          - git
-          - configuration-as-code
-          - kubernetes-cd
-          - blueocean
-          - locale
-          - python
-          - deepsecurity-smartcheck
-        # installPlugins:
-        #   - kubernetes:1.27.5
-        #   - workflow-job:2.40
-        #   - workflow-aggregator:2.6
-        #   - credentials-binding:1.24
-        #   - git:4.4.5
-        #   - configuration-as-code:1.46
-        #   - kubernetes-cd:2.3.1
-        #   - blueocean:1.24.3
-        #   - locale:1.4
-        #   - python:1.3
-        #   - deepsecurity-smartcheck:1.1.3
-        scriptApproval:
-          - "new groovy.json.JsonBuilder java.lang.Object"
-          - "method groovy.lang.GroovyObject invokeMethod java.lang.String java.lang.Object"
-          - "method hudson.plugins.git.GitSCM getUserRemoteConfigs"
-          - "method hudson.plugins.git.UserRemoteConfig getUrl"
-      agent:
-        image: "mawinkler/jenkins-jnlp-slave-docker"
-        # image: "10.0.2.221:30017/jenkins-jnlp-slave-docker"
-        # imagePullSecretName: "registry-auth"
-        customJenkinsLabels:
-          - jenkins-jenkins-slave
-        podName: "jenkins-jnlp-slave-docker"
-        idleMinutes: 10
-        tag: "latest"
-        envVars:
-          - name: DSSC_REGISTRY
-            value: {{ inventory_hostname }}:{{ smartcheck_registry }}
-          - name: DSSC_SERVICE
-            value: {{ inventory_hostname }}:{{ smartcheck_nodeport }}
-          - name: K8S_REGISTRY
-            value: {{ inventory_hostname }}:{{ registry_nodeport }}
-          - name: APPSEC_KEY
-            value: {{ application_security_key }}
-          - name: APPSEC_SECRET
-            value: {{ application_security_secret }}
-        resources:
-          limits:
-            cpu: {{ agent_limits_cpu }}
-            memory: {{ agent_limits_memory }}
-        volumes:
-          - type: HostPath
-            hostPath: /var/run/docker.sock
-            mountPath: /var/run/docker.sock
-      persistence:
+      # Default values for CloudBees Core
+      # This is a YAML-formatted file.
+      # Declare variables to be passed into your templates.
+      
+      # ingress-nginx.Enabled -- Installs the [ingress-nginx](https://github.com/kubernetes/ingress-nginx/tree/master/charts/ingress-nginx) controller (optional).
+      # Enable this section if you don't have an existing installation of ingress-nginx controller
+      # Note: use `beta.kubernetes.io/os` when deploying on Kubernetes versions below 1.16
+      ingress-nginx:
+        Enabled: true
+        controller:
+          ingressClass: nginx
+          nodeSelector:
+            kubernetes.io/os: linux
+          service:
+            externalTrafficPolicy:
+            type: NodePort
+            ports:
+            - name: http
+              nodePort: {{ jenkins_nodeport }}
+              port: 80
+              protocol: TCP
+              targetPort: http
+          admissionWebhooks:
+            patch:
+              nodeSelector:
+                kubernetes.io/os: linux
+        defaultBackend:
+          nodeSelector:
+            kubernetes.io/os: linux
+      
+      # Sidecar injector (optional)
+      # Useful when running infrastructure (GitHub Enterprise, Nexus, etc.) using a self-signed certificate.
+      # It allows you to inject certificate bundles in pods running in CloudBees Core so that they can trust provided certificates
+      # without having to build custom docker images.
+      # Use helm inspect readme cloudbees/cloudbees-sidecar-injector to read more on this optional components
+      sidecarinjector:
+        # sidecarinjector.Enabled -- Whether to enable installation of Sidecar Injector
+        Enabled: false
+      
+      # Operations Center options
+      OperationsCenter:
+        # OperationsCenter.Enabled -- Disable for particular use case like setting up namespaces to host masters only
+        Enabled: true
+      
+        # Operations Center docker image
+        Image:
+          # OperationsCenter.Image.dockerImage -- Container image to use for Operations Center
+          dockerImage: cloudbees/cloudbees-cloud-core-oc:2.277.1.2
+          # OperationsCenter.Image.dockerPullPolicy -- https://kubernetes.io/docs/concepts/containers/images/#updating-images
+          dockerPullPolicy: null
+      
+        # Image pull secrets
+        # Enable this option when using a private registry.
+        # https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/#create-a-secret-by-providing-credentials-on-the-command-line
+        # OperationsCenter.ImagePullSecrets -- Name of image pull secret to pull private Docker images or an array of image pull secrets
+        ImagePullSecrets: null
+      
+        # OperationsCenter.Platform -- Enables specific settings depending on the platform
+        # platform specific values are: `eks`, `aws`, `gke`, `aks`, `openshift`, `openshift4`
+        # Note: `openshift` maps to OpenShift 3.x
+        Platform: standard
+      
+        # OperationsCenter.HostName -- The hostname used to access Operations Center through the ingress controller.
+        HostName: null
+      
+        # OperationsCenter.ContextPath -- the path under which Operations Center will be accessible in the given host.
+        ContextPath: /cjoc
+      
+        # OperationsCenter.Protocol -- the protocol used to access CJOC. Possible values are http/https.
+        Protocol: http
+        # Protocol: https
+      
+        # OperationsCenter.Port -- the port used to access CJOC. Defaults to 80/443 depending on Protocol. Can be overridden.
+        # Port: 80
+      
+        # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
+        Resources:
+          Limits:
+            # OperationsCenter.Resources.Limits.Cpu -- CPU limit to run Operations Center
+            # https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-cpu
+            Cpu: 1
+            # OperationsCenter.Resources.Limits.Memory -- Memory limit to run Operations Center
+            # https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-memory
+            Memory: 2G
+          Requests:
+            # OperationsCenter.Resources.Requests.Cpu -- CPU request to run Operations Center
+            # https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-cpu
+            Cpu: 1
+            # OperationsCenter.Resources.Requests.Memory -- Memory request to run Operations Center
+            # https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-memory
+            Memory: 2G
+      
+        # Environment variables that get added to the container (useful for e.g. http_proxy)
+        # ContainerEnv:
+        #   - name: http_proxy
+        #     value: "http://192.168.64.1:3128"
+      
+        # OperationsCenter.JavaOpts -- Additional java options to pass to the Operations Center
+        JavaOpts: null
+        #   -Dcom.sun.management.jmxremote.port=4000
+        #   -Dcom.sun.management.jmxremote.authenticate=false
+        #   -Dcom.sun.management.jmxremote.ssl=false
+      
+        # Container port where JMX is exposed
+        # JMXPort: 4000
+      
+        # OperationsCenter.JenkinsOpts -- Additional arguments for jenkins.war
+        JenkinsOpts: null
+      
+        # Run the Operations Center as a specific user (defaults to uid 1000)
+        # When setting RunAsUser to a different value than 0 also set FsGroup to the same value:
+        # https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+        # RunAsUser: 1000
+        # RunAsGroup: 1000
+        # Volumes that support ownership management are modified to be owned and writable by the GID specified in fsGroup
+        # Should be set to the same value as RunAsUser to ensure the volume is writable
+        # https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#discussion
+        # FsGroup: 1000
+      
+        # OperationsCenter.ServicePort -- Controls the service port where Operations Center http port is exposed. Don't change this parameter unless you know what you are doing
+        ServicePort: 80
+        # OperationsCenter.ServiceAgentListenerPort -- Controls the service port where Operations Center TCP port for agents is exposed. Don't change this parameter unless you know what you are doing
+        ServiceAgentListenerPort: 50000
+      
+        # OperationsCenter.ServiceType -- Service Type. Defaults to ClusterIP, since we recommend using an ingress controller.
+        ServiceType: ClusterIP
+      
+        # OperationsCenter.ServiceAnnotations -- Additional annotations to put on the Operations Center service
+        ServiceAnnotations: {}
+        #   service.beta.kubernetes.io/aws-load-balancer-backend-protocol: https
+      
+        # OperationsCenter.ContainerPort -- Container port for http traffic
+        ContainerPort: 8080
+      
+        # OperationsCenter.AgentListenerPort -- Container port for agent listener traffic
+        AgentListenerPort: 50000
+        # OperationsCenter.HealthProbes -- Enable Kubernetes Liveness and Readiness Probes
+        HealthProbes: true
+        # OperationsCenter.HealthProbeLivenessFailureThreshold -- Threshold for liveness failure
+        HealthProbeLivenessFailureThreshold: 12
+      
+        # https://wiki.jenkins.io/display/JENKINS/CSRF+Protection
+        CSRF:
+          # OperationsCenter.CSRF.ProxyCompatibility -- Proxy compatibility for the default CSRF issuer
+          ProxyCompatibility: false
+      
+        # OperationsCenter.LoadBalancerSourceRanges -- Only applicable when using `ServiceType: LoadBalancer`
+        LoadBalancerSourceRanges:
+        - 0.0.0.0/0
+        # OperationsCenter.LoadBalancerIP -- Optionally assign a known public LB IP
+        LoadBalancerIP: null
+        # LoadBalancerIP: 1.2.3.4
+      
+        # OperationsCenter.NodeSelector -- Node labels and tolerations for pod assignment
+        # ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
+        NodeSelector: {}
+        # OperationsCenter.Tolerations -- Specify tolerations for the Operations Center pod.
+        # See [documentation](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
+        Tolerations: []
+      
+        # OperationsCenter.Annotations -- Additional annotations to put on the pod running Operations Center
+        Annotations: {}
+      
+        Ingress:
+          # OperationsCenter.Ingress.Class -- Ingress class to use for OC and MM ingresses
+          # Should be set to the same value as nginx-ingress.controller.ingressClass if enabled
+          Class: nginx
+          # OperationsCenter.Ingress.Annotations -- annotations to put on Ingress object
+          Annotations:
+            kubernetes.io/tls-acme: 'false'
+      
+          tls:
+            # OperationsCenter.Ingress.tls.Enable -- Set this to true in order to enable TLS on the ingress record
+            Enable: false
+            # OperationsCenter.Ingress.tls.SecretName -- The name of the secret containing the certificate
+            # and private key to terminate TLS for the ingress
+            SecretName: null
+      
+        Route:
+          tls:
+            # OperationsCenter.Route.tls.Enable -- Set this to true in OpenShift to terminate TLS at route level
+            # Read https://docs.openshift.com/container-platform/4.6/networking/routes/secured-routes.html for details.
+            # These also apply to Hibernation monitor if enabled.
+            Enable: false
+            # OperationsCenter.Route.tls.Termination -- Type of termination
+            Termination: edge
+            # OperationsCenter.Route.tls.InsecureEdgeTerminationPolicy -- Whether to redirect http to https
+            InsecureEdgeTerminationPolicy: Redirect
+            # OperationsCenter.Route.tls.CACertificate -- CA Certificate PEM-encoded
+            CACertificate: null
+            # OperationsCenter.Route.tls.Certificate -- Certificate PEM-encoded
+            Certificate: null
+            # OperationsCenter.Route.tls.Key -- Private key PEM-encoded
+            Key: null
+            # OperationsCenter.Route.tls.DestinationCACertificate -- When using `termination=reencrypt`, destination CA PEM-encoded
+            DestinationCACertificate: null
+        # OperationsCenter.ExtraConfigMaps -- Extra configmaps deployed with the chart
+        ExtraConfigMaps: []
+        # ExtraConfigMaps:
+        # - name: my-config-map
+        #   labels:
+        #     key1: value1
+        #   annotations:
+        #     key1: value1
+        #   data:
+        #      myfile.yaml: |
+        #        foo: bar
+      
+        # OperationsCenter.ExtraContainers -- Extra containers to add to the pod containing Operations Center.
+        ExtraContainers: []
+        # ExtraContainers:
+        # - name: sleep
+        #   image: tutum/curl
+        #   command: ["sleep", "infinity"]
+      
+        # OperationsCenter.ExtraGroovyConfiguration -- Provides additional init groovy scripts
+        # Each key becomes a file in /var/jenkins_config
+        ExtraGroovyConfiguration: {}
+        # ExtraGroovyConfiguration:
+        #   hello-world.groovy: |
+        #     System.out.println('Hello world!')
+      
+        # OperationsCenter.ExtraVolumes -- Extra volumes to add to the pod
+        ExtraVolumes: []
+        # ExtraVolumes:
+        # - name: my-volume
+        #   configMap:
+        #     name: my-config-map
+      
+        # OperationsCenter.ExtraVolumeMounts -- Extra volume mounts to add to the container containing Operations Center
+        ExtraVolumeMounts: []
+        # ExtraVolumeMounts:
+        # - name: my-volume
+        #   mountPath: /var/my-path
+        #   readOnly: true
+      
+      # Master options
+      Master:
+        # Master.Enabled -- Whether to create the resources required to schedule masters.
+        Enabled: true
+        # Master.OperationsCenterNamespace -- When deploying Master resources, this grants an Operations Center deployed in another namespace the right to deploy masters
+        OperationsCenterNamespace: null
+      
+        # Docker image inserted in Operations Center automatically
+        Image:
+          # Master.Image.dockerImage -- Used to override the default docker image
+          dockerImage: cloudbees/cloudbees-core-mm:2.277.1.2
+        # Master.JavaOpts -- Additional Java options to pass to managed masters. For example, setting up a JMX port
+        JavaOpts: null
+      
+      # Agent options
+      Agents:
+        # Agents.Enabled -- Enable to create agent resources (service account, role)
+        Enabled: true
+        SeparateNamespace:
+          # Agents.SeparateNamespace.Enabled -- If enabled, agents resources will be created in a separate namespace as well as bindings allowing masters to schedule them.
+          Enabled: false
+          # Agents.SeparateNamespace.Name -- Namespace where to create agents resources. Defaults to `${namespace}-builds` where `${namespace}` is the namespace where the chart is installed.
+          Name: null
+          # Agents.SeparateNamespace.Create -- If true, the second namespace will be created when installing this chart. Otherwise, the existing namespace should be labeled with `cloudbees.com/role: agents` in order for network policies to work.
+          Create: false
+        Image:
+          # Agents.Image.dockerImage -- Used to override the default docker image used for agents
+          dockerImage: cloudbees/cloudbees-core-agent:2.277.1.2
+        # Image pull secrets
+        # Enable this option when using a private registry.
+        # https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/#create-a-secret-by-providing-credentials-on-the-command-line
+        # Agents.ImagePullSecrets -- Name of image pull secret to pull private Docker images or an array of image pull secrets
+        ImagePullSecrets: null
+      
+      Persistence:
+        # Persistence.StorageClass -- Persistent Volume Storage Class for Jenkins Home
+        # If defined, storageClassName: <storageClass>.
+        # If set to "-", storageClassName: "", which disables dynamic provisioning.
+        # If undefined (the default) or set to null, the default storage class will be used,
+        # unless specified otherwise below.
+        # If setting OperationsCenter.Platform == gke, a storage class backed with
+        # SSD drives will be created by this chart and used automatically.
+        #
+        # StorageClass: "-"
         StorageClass: {{ persistence_storageClassName }}
-        size: {{ persistence_size }}
+      
+        # On AKS, use the following
+        # StorageClass: "managed-premium"
+      
+        # Persistence.Annotations -- Annotations to put on the PVC
+        Annotations: {}
+        # Persistence.AccessMode -- Access mode for the PVC ([doc](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes))
+        AccessMode: ReadWriteOnce
+      
+        # Persistence.Size -- Size of the Operations Center volume
+        Size: {{ persistence_size }}
+      
+      # Master hibernation
+      Hibernation:
+        # Hibernation.Enabled -- Whether to enable the [Hibernation](https://docs.cloudbees.com/docs/cloudbees-ci/latest/cloud-admin-guide/managing-masters#_hibernation_of_managed_masters) feature
+        Enabled: false
+        Image:
+          # Hibernation.Image.dockerImage -- Used to override the default docker image
+          dockerImage: cloudbees/managed-master-hibernation-monitor:230.ee066a318539
+          # Hibernation.Image.dockerPullPolicy -- Used to override the default pull policy
+          dockerPullPolicy: null
+        # Image pull secrets
+        # Enable this option when using a private registry.
+        # https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/#create-a-secret-by-providing-credentials-on-the-command-line
+        # Hibernation.ImagePullSecrets -- Name of image pull secret to pull private Docker images or an array of image pull secrets
+        ImagePullSecrets: null
+        # Hibernation.NodeSelector -- Node labels and tolerations for pod assignment
+        # ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
+        NodeSelector: {}
+        # Hibernation.Tolerations -- Specify tolerations for the Hibernation Monitor pod.
+        # See [documentation](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
+        Tolerations: []
+      
+      PodSecurityPolicy:
+        # Requires rbac.installCluster = true
+        #
+        # PodSecurityPolicy.Enabled -- Enables [Pod Security Policies](https://kubernetes.io/docs/concepts/policy/pod-security-policy/) support
+        # Enable only if the cluster supports it.
+        Enabled: false
+        # PodSecurityPolicy.Annotations -- Additional annotations to put on the PodSecurityPolicy, e.g. AppArmor/Seccomp settings
+        Annotations: {}
+      
+      NetworkPolicy:
+        # NetworkPolicy.Enabled -- Enable only if the cluster supports it. Read the [documentation](https://kubernetes.io/docs/concepts/services-networking/network-policies/) to understand what this is about.
+        Enabled: false
+      
+        # NetworkPolicy.ingressControllerSelector -- Custom selector for the ingress-controller
+        ingressControllerSelector: []
+      #    - namespaceSelector:
+      #        matchLabels:
+      #          name: nginx-ingress
+      #      podSelector:
+      #        matchLabels:
+      #         app: nginx-ingress
+      #         component: controller
+      
+        # NetworkPolicy.JMXSelectors -- Custom selectors for accessing JMX port
+        JMXSelectors: []
+      #    - namespaceSelector:
+      #        matchLabels:
+      #          name: datadog
+      #      podSelector:
+      #        matchLabels:
+      #         app: datadog
+      
+      ## Install Default RBAC roles and bindings
       rbac:
-        create: {{ rbac_create }}
+        # rbac.install -- Install `role`/`rolebindings`/`serviceAccount`.
+        # If false (and rbac is enabled in the cluster anyway), provide valid names for all service accounts.
+        install: true
+      
+        # rbac.installCluster -- Install `clusterrole`/`clusterrolebinding`
+        # These cluster roles are optional but prevent usage of some features, so we recommend setting them up.
+        # Defaults to true, except on Openshift 3 where it defaults to false
+        # Please refer to templates/cjoc-clusterrole-master-management.yaml in the chart
+        #installCluster: true
+      
+        # rbac.serviceAccountName -- Name of the service account Operations Center will run as
+        serviceAccountName: cjoc
+        # rbac.masterServiceAccountName -- Name of the service account Jenkins masters will run as
+        masterServiceAccountName: jenkins
+        # rbac.agentServiceAccountName -- Name of the service account Jenkins agents will run as
+        agentsServiceAccountName: jenkins-agents
+        # rbac.hibernationMonitorServiceAccountName -- Name of the service account the Hibernation monitor will run as (if enabled)
+        hibernationMonitorServiceAccountName: managed-master-hibernation-monitor
+      
 
-  # yamlTemplate: |-
-  #   apiVersion: v1
-  #   kind: Pod
-  #   spec:
-  #     containers:
-  #     - args:
-  #       securityContext:
-  #         privileged: true
-  #         runAsGroup: 999
-  #         runAsUser: 1000
+      
+
+
+- name: Install Cloudbees Repo
+  become: true
+  become_user: ubuntu
+  shell: helm repo add cloudbees https://charts.cloudbees.com/public/cloudbees
+
+- name: Update Cloudbees Repo
+  become: true
+  become_user: ubuntu
+  shell: helm repo update
+  
 - name: Create Jenkins Namespace
   become: true
   become_user: ubuntu

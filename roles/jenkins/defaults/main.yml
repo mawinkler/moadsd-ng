@@ -2,15 +2,10 @@ service_type: NodePort
 service_port: "{{ jenkins_nodeport }}"
 persistence_storageClassName: rook-ceph-block
 persistence_size: 8Gi
-limits_cpu: 2000m
-limits_memory: 4096Mi
-agent_limits_cpu: 512m
-agent_limits_memory: 512Mi
 rbac_create: true
 
-jenkins_image: jenkins/jenkins
-jenkins_chart: stable/jenkins
-jenkins_tag: lts
-jenkins_chart_version: 1.18.0
+#jenkins_image: jenkins/jenkins
+jenkins_chart: cloudbees/cloudbees-core
+jenkins_chart_version: 3.28.1+3c5f25973d17
 jenkins_namespace: jenkins
 jenkins_name: jenkins
