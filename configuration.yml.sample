@@ -15,7 +15,7 @@
 # #####################################################################
 site_deploy_kubernetes: yes
 site_deploy_smartcheck: yes
-site_deploy_jenkins: yes
+site_deploy_jenkins: no        # Broken as of 03/22/2021
 site_deploy_prometheus: yes
 site_deploy_grafana: yes
 
