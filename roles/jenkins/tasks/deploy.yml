@@ -37,12 +37,10 @@
           service:
             externalTrafficPolicy:
             type: NodePort
-            ports:
-            - name: http
-              nodePort: {{ jenkins_nodeport }}
-              port: 80
-              protocol: TCP
-              targetPort: http
+            nodePorts:
+              http: {{ jenkins_nodeport }}
+              tcp:
+                80: {{ jenkins_nodeport }}
           admissionWebhooks:
             patch:
               nodeSelector:
@@ -412,7 +410,7 @@
 - name: Install Jenkins
   become: true
   become_user: ubuntu
-  shell: helm install --namespace {{ jenkins_namespace }} --values overrides-jenkins.yml {{ jenkins_name }} {{ jenkins_chart }} >> jenkins.log
+  shell: helm install --namespace {{ jenkins_namespace }} --values overrides-jenkins.yml {{ jenkins_name }} {{ jenkins_chart }} --version {{ jenkins_chart_version }} >> jenkins.log
   args:
     chdir: $HOME
     creates: jenkins.log
